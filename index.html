@@ -86,6 +86,9 @@ svg.pt.dead{filter:grayscale(1) brightness(.8)}
 .journal li{display:grid;grid-template-columns:38px 1fr;gap:6px;line-height:1.35}
 .journal time{color:var(--bone-dim);font-variant-numeric:tabular-nums;font-size:12.5px;padding-top:1px}
 .roster{display:grid;gap:6px;margin-top:8px}
+.chart{display:block;width:100%;max-width:460px;height:auto;margin:2px auto 6px}
+.sbar{display:grid;grid-template-columns:minmax(90px,38%) 1fr 30px;align-items:center;gap:8px;font-size:13px;margin:3px 0}.sbar i{display:block;height:9px;border-radius:5px}.sbar b{text-align:right;font-variant-numeric:tabular-nums}
+.btn.small{padding:4px 10px;font-size:12px;margin-left:6px}
 .rrow{display:grid;grid-template-columns:44px 1fr;column-gap:10px;row-gap:2px;align-items:center;text-align:left;padding:8px 10px;border-radius:10px;background:var(--bark-raised);border:1px solid var(--edge)}
 .rrow svg.pt{width:44px;height:44px;grid-row:span 2}
 .rrow .rn{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;min-width:0}
@@ -287,9 +290,11 @@ const SEED = SAVED ? SAVED.seed : (Math.random() * 1e9) | 0;
 // Calendrier historique : la tribu démarre en 40 000 av. J.-C. ; chaque savoir fait avancer l'époque.
 const START_YEAR = -40000;
 // le temps file moins vite à mesure que l'histoire s'accélère
-const yearsPerHour = () => tech.fer ? 0.25 : tech.bronze ? 0.4 : tech.cuivre ? 0.6 : tech.village ? 1.2 : 2;
+const yearsPerHour = () => tech.rome ? 0.1 : tech.fer ? 0.25 : tech.bronze ? 0.4 : tech.cuivre ? 0.6 : tech.village ? 1.2 : 2;
 // plafond de population (fluidité sur téléphone) ; les oppida de l'âge du fer permettent une vraie petite ville
-const popMax = () => tech.oppidum ? 80 : 60;
+// Antiquité : le village devient un vicus. Les vrais comptaient plusieurs centaines d'habitants ; chaque villageois étant
+// simulé un à un, on en montre un échantillon, plafonné pour rester fluide sur tablette.
+const popMax = () => tech.theatre ? 160 : tech.tuiles ? 130 : tech.pax ? 100 : tech.oppidum ? 80 : 60;
 function yearText(y) { const a = Math.round(-y / 10) * 10; return a > 0 ? `${a.toLocaleString('fr-FR')} av. J.-C.` : `${(-a).toLocaleString('fr-FR')} apr. J.-C.`; }
 
 const rr = (a, b) => a + Math.random() * (b - a);
@@ -625,7 +630,8 @@ function updateBergs(dt) {
 // ================= Climat =================
 // Écart de température moyenne par rapport à aujourd'hui (°C, Europe de l'Ouest, d'après les reconstitutions paléoclimatiques, simplifiées) :
 // glaciation, maximum glaciaire (~26 000 – 19 000), réchauffement, Dryas récent (~12 900 – 11 700), Holocène, optimum climatique.
-const CLIMATE = [[-40000, -4], [-30000, -5], [-26000, -7], [-19000, -7], [-14700, -3], [-12900, -2.5], [-12500, -5], [-11700, -3.5], [-10000, -0.5], [-7000, 0.8], [-4000, 0.5], [-1000, 0], [2000, 0]];
+// … puis l'optimum climatique romain (un peu plus doux, ~ -200 à 300) et le refroidissement de l'Antiquité tardive
+const CLIMATE = [[-40000, -4], [-30000, -5], [-26000, -7], [-19000, -7], [-14700, -3], [-12900, -2.5], [-12500, -5], [-11700, -3.5], [-10000, -0.5], [-7000, 0.8], [-4000, 0.5], [-1000, 0], [-200, 0.3], [300, 0.3], [450, -0.2], [2000, 0]];
 // L'ouest de la France se refroidissait environ deux fois plus que la moyenne mondiale : au maximum glaciaire,
 // le sol gelait en profondeur (pergélisol jusque vers 47° N, latitude de Nantes) ; moyenne annuelle sous zéro.
 const MEAN_TODAY = 11, EUROPE_AMPLIFY = 2, DAY_SWING = 3.5;
@@ -648,6 +654,7 @@ const climateC = () => clamp((anomaly(colony.year) + 7) / 7.8, 0, 1);
 function climatePhase() {
   const y = colony.year, a = anomaly(y);
   if (y > -12900 && y < -11700) return 'Dryas récent';
+  if (y > -200 && y < 350) return 'Optimum romain';
   return a <= -6 ? 'Maximum glaciaire' : a <= -3.5 ? 'Période glaciaire' : a < -1.5 ? 'Fin de la glaciation' : a > 0.4 ? 'Optimum climatique' : 'Holocène tempéré';
 }
 const PHASE_MSG = {
@@ -657,6 +664,7 @@ const PHASE_MSG = {
   'Dryas récent': 'Un brusque retour du froid : c’est le Dryas récent.',
   'Holocène tempéré': 'La glaciation est finie : la forêt et les prairies reverdissent.',
   'Optimum climatique': 'Le climat n’a jamais été aussi doux : c’est l’optimum de l’Holocène.',
+  'Optimum romain': 'Des siècles doux et réguliers : les récoltes sont bonnes, la vigne remonte vers le nord.',
 };
 let climateShown = -1, phaseShown = '';
 // Neige au sol et glace, mises à jour chaque heure de jeu :
@@ -1187,11 +1195,16 @@ class Villager {
   }
   get adult() { return this.age >= ADULT_AGE; }
 }
+// noms gallo-romains (latins et gaulois latinisés, attestés par les inscriptions de Gaule) donnés aux nouveaux venus après la conquête
+const LATIN_NAMES = { M: ['Marcus', 'Lucius', 'Gaius', 'Quintus', 'Sextus', 'Secundus', 'Primus', 'Severus', 'Victorinus', 'Maternus', 'Felix', 'Albinus', 'Senecio', 'Vindex', 'Cintugnatus', 'Camulus', 'Martinus', 'Sabinus', 'Iulius', 'Tertius', 'Paulus', 'Iovinus', 'Litavicus', 'Rufus'], F: ['Iulia', 'Sabina', 'Aurelia', 'Flavia', 'Valeria', 'Claudia', 'Tertia', 'Secunda', 'Paulina', 'Cornelia', 'Lucilla', 'Rufina', 'Marcella', 'Faustina', 'Solimara', 'Matrona', 'Severa', 'Prima', 'Verecunda', 'Attia', 'Iustina', 'Lupula', 'Vitalia', 'Germana'] };
+function latinName(sex) { const used = new Set(villagers.map(v => v.name)), L = LATIN_NAMES[sex === 'F' ? 'F' : 'M'], free = L.filter(n => !used.has(n)); return free.length ? pick(free) : pick(L) + ' ' + ['le Jeune', 'Secundus', 'II', 'l’Ancien'][Math.floor(Math.random() * 4)]; }
 function freeName() { const used = new Set(villagers.map(v => v.name)); const free = NAMES.filter(n => !used.has(n)); return free.length ? pick(free) : pick(NAMES) + ' ' + ['le Jeune', 'l’Autre', 'II'][Math.floor(Math.random() * 3)]; }
 // ---- rôles : chef de village (dès la sédentarisation) et druide (âge du fer) ----
 // Titre du chef selon l'époque ; à l'oppidum, le chef est un vergobret, magistrat élu chez les Gaulois (toujours un homme selon les sources).
-function chiefTitle(v) { return tech.oppidum && v.sex === 'M' ? 'vergobret' : tech.chefferie ? gx(v, 'chef', 'cheffe') : gx(v, 'chef de village', 'cheffe de village'); }
-const roleName = v => v.chief ? chiefTitle(v) : v.druid ? 'druide' : '';
+function chiefTitle(v) { return tech.pax && v.sex === 'M' ? 'magistrat' : tech.oppidum && v.sex === 'M' ? 'vergobret' : tech.chefferie ? gx(v, 'chef', 'cheffe') : gx(v, 'chef de village', 'cheffe de village'); }
+// le druidisme est interdit sous Claude (vers 50 apr. J.-C.) : l'ancien druide devient prêtre du fanum, puis prêtre chrétien
+const priestTitle = () => tech.christ ? 'prêtre' : tech.fanum ? 'prêtre du fanum' : 'druide';
+const roleName = v => v.chief ? chiefTitle(v) : v.druid ? priestTitle() : '';
 // Âge de mort naturelle d'un adulte : d'après les squelettes préhistoriques, la plupart meurent entre 30 et 50 ans,
 // une minorité atteint 60 ans et plus (hors accidents, maladies, raids, couches, simulés à part).
 function rollDeathAge() { const r = Math.random(); return r < 0.15 ? rr(28, 36) : r < 0.55 ? rr(36, 50) : r < 0.85 ? rr(50, 60) : rr(60, 74); }
@@ -1225,8 +1238,12 @@ const JOBS = {
   saunier: { m: 'Saunier', f: 'Saunière', unlock: () => tech.fer, work: 'Fait bouillir la saumure pour le sel', talent: ['cueilleur', 'robuste'], n: 1, diary: 'Remplit des moules de sel : la viande se conservera tout l’hiver.' },
   orfevre: { m: 'Orfèvre', f: 'Orfèvre', unlock: () => tech.artisanat, work: 'Cisèle des torques et des bijoux', talent: ['mystique', 'reveur'], n: 1, diary: 'Cisèle un torque d’or pour le chef.' },
   tonnelier: { m: 'Tonnelier', f: 'Tonnelière', unlock: () => tech.tonneau, work: 'Assemble des tonneaux de chêne', talent: ['bucheron'], n: 1, men: true, diary: 'Assemble un tonneau pour la cervoise.' },
-  barde: { m: 'Barde', f: 'Barde', unlock: () => tech.druides, work: 'Chante les exploits des ancêtres', talent: ['conteur', 'joyeux'], n: 1, men: true, diary: 'Chante la geste des ancêtres au banquet.' },
-  guerrier: { m: 'Guerrier', f: 'Guerrière', unlock: () => tech.guerriers, work: 'Monte la garde', talent: ['chasseur', 'intrepide'], n: p => Math.max(2, Math.floor(p / 8)), men: true, diary: 'Monte la garde sur la palissade toute la nuit.' },
+  barde: { m: 'Barde', f: 'Barde', until: 'christ', unlock: () => tech.druides, work: 'Chante les exploits des ancêtres', talent: ['conteur', 'joyeux'], n: 1, men: true, diary: 'Chante la geste des ancêtres au banquet.' },
+  tuilier: { m: 'Tuilier', f: 'Tuilière', unlock: () => tech.tuiles, work: 'Moule et cuit des tuiles', talent: ['batisseur', 'robuste'], n: 1, diary: 'Défourne une fournée de tuiles rouges.' },
+  scribe: { m: 'Scribe', f: 'Scribe', unlock: () => tech.latin, work: 'Tient les comptes sur des tablettes de cire', talent: ['conteur', 'reveur'], n: 1, diary: 'Grave une dédicace aux dieux sur une plaque de pierre.' },
+  veteran: { m: 'Vétéran des légions', f: 'Vétérane', unlock: () => tech.pax, work: 'Entraîne la milice du vicus', talent: ['intrepide', 'chasseur'], n: p => Math.max(1, Math.floor(p / 20)), men: true, diary: 'Raconte ses vingt-cinq ans de service sur le Rhin.' },
+  vigneron: { m: 'Vigneron', f: 'Vigneronne', unlock: () => tech.vigne, work: 'Taille et vendange la vigne', talent: ['cueilleur', 'joyeux'], n: 1, diary: 'Foule le raisin de la vendange.' },
+  guerrier: { m: 'Guerrier', f: 'Guerrière', until: 'pax', unlock: () => tech.guerriers, work: 'Monte la garde', talent: ['chasseur', 'intrepide'], n: p => Math.max(2, Math.floor(p / 8)), men: true, diary: 'Monte la garde sur la palissade toute la nuit.' },
 };
 const jobName = v => v.job && JOBS[v.job] ? JOBS[v.job][v.sex === 'F' ? 'f' : 'm'] : '';
 const hasJob = id => villagers.some(v => v.job === id && !v.sick);
@@ -1269,11 +1286,11 @@ function chooseDruid() {
   const pref = v => (has(v, 'mystique') ? 30 : 0) + (has(v, 'guerisseur') ? 25 : 0) + (has(v, 'conteur') ? 20 : 0) + (v.parents.some(p => p.druid) ? 25 : 0) + v.age * 0.5;
   const d = villagers.filter(v => v.adult && v.sex === 'M' && !v.chief && !v.sick).sort((a, b) => pref(b) - pref(a))[0]; if (!d) return;
   d.druid = true; applyRoleLook(d); setLabel(d);
-  journal(d, 'Est initié comme druide, après de longues années d’apprentissage par cœur.');
-  log(`${d.name} devient le druide du village.`, 'power');
+  journal(d, tech.fanum ? 'Devient prêtre et veille sur le temple de la cité.' : 'Est initié comme druide, après de longues années d’apprentissage par cœur.');
+  log(`${d.name} devient le ${priestTitle()} du village.`, 'power');
   const n = works.find(w => w.kind === 'nemeton'); milestone('druid', n ? n.x : d.x, n ? n.z : d.z);
 }
-function addVillager(o) { const v = new Villager(o); villagers.push(v); for (const p of v.parents) p.children.push(v); colony.maxPop = Math.max(colony.maxPop, villagers.length); return v; }
+function addVillager(o) { if (tech.pax && started) o.name = latinName(o.sex); const v = new Villager(o); villagers.push(v); for (const p of v.parents) p.children.push(v); colony.maxPop = Math.max(colony.maxPop, villagers.length); return v; }
 
 // Les villageois et les pillards passent par les portes de l'enceinte au lieu de traverser les murs.
 function moveTo(e, tx, tz, gh, speed) {
@@ -1285,7 +1302,7 @@ function stepTo(e, tx, tz, gh, speed) {
   if (d <= step || d < 0.3) { e.x = tx; e.z = tz; return true; }
   e.x += dx / d * step; e.z += dz / d * step; e.face = Math.atan2(dx, dz); e.moving = true; return false;
 }
-function spd(v) { let s = v.adult ? 11 : 8; if (v.sick) s *= 0.6; if (v.energy < 15) s *= 0.75; return s; }
+function spd(v) { let s = (v.adult ? 11 : 8) * (built('voie') ? 1.1 : 1); if (v.sick) s *= 0.6; if (v.energy < 15) s *= 0.75; return s; }
 function bedSpot(v) {
   if (v.hut && v.hut.built) return { x: v.hut.x, z: v.hut.z };
   const a = v.id * 2.399; return { x: Math.cos(a) * 2.8, z: Math.sin(a) * 2.8 };
@@ -1438,7 +1455,7 @@ function runTask(v, gh) {
     case 'build': {
       const s = t.site;
       if (s.built || s.gone) { endTask(v); break; }
-      if (!t.arrived) { const a = v.id * 1.7 + (t.spot = t.spot ?? rr(0, 6.28)) * (s.kind === 'palisade' || s.kind === 'rampart' ? 1 : 0), rad = (s.kind === 'palisade' || s.kind === 'rampart') && colony.wallProf ? profR(colony.wallProf, a) + (s.kind === 'rampart' ? 0.5 : -1.2) : s.kind === 'longhouse' ? 3.4 : s.kind === 'chief' ? 3 : 1.9; if (moveTo(v, s.x + Math.cos(a) * rad, s.z + Math.sin(a) * rad, gh, spd(v))) t.arrived = true; break; }
+      if (!t.arrived) { const a = v.id * 1.7 + (t.spot = t.spot ?? rr(0, 6.28)) * (s.kind === 'palisade' || s.kind === 'rampart' || s.kind === 'castrum' ? 1 : 0), rad = (s.kind === 'palisade' || s.kind === 'rampart' || s.kind === 'castrum') && colony.wallProf ? profR(colony.wallProf, a) + (s.kind === 'palisade' ? -1.2 : 0.5) : s.kind === 'voie' ? 0 : s.kind === 'longhouse' ? 3.4 : s.kind === 'chief' ? 3 : 1.9; if (s.kind === 'voie') { t.rd = t.rd ?? rr(6, 40); const ra = colony.roadA || 0; if (moveTo(v, Math.cos(ra) * t.rd + 1.6, Math.sin(ra) * t.rd, gh, spd(v))) t.arrived = true; break; } if (moveTo(v, s.x + Math.cos(a) * rad, s.z + Math.sin(a) * rad, gh, spd(v))) t.arrived = true; break; }
       if (!s.paid) { if (colony.wood >= s.cost) { colony.wood -= s.cost; s.paid = true; } else { endTask(v); break; } }
       v.working = true; v.face = Math.atan2(s.x - v.x, s.z - v.z);
       s.progress = Math.min(1, s.progress + gh / BUILD_HOURS[s.kind] * (has(v, 'batisseur') ? 1.6 : 1) * workMul()); syncSite(s);
@@ -1482,7 +1499,7 @@ function runTask(v, gh) {
       if (t.t >= 1.5 / workMul()) {
         const C = CROPS[f.crop];
         f.growth = 0; f.res = null; syncField(f);
-        v.carry = { kind: 'food', n: Math.round(C.food * (f.crop !== 'lin' && tech.meule ? 1.4 : 1) * (tech.araire ? 1.5 : 1) * (tech.charrue ? 1.4 : 1)) }; t.phase = 'back';
+        v.carry = { kind: 'food', n: Math.round(C.food * (f.crop !== 'lin' && tech.meule ? 1.4 : 1) * (tech.araire ? 1.5 : 1) * (tech.charrue ? 1.4 : 1) * (tech.vallus && f.crop !== 'vigne' ? 1.3 : 1)) }; t.phase = 'back';
         milestone('harvest', f.x, f.z);
         if (f.crop === 'lin') { colony.mood += 3; journal(v, 'Récolte le lin pour tisser des vêtements.'); }
       }
@@ -1568,6 +1585,7 @@ function updateVillager(v, gh) {
   if (hasCaveRole('sepulture')) tgt += 4;
   if (v.hut && v.hut.kind === 'cave') tgt += Math.min(8, (colony.paintings || 0) * 2);
   tgt += builtMenhirs();
+  tgt += (built('theatre') ? 6 : 0) + (built('thermes') ? 3 : 0) + (built('church') ? 4 : 0);
   if (built('well')) tgt += 3; if (tech.tissage) tgt += 3; if (colony.hasChief) tgt += 5; if (tech.artisanat) tgt += 4;
   if (has(v, 'joyeux')) tgt += 10; if (has(v, 'grincheux')) tgt -= 8;
   if (v.partner && v.partner.alive) tgt += 4;
@@ -1622,6 +1640,7 @@ const CROPS = {
   ble: { name: 'Blé amidonnier', of: 'de blé amidonnier', food: 14, green: '#86b04c', ripe: '#e0b84a', stalk: '#7fa443', straw: '#cfae58', droop: 0 },
   orge: { name: 'Orge', of: 'd’orge', food: 12, green: '#9cc05a', ripe: '#ead07a', stalk: '#8cb04c', straw: '#d8c07a', droop: 1.05 },
   lin: { name: 'Lin', of: 'de lin', food: 4, green: '#6f8fd6', ripe: '#9a7a3a', stalk: '#6f9a48', straw: '#a99a5a', droop: 0 },
+  vigne: { name: 'Vigne', of: 'de vigne', food: 10, green: '#6e9a3e', ripe: '#4e2550', stalk: '#5e4a2e', straw: '#6e5a3a', droop: 0.5 },
 };
 const _e = new T.Euler(), _c2 = new T.Color();
 function fieldText(f) {
@@ -1674,6 +1693,14 @@ const GAUL = {
   door: new T.BoxGeometry(0.7, 1.1, 0.1).translate(0, 0.55, 1.61),
 };
 const GAUL_WALL = lam('#a88a5e');
+// maison gallo-romaine : murs de pierre enduits à la chaux, toit de tuiles (tegulae) en croupe, petit portique
+const TILE = lam('#b4553a'), PLASTER = lam('#e3d6bc'), RSTONE = lam('#c2b8a5'), BRICK = lam('#a4523a');
+const DOMUS = {
+  walls: new T.BoxGeometry(4.4, 1.7, 3.2).translate(0, 0.85, 0),
+  roof: merge([new T.ConeGeometry(3.25, 1.3, 4).rotateY(Math.PI / 4).scale(1.08, 1, 0.82).translate(0, 2.32, 0), new T.BoxGeometry(4.6, 0.12, 1.1).translate(0, 1.72, 2.05)]),
+  door: merge([new T.BoxGeometry(0.75, 1.15, 0.1).translate(0, 0.58, 1.62), ...[-1.9, -0.65, 0.65, 1.9].map(x => new T.CylinderGeometry(0.1, 0.11, 1.7, 7).translate(x, 0.85, 2.5))]),
+};
+const DOMUS_PORCH = lam('#d9cdb4');
 // habitations : hutte (Paléolithique), maison en torchis, maison longue danubienne, grande maison du chef (âge du bronze)
 const HOME = {
   hut: { cap: 3, cost: 12, clear: 2.6, spot: 4.2, parts: [[HG.walls, HM.walls], [HG.roof, HM.roof, 1], [HG.door, HM.door]] },
@@ -1681,6 +1708,7 @@ const HOME = {
   longhouse: { cap: 10, cost: 35, clear: 4.4, spot: 7.5, parts: [[LONG.walls, HOUSE_WALL], [LONG.roof, HM.roof, 1], [LONG.door, HM.door]] },
   chief: { cap: 8, cost: 30, clear: 4, spot: 7, parts: [[CHIEF.walls, HOUSE_WALL], [CHIEF.roof, HM.roof, 1], [CHIEF.door, HM.door]] },
   gaulish: { cap: 8, cost: 30, clear: 3.6, spot: 6, parts: [[GAUL.walls, GAUL_WALL], [GAUL.roof, HM.roof, 1], [GAUL.door, HM.door]] },
+  domus: { cap: 10, cost: 35, clear: 3.9, spot: 6.4, parts: [[DOMUS.walls, PLASTER], [DOMUS.roof, TILE, 1], [DOMUS.door, DOMUS_PORCH]] },
 };
 function addHutSite(at, kind = 'hut') {
   const H = HOME[kind];
@@ -1698,10 +1726,34 @@ function addHutSite(at, kind = 'hut') {
 // ================= Ouvrages : enclos, menhirs, puits, grenier, palissade, tumulus, forge, marché =================
 const works = [], sheep = [];
 const MENHIR_COUNT = 7;
-const BUILD_HOURS = { hut: 8, house: 12, longhouse: 18, chief: 16, gaulish: 14, field: 3, pen: 4, menhir: 5, well: 4, granary: 6, palisade: 16, tumulus: 10, forge: 6, market: 5, rampart: 24, nemeton: 8, jetty: 5 };
-const BUILD_LABEL = { jetty: 'Enfonce les pieux du ponton', gaulish: 'Bâtit une maison gauloise', rampart: 'Monte le rempart de l’oppidum', nemeton: 'Aménage le sanctuaire', hut: 'Construit une hutte', house: 'Bâtit une maison en torchis', longhouse: 'Bâtit une maison longue', chief: 'Bâtit la grande maison du chef', field: 'Prépare un champ', pen: 'Construit un enclos', menhir: 'Dresse un menhir', well: 'Creuse le puits', granary: 'Construit le grenier', palisade: 'Plante les pieux de la palissade', tumulus: 'Élève le tumulus', forge: 'Construit la forge', market: 'Monte les étals du marché' };
-const BUILD_DONE = { jetty: 'Achève le ponton.', gaulish: 'Achève une maison gauloise.', rampart: 'Pose la dernière poutre du rempart.', nemeton: 'Plante le dernier poteau du sanctuaire.', hut: 'Achève une hutte.', house: 'Achève une maison en torchis.', longhouse: 'Achève une maison longue.', chief: 'Achève la grande maison du chef.', field: 'Prépare un nouveau champ.', pen: 'Achève l’enclos à moutons.', menhir: 'Dresse un menhir avec les autres.', well: 'Trouve l’eau au fond du puits.', granary: 'Achève le grenier sur pilotis.', palisade: 'Plante le dernier pieu de la palissade.', tumulus: 'Achève le tumulus des ancêtres.', forge: 'Allume le premier feu de la forge.', market: 'Ouvre le marché.' };
-const WORK_INFO = { pen: { name: 'Enclos à moutons', cost: 10, clear: 4 }, menhir: { name: 'Menhir', cost: 0, clear: 1.6 }, well: { name: 'Puits', cost: 8, clear: 2 }, granary: { name: 'Grenier sur pilotis', cost: 15, clear: 2.6 }, palisade: { name: 'Palissade', cost: 30, clear: 0 }, tumulus: { name: 'Tumulus des ancêtres', cost: 0, clear: 4.5 }, forge: { name: 'Forge', cost: 15, clear: 2.6 }, market: { name: 'Marché', cost: 12, clear: 4 }, rampart: { name: 'Rempart de l’oppidum', cost: 60, clear: 0 }, nemeton: { name: 'Sanctuaire (nemeton)', cost: 20, clear: 5 }, jetty: { name: 'Ponton', cost: 12, clear: 0 } };
+// ---- monuments gallo-romains ----
+const ROMAN = {
+  // fanum : cella carrée en tour, entourée d'une galerie basse à colonnes (plan typique des temples de Gaule)
+  cella: new T.BoxGeometry(2.2, 3.2, 2.2).translate(0, 1.6, 0), cellaRoof: new T.ConeGeometry(1.75, 1.1, 4).rotateY(Math.PI / 4).translate(0, 3.75, 0),
+  gallery: new T.BoxGeometry(4.6, 0.25, 4.6).translate(0, 1.75, 0), galleryRoof: new T.CylinderGeometry(1.45, 3.45, 0.75, 4, 1, true).rotateY(Math.PI / 4).translate(0, 2.25, 0),
+  podium: new T.BoxGeometry(5, 0.35, 5).translate(0, 0.17, 0), column: new T.CylinderGeometry(0.11, 0.12, 1.45, 7).translate(0, 1.0, 0),
+  // thermes : salle longue, abside chauffée, coupole
+  bath: new T.BoxGeometry(5.2, 2, 3).translate(0, 1, 0), bathRoof: merge([new T.CylinderGeometry(1.6, 1.6, 5.4, 3).rotateX(-Math.PI / 2).rotateY(Math.PI / 2).scale(1, 0.45, 1).translate(0, 2.35, 0)]),
+  apse: new T.CylinderGeometry(1.3, 1.3, 1.9, 12, 1, false, 0, Math.PI).translate(2.6, 0.95, 0), dome: new T.SphereGeometry(1.1, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2).translate(-1.2, 2.1, 0),
+  basin: new T.BoxGeometry(2.4, 0.1, 1.4).translate(0, 0.08, 2.4),
+  // église paléochrétienne : nef, abside, petite façade
+  nave: new T.BoxGeometry(2.8, 2.2, 5.2).translate(0, 1.1, 0), naveRoof: merge([new T.CylinderGeometry(1.75, 1.75, 5.4, 3).rotateX(-Math.PI / 2).scale(1, 0.5, 1).translate(0, 2.65, 0)]),
+  churchApse: new T.CylinderGeometry(1.2, 1.2, 1.8, 12, 1, false, 0, Math.PI).rotateY(Math.PI / 2).translate(0, 0.9, -2.6),
+  churchDoor: new T.BoxGeometry(0.8, 1.3, 0.1).translate(0, 0.65, 2.62),
+  // voie : dalles posées sur le relief ; borne milliaire
+  slab: new T.BoxGeometry(2.6, 0.16, 1.5), milestone: merge([new T.CylinderGeometry(0.28, 0.32, 1.5, 9).translate(0, 0.75, 0), new T.BoxGeometry(0.75, 0.2, 0.75).translate(0, 0.1, 0)]),
+  // castrum : tours rondes de pierre à chaînages de brique
+  tower: new T.CylinderGeometry(1.15, 1.25, 3.6, 12).translate(0, 1.6, 0), towerBand: new T.CylinderGeometry(1.2, 1.2, 0.18, 12),
+  towerRoof: new T.ConeGeometry(1.45, 1.1, 12).translate(0, 3.95, 0),
+};
+// gradin : demi-anneau de pierre extrudé vers le haut (les rangs extérieurs sont plus hauts)
+function theatreTier(r, w, h) { const s = new T.Shape(); s.absarc(0, 0, r + w, 0, Math.PI, false); s.lineTo(-r, 0); s.absarc(0, 0, r, Math.PI, 0, true); s.lineTo(r + w, 0); return new T.ExtrudeGeometry(s, { depth: h, bevelEnabled: false, curveSegments: 20 }).rotateX(-Math.PI / 2); }
+const THEATRE_MAT = lam('#b3a994');
+const ROAD_MAT = lam('#9b958a');
+const BUILD_HOURS = { domus: 14, fanum: 12, thermes: 14, theatre: 16, church: 12, voie: 10, castrum: 20, hut: 8, house: 12, longhouse: 18, chief: 16, gaulish: 14, field: 3, pen: 4, menhir: 5, well: 4, granary: 6, palisade: 16, tumulus: 10, forge: 6, market: 5, rampart: 24, nemeton: 8, jetty: 5 };
+const BUILD_LABEL = { domus: 'Bâtit une maison de pierre', fanum: 'Élève le temple', thermes: 'Bâtit les thermes', theatre: 'Taille les gradins du théâtre', church: 'Bâtit l’église', voie: 'Pose les dalles de la voie', castrum: 'Élève une tour du castrum', jetty: 'Enfonce les pieux du ponton', gaulish: 'Bâtit une maison gauloise', rampart: 'Monte le rempart de l’oppidum', nemeton: 'Aménage le sanctuaire', hut: 'Construit une hutte', house: 'Bâtit une maison en torchis', longhouse: 'Bâtit une maison longue', chief: 'Bâtit la grande maison du chef', field: 'Prépare un champ', pen: 'Construit un enclos', menhir: 'Dresse un menhir', well: 'Creuse le puits', granary: 'Construit le grenier', palisade: 'Plante les pieux de la palissade', tumulus: 'Élève le tumulus', forge: 'Construit la forge', market: 'Monte les étals du marché' };
+const BUILD_DONE = { domus: 'Achève une maison de pierre à toit de tuiles.', fanum: 'Achève le fanum.', thermes: 'Allume le premier feu de l’hypocauste.', theatre: 'Pose le dernier gradin du théâtre.', church: 'Achève l’église.', voie: 'Pose la dernière dalle de la voie.', castrum: 'Achève la dernière tour du castrum.', jetty: 'Achève le ponton.', gaulish: 'Achève une maison gauloise.', rampart: 'Pose la dernière poutre du rempart.', nemeton: 'Plante le dernier poteau du sanctuaire.', hut: 'Achève une hutte.', house: 'Achève une maison en torchis.', longhouse: 'Achève une maison longue.', chief: 'Achève la grande maison du chef.', field: 'Prépare un nouveau champ.', pen: 'Achève l’enclos à moutons.', menhir: 'Dresse un menhir avec les autres.', well: 'Trouve l’eau au fond du puits.', granary: 'Achève le grenier sur pilotis.', palisade: 'Plante le dernier pieu de la palissade.', tumulus: 'Achève le tumulus des ancêtres.', forge: 'Allume le premier feu de la forge.', market: 'Ouvre le marché.' };
+const WORK_INFO = { pen: { name: 'Enclos à moutons', cost: 10, clear: 4 }, menhir: { name: 'Menhir', cost: 0, clear: 1.6 }, well: { name: 'Puits', cost: 8, clear: 2 }, granary: { name: 'Grenier sur pilotis', cost: 15, clear: 2.6 }, palisade: { name: 'Palissade', cost: 30, clear: 0 }, tumulus: { name: 'Tumulus des ancêtres', cost: 0, clear: 4.5 }, forge: { name: 'Forge', cost: 15, clear: 2.6 }, market: { name: 'Marché', cost: 12, clear: 4 }, rampart: { name: 'Rempart de l’oppidum', cost: 60, clear: 0 }, nemeton: { name: 'Sanctuaire (nemeton)', cost: 20, clear: 5 }, jetty: { name: 'Ponton', cost: 12, clear: 0 }, fanum: { name: 'Fanum', cost: 25, clear: 4 }, thermes: { name: 'Thermes', cost: 30, clear: 4 }, theatre: { name: 'Théâtre', cost: 35, clear: 7 }, church: { name: 'Église', cost: 25, clear: 3.6 }, voie: { name: 'Voie romaine', cost: 20, clear: 0 }, castrum: { name: 'Tours du castrum', cost: 40, clear: 0 } };
 const JETTY = { deck: new T.BoxGeometry(1.6, 0.14, 8), post: new T.CylinderGeometry(0.09, 0.1, 2.2, 6) };
 function jettySpot() {
   nearestShore({ x: 0, z: 0 });   // calcule les rivages si besoin
@@ -1778,7 +1830,7 @@ const penBuilt = () => works.find(w => w.kind === 'pen' && w.built);
 let WALL = null;   // enceinte active : { prof, gates }
 // Tracé de l'enceinte : elle fait le tour de tout ce qui doit être protégé (maisons, grottes habitées, puits, grenier,
 // forge, marché, enclos, réserves), avec une marge, puis se cale sur la terre ferme. Champs, menhirs et tumulus restent dehors.
-const WALL_SKIP = ['menhir', 'tumulus', 'palisade', 'rampart', 'jetty', 'nemeton'];
+const WALL_SKIP = ['menhir', 'tumulus', 'palisade', 'rampart', 'jetty', 'nemeton', 'theatre', 'voie', 'castrum'];
 const wallLand = (a, R) => { const h = heightAt(Math.cos(a) * R, Math.sin(a) * R); return h > 0.4 && h < 10; };
 // côté mer : pas d'enceinte, le rivage reste ouvert (le mur s'arrête avant la plage)
 function seaSide(a, R) {
@@ -1873,7 +1925,7 @@ function addWork(kind, at) {
   const W = WORK_INFO[kind], p = at; if (!p) return null;
   if (W.clear) clearArea(p.x, p.z, W.clear);
   const g = new T.Group(); g.position.set(p.x, heightAt(p.x, p.z) - 0.05, p.z);
-  if (kind !== 'menhir' && kind !== 'pen' && kind !== 'palisade') g.rotation.y = Math.atan2(-p.x, -p.z);
+  if (kind !== 'menhir' && kind !== 'pen' && kind !== 'palisade' && kind !== 'voie' && kind !== 'castrum') g.rotation.y = Math.atan2(-p.x, -p.z);
   const add = (geo, mat, x = 0, y = 0, z = 0) => { const m = new T.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; g.add(m); return m; };
   const w = { kind, x: p.x, z: p.z, progress: 0, built: false, paid: false, cost: W.cost, mesh: g, gone: false, res: null };
   if (kind === 'pen') {
@@ -1913,6 +1965,42 @@ function addWork(kind, at) {
     for (const [x, z, r] of [[0, -4, 0], [0, 4, 0], [-4, 0, Math.PI / 2], [4, 0, Math.PI / 2]]) add(NEMETON.ditch, DARK_WOOD, x, -0.05, z).rotation.y = r;
     for (let i = 0; i < 12; i++) { const t = i / 12 * Math.PI * 2; add(NEMETON.post, PEN_WOOD, Math.cos(t) * 3.4, 0, Math.sin(t) * 3.4); }
     add(NEMETON.trunk, TRUNK_MAT); add(NEMETON.crown, OAK); add(NEMETON.altar, STONE_MAT, 0, 0, 1.8);
+  } else if (kind === 'fanum') {
+    add(ROMAN.podium, RSTONE); add(ROMAN.cella, PLASTER); add(ROMAN.cellaRoof, TILE); add(ROMAN.gallery, RSTONE); add(ROMAN.galleryRoof, TILE);
+    for (let i = 0; i < 16; i++) { const s = i % 4, k = Math.floor(i / 4), t = -1.95 + k * 1.3; const [x, z] = [[t, -2.05], [2.05, t], [-t, 2.05], [-2.05, -t]][s]; add(ROMAN.column, PLASTER, x, 0.3, z); }
+  } else if (kind === 'thermes') {
+    add(ROMAN.bath, PLASTER); add(ROMAN.bathRoof, TILE); add(ROMAN.apse, RSTONE); add(ROMAN.dome, RSTONE); add(ROMAN.basin, WATER_MAT);
+  } else if (kind === 'church') {
+    add(ROMAN.nave, PLASTER); add(ROMAN.naveRoof, TILE); add(ROMAN.churchApse, PLASTER); add(ROMAN.churchDoor, HM.door);
+  } else if (kind === 'theatre') {
+    // gradins en demi-cercle adossés au terrain, scène et mur de scène face aux spectateurs
+    for (let row = 0; row < 4; row++) add(theatreTier(3.3 + row * 0.95, 0.95, 0.45 * (row + 1) + 0.3), row % 2 ? RSTONE : THEATRE_MAT, 0, -0.3, -0.6);
+    add(new T.BoxGeometry(5.2, 0.4, 1.7).translate(0, 0.2, 0), PLASTER, 0, 0, 0.9); add(new T.BoxGeometry(5.6, 2.2, 0.35).translate(0, 1.1, 0), PLASTER, 0, 0, 1.9);
+  } else if (kind === 'voie') {
+    // la voie sort par la porte principale (et, s'il y en a une, ressort par la deuxième), dalle après dalle
+    g.position.set(0, 0, 0);
+    const angs = (colony.wallGates && colony.wallGates.length ? colony.wallGates.slice(0, 2) : [colony.roadA ?? 0.6]); colony.roadA = angs[0];
+    const pts = []; for (const a of angs) for (let r = 5; r <= 64; r += 1.45) { const x = Math.cos(a) * r, z = Math.sin(a) * r, h = heightAt(x, z); if (h > 0.35 && h < 9) pts.push([x, h, z, a]); }
+    const slabs = new T.InstancedMesh(ROMAN.slab, ROAD_MAT, Math.max(1, pts.length));
+    pts.forEach(([x, h, z, a], i) => { _q.setFromAxisAngle(UP, Math.atan2(Math.cos(a), Math.sin(a))); _p.set(x, h + 0.03, z); _s.set(1, 1, 1); slabs.setMatrixAt(i, _m.compose(_p, _q, _s)); for (const t of trees) if (t.state !== 'gone' && Math.hypot(t.x - x, t.z - z) < 2) setTreeState(t, 'gone'); });
+    slabs.receiveShadow = true; slabs.frustumCulled = false; g.add(slabs);
+    const a0 = angs[0], R0 = (colony.wallProf ? profR(colony.wallProf, a0) + 4 : 20), mx = Math.cos(a0) * R0 - Math.sin(a0) * 2.2, mz = Math.sin(a0) * R0 + Math.cos(a0) * 2.2;
+    add(ROMAN.milestone, RSTONE, mx, heightAt(mx, mz), mz);
+    w.inst = [[slabs, 1]]; w.nInst = pts.length;
+  } else if (kind === 'castrum') {
+    // tours rondes le long du rempart : une de chaque côté des portes, puis régulièrement espacées
+    g.position.set(0, 0, 0);
+    const wall = works.find(x => x.kind === 'rampart') || works.find(x => x.kind === 'palisade'), prof = wall ? wall.prof : Float32Array.from({ length: 128 }, () => colony.palR || 24);
+    const gates = (wall && wall.gates) || [], spots = [];
+    for (const gt of gates) for (const sgn of [-1, 1]) spots.push(gt.a + sgn * 3.4 / gt.R);
+    const n = Math.floor(Math.PI * 2 * (colony.palR || 24) / 13); for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; if (spots.every(b => angDiff(a, b) * (colony.palR || 24) > 6)) spots.push(a); }
+    const ok = spots.map(a => [a, profR(prof, a)]).filter(([a, R]) => wallLand(a, R) && !seaSide(a, R));
+    const body = new T.InstancedMesh(ROMAN.tower, RSTONE, ok.length || 1), band = new T.InstancedMesh(ROMAN.towerBand, BRICK, (ok.length || 1) * 2), roofI = new T.InstancedMesh(ROMAN.towerRoof, TILE, ok.length || 1);
+    ok.forEach(([a, R], i) => { const x = Math.cos(a) * R, z = Math.sin(a) * R, h = heightAt(x, z); _q.identity(); _s.set(1, 1, 1);
+      _p.set(x, h - 0.2, z); body.setMatrixAt(i, _m.compose(_p, _q, _s)); roofI.setMatrixAt(i, _m.compose(_p, _q, _s));
+      _p.set(x, h + 0.9, z); band.setMatrixAt(i * 2, _m.compose(_p, _q, _s)); _p.set(x, h + 2.2, z); band.setMatrixAt(i * 2 + 1, _m.compose(_p, _q, _s)); });
+    for (const im of [body, band, roofI]) { im.castShadow = im.receiveShadow = true; im.frustumCulled = false; g.add(im); }
+    w.inst = [[body, 1], [band, 2], [roofI, 1]]; w.nInst = ok.length;
   } else if (kind === 'rampart' || kind === 'palisade') {
     // Enceinte qui épouse le terrain : elle s'arrête avant l'eau et longe la rive (le lac ou la mer protège ce côté).
     // Palissade de pieux au Néolithique ; murus gallicus (pierre lacée de poutres) pour l'oppidum, qui la remplace.
@@ -1979,7 +2067,14 @@ const ART_COLORS = ['ocre rouge', 'charbon', 'ocre jaune'];
 const INK = '#17100a', PIG = [['#c0582f', '#7e2c16', '#e2a067'], ['#4a3a30', '#1f1712', '#6a5a4c'], ['#e0a642', '#a8681e', '#f3d391']];
 const HEAD_X = { cerf: 104, aurochs: 112, cheval: 100, mammouth: 106, rhino: 112, chasse: 118 };
 const circ = (x, y, r) => `M${x - r} ${y} a${r} ${r} 0 1 0 ${2 * r} 0 a${r} ${r} 0 1 0 ${-2 * r} 0`;
-const handPath = (dx, dy) => { const P = (x, y) => `${x + dx} ${y + dy}`; return `M${P(40, 92)} C${P(30, 92)} ${P(28, 76)} ${P(32, 68)} L${P(30, 46)} C${P(30, 42)} ${P(35, 42)} ${P(36, 46)} L${P(38, 62)} L${P(39, 40)} C${P(39, 36)} ${P(44, 36)} ${P(44, 40)} L${P(45, 62)} L${P(47, 42)} C${P(47, 38)} ${P(52, 38)} ${P(52, 42)} L${P(51, 64)} L${P(55, 50)} C${P(56, 46)} ${P(60, 47)} ${P(59, 51)} L${P(56, 76)} C${P(54, 88)} ${P(48, 92)} ${P(40, 92)} Z`; };
+// main gauche ouverte, paume contre la paroi : pouce écarté sur le côté, quatre doigts en léger éventail
+const handPath = (dx, dy) => { const P = (x, y) => `${(x + dx).toFixed(1)} ${(y + dy).toFixed(1)}`; return `M${P(38, 94)} C${P(35, 88)} ${P(33, 81)} ${P(33, 75)}`
+  + ` C${P(29, 73)} ${P(25, 69)} ${P(22, 64)} C${P(20, 60)} ${P(22, 55.5)} ${P(26, 57)} C${P(29.5, 58.5)} ${P(32, 62)} ${P(34.5, 64)}`   // pouce
+  + ` L${P(30.5, 46)} C${P(30, 42)} ${P(35, 41)} ${P(35.8, 45)} L${P(39, 61.5)}`   // index
+  + ` L${P(40.3, 61.5)} L${P(40, 39)} C${P(40, 35)} ${P(45.2, 35)} ${P(45.2, 39)} L${P(45.6, 61.5)}`   // majeur
+  + ` L${P(47, 62.5)} L${P(49, 42)} C${P(49.5, 38)} ${P(54.5, 39)} ${P(53.8, 43)} L${P(52.6, 63.5)}`   // annulaire
+  + ` L${P(54, 65.5)} L${P(58, 52.5)} C${P(59.3, 49)} ${P(63.5, 50.5)} ${P(62.2, 54.5)} L${P(58.6, 69)}`   // auriculaire
+  + ` C${P(58.5, 76)} ${P(56.5, 82)} ${P(54, 88)} C${P(53, 91)} ${P(52, 93)} ${P(51, 94)} Z`; };
 const SIGN_DOTS = []; for (let i = 0; i < 11; i++) { SIGN_DOTS.push([22 + i * 8.5, 40 + 12 * Math.sin(i / 10 * Math.PI)]); SIGN_DOTS.push([26 + i * 8, 64 + 10 * Math.sin(i / 10 * Math.PI + 0.6)]); }
 // signes de Lascaux : rangées de points et « blason » quadrillé (cases teintes)
 const SIGN_LINES = 'M116 30 h32 v26 h-32 Z M116 39 h32 M116 48 h32 M126.6 30 v26 M137.3 30 v26 M120 70 L120 96 M132 66 L132 98 M144 70 L144 94';
@@ -2143,7 +2238,7 @@ function addPainting(c, v) {
 function addFieldSite(at, crop) {
   const p = at || findSpot(13, 21 + fields.length * 0.6, 5.5); if (!p) return;
   clearArea(p.x, p.z, 3.4);
-  crop = crop || (tech.tissage && !fields.some(f => f.crop === 'lin') ? 'lin' : fields.filter(f => f.crop === 'ble').length <= fields.filter(f => f.crop === 'orge').length ? 'ble' : 'orge');
+  crop = crop || (tech.vigne && !fields.some(f => f.crop === 'vigne') ? 'vigne' : tech.tissage && !fields.some(f => f.crop === 'lin') ? 'lin' : fields.filter(f => f.crop === 'ble').length <= fields.filter(f => f.crop === 'orge').length ? 'ble' : 'orge');
   // parcelle organique : contour irrégulier, terre labourée en sillons qui épouse le relief, bord herbeux fondu
   const rot = Math.atan2(-p.x, -p.z), cr = Math.cos(rot), sr = Math.sin(rot), ph1 = rr(0, 6.28), ph2 = rr(0, 6.28), RX = 3.4, RZ = 2.5;
   const shape = th => 1 + 0.15 * Math.sin(3 * th + ph1) + 0.08 * Math.sin(5 * th + ph2);
@@ -2176,6 +2271,7 @@ function syncSite(s) {
   if (HOME[s.kind]) { s.mesh.scale.set(1, 0.06 + 0.94 * s.progress, 1); if (s.roof) s.roof.visible = s.progress > 0.5; }
   else if (s.kind === 'field') syncField(s);
   else if (s.kind === 'menhir') { s.stone.rotation.x = (1 - smooth(0, 1, s.progress)) * 1.45; s.stone.rotation.z = s.tilt; s.logs.visible = !s.built; }
+  else if (s.inst) { const k = Math.floor(s.nInst * s.progress); for (const [im, per] of s.inst) im.count = k * per; }
   else if (s.kind === 'palisade' || s.kind === 'rampart') { s.stakes.count = Math.floor(s.nStakes * s.progress); if (s.beams) s.beams.count = s.stakes.count * 2; for (const gt of s.gates || []) if (gt.group) gt.group.visible = s.progress > 0.95; }
   else s.mesh.scale.set(1, 0.08 + 0.92 * s.progress, 1);
 }
@@ -2204,6 +2300,13 @@ function completeSite(s) {
   if (s.kind === 'palisade' || s.kind === 'rampart') { refreshWall(); milestone('build:' + s.kind, 0, 0); }
   else if (s.kind !== 'field') milestone('build:' + s.kind, s.x, s.z);
   if (s.kind === 'gaulish') log('Une maison gauloise est terminée : +8 places.', 'good');
+  else if (s.kind === 'domus') log('Une maison de pierre à toit de tuiles est terminée : +10 places.', 'good');
+  else if (s.kind === 'fanum') log('Le fanum est consacré aux dieux de la cité.', 'good');
+  else if (s.kind === 'thermes') log('Les thermes ouvrent : bains chauds, tièdes et froids pour tous.', 'good');
+  else if (s.kind === 'theatre') log('Le théâtre est achevé : on y donnera des jeux et des chants.', 'good');
+  else if (s.kind === 'church') log('L’église est consacrée.', 'good');
+  else if (s.kind === 'voie') log('La voie romaine est achevée : la borne milliaire indique la route de Condevincum.', 'good');
+  else if (s.kind === 'castrum') log('Les tours du castrum se dressent sur le rempart.', 'good');
   else if (s.kind === 'jetty') log('Le ponton est terminé : les bateaux peuvent accoster.', 'good');
   else if (s.kind === 'rampart') log('Le rempart de l’oppidum est achevé.', 'good');
   else if (s.kind === 'nemeton') log('Le sanctuaire des druides est consacré.', 'good');
@@ -2232,16 +2335,24 @@ function destroyHut(h) {
 }
 function manageSites() {
   updateCaveRoles(); syncCaveDeco();
-  const homeKind = tech.oppidum ? 'gaulish' : tech.maisonlongue ? 'longhouse' : tech.torchis ? 'house' : 'hut';
-  if (tech.huttes && huts.length < 24 && !huts.some(h => !h.built) && (tech.torchis ? homesCap() : housingCap()) < villagers.length + 4 && villagers.length < popMax()) addHutSite(null, homeKind);
+  const homeKind = tech.tuiles ? 'domus' : tech.oppidum ? 'gaulish' : tech.maisonlongue ? 'longhouse' : tech.torchis ? 'house' : 'hut';
+  if (tech.huttes && huts.length < (tech.tuiles ? 30 : 24) && !huts.some(h => !h.built) && (tech.torchis ? homesCap() : housingCap()) < villagers.length + 4 && villagers.length < popMax()) addHutSite(null, homeKind);
   if (tech.chefferie && !huts.some(h => h.kind === 'chief')) addHutSite(null, 'chief');
+  // les vieilles maisons sont peu à peu rebâties en pierre et tuiles, sans jamais laisser personne sans toit
+  if (tech.tuiles && !huts.some(h => !h.built) && Math.random() < 0.08) {
+    const old = huts.filter(h => h.built && h.kind !== 'domus' && h.kind !== 'chief').sort((a, b) => (HOME[a.kind].cap - HOME[b.kind].cap))[0];
+    if (old && homesCap() - old.cap >= villagers.length) { const at = { x: old.x, z: old.z }; destroyHut(old); addHutSite(at, 'domus'); assignHuts(); log('Une vieille maison est rebâtie en pierre, avec un toit de tuiles.', 'good'); }
+  }
   const maxF = tech.araire ? 12 : 8;
   if (tech.agri && fields.length < maxF && !fields.some(f => !f.built) && fields.length < Math.max(2, Math.ceil(villagers.length / (tech.araire ? 2.5 : 3)))) addFieldSite();
   const once = (ok, kind, r0, r1, clr) => { if (ok && !works.some(w => w.kind === kind)) { const p = findSpot(r0, r1, clr, !WALL_SKIP.includes(kind)) || findSpot(4, 34, clr * 0.8, !WALL_SKIP.includes(kind)); if (p) addWork(kind, p); } };
   once(tech.elevage, 'pen', 14, 22, 7); once(tech.puits, 'well', 4.5, 9, 3); once(tech.grenier, 'granary', 6, 12, 4);
   once(tech.sepultures, 'tumulus', 18, 28, 7); once(tech.cuivre, 'forge', 7, 13, 4); once(tech.commerce, 'market', 6, 12, 5);
   if (tech.palissade && !works.some(w => w.kind === 'palisade')) addWork('palisade', { x: 0, z: 0 });
-  once(tech.druides, 'nemeton', 16, 28, 7);
+  once(tech.druides && !tech.fanum, 'nemeton', 16, 28, 7);
+  once(tech.fanum, 'fanum', 8, 16, 5); once(tech.thermes, 'thermes', 6, 14, 4.5); once(tech.theatre, 'theatre', 18, 34, 8); once(tech.christ, 'church', 6, 14, 4.2);
+  if (tech.voie && !works.some(w => w.kind === 'voie')) addWork('voie', { x: 0, z: 0 });
+  if (tech.castrum && works.some(w => (w.kind === 'rampart' || w.kind === 'palisade') && w.built) && !works.some(w => w.kind === 'castrum')) addWork('castrum', { x: 0, z: 0 });
   if (tech.commerce && !works.some(w => w.kind === 'jetty')) { const s = jettySpot(); if (s) addWork('jetty', s); }
   if (tech.oppidum && !works.some(w => w.kind === 'rampart')) addWork('rampart', { x: 0, z: 0 });
   if (tech.megalithes) {
@@ -2407,6 +2518,8 @@ function flash(x, z, color) {
   const l = new T.PointLight(color, 4, 30, 1.5); l.position.set(x, Math.max(heightAt(x, z), 0) + 4, z); scene.add(l);
   effects.push({ age: 0, update(dt) { this.age += dt; l.intensity = 4 * (1 - this.age / 0.8); if (this.age >= 0.8) { scene.remove(l); return false; } return true; } });
 }
+// ombre d'averse : disque bleu-gris aux bords très doux
+const RAIN_SHADE = (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, 'rgba(28,38,52,.75)'); gr.addColorStop(0.55, 'rgba(28,38,52,.45)'); gr.addColorStop(1, 'rgba(28,38,52,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128); return new T.CanvasTexture(c); })();
 // opt : R (rayon), hours (durée), natural (pluie naturelle : ne noie pas le foyer abrité), snow (flocons)
 function startRain(x, z, opt = {}) {
   const R = opt.R ?? 16, N = Math.min(2600, Math.round(900 * (R / 16) ** 2)), base = Math.max(heightAt(x, z), 0), snow = !!opt.snow;
@@ -2415,9 +2528,11 @@ function startRain(x, z, opt = {}) {
   geo.setAttribute('position', new T.BufferAttribute(pos, 3));
   const mat = new T.PointsMaterial(snow ? { color: '#ffffff', size: 0.34, map: dotTex, transparent: true, opacity: 0.9, depthWrite: false } : { color: '#cfe3f3', size: 0.2, transparent: true, opacity: 0.75, depthWrite: false });
   const pts = new T.Points(geo, mat); pts.frustumCulled = false; scene.add(pts);
-  const cloud = new T.Group(), cm = new T.MeshLambertMaterial({ color: snow ? '#a9b0b8' : '#7d8590', transparent: true, opacity: 0.9 }), nc = Math.round(9 * R / 16);
-  for (let i = 0; i < nc; i++) { const c = new T.Mesh(new T.IcosahedronGeometry(1, 1), cm); c.scale.set(rr(4, 7.5), rr(1.3, 2.2), rr(4, 7.5)); c.position.set(rr(-R * 0.6, R * 0.6), rr(-0.6, 0.8), rr(-R * 0.6, R * 0.6)); cloud.add(c); }
-  cloud.position.set(x, base + 24, z); scene.add(cloud);
+  // pas de nuages entre la caméra et le village : l'averse se lit à l'ombre douce qu'elle pose sur le sol
+  const S = R * 2.4, sg = new T.PlaneGeometry(S, S, 28, 28).rotateX(-Math.PI / 2), sp = sg.attributes.position;
+  for (let i = 0; i < sp.count; i++) sp.setY(i, Math.max(heightAt(x + sp.getX(i), z + sp.getZ(i)), 0) + 0.12);
+  const cm = new T.MeshBasicMaterial({ map: RAIN_SHADE, color: snow ? '#cfd8e0' : '#ffffff', transparent: true, opacity: snow ? 0.35 : 0.55, depthWrite: false });
+  const cloud = new T.Mesh(sg, cm); cloud.position.set(x, 0, z); cloud.renderOrder = 1; scene.add(cloud);
   rains.push({ x, z, R, left: opt.hours ?? 10, pts, cloud, geo, pos, ground, ox, mat, cm, N, fade: 1, snow, vy: snow ? 3.5 : 28 });
   if (snow) return;
   // effets immédiats
@@ -2434,7 +2549,7 @@ function updateRains(dt, simOn) {
       if (r.pos[i * 3 + 1] < r.ground[i]) { r.pos[i * 3 + 1] = r.ground[i] + 22; r.pos[i * 3] = r.ox[i * 2]; r.pos[i * 3 + 2] = r.ox[i * 2 + 1]; }
     }
     r.geo.attributes.position.needsUpdate = true;
-    if (r.left <= 0) { r.fade -= dt * 0.6; r.mat.opacity = 0.75 * r.fade; r.cm.opacity = 0.9 * r.fade; if (r.fade <= 0) { scene.remove(r.pts, r.cloud); r.geo.dispose(); rains.splice(k, 1); } }
+    if (r.left <= 0) { r.fade -= dt * 0.6; r.mat.opacity = 0.75 * r.fade; r.cm.opacity = (r.snow ? 0.35 : 0.55) * r.fade; if (r.fade <= 0) { scene.remove(r.pts, r.cloud); r.geo.dispose(); r.cloud.geometry.dispose(); rains.splice(k, 1); } }
   }
 }
 
@@ -2528,10 +2643,24 @@ const TECHS = [
   { id: 'druides', name: 'Druides', tier: 10, cost: 80, year: -300, req: ['fer', 'sepultures'], desc: 'Un sanctuaire, le nemeton (20 bois) : plus de mana, des malades mieux soignés, un savoir transmis de mémoire.' },
   { id: 'monnaie', name: 'Monnaie', tier: 10, cost: 80, year: -250, req: ['fer', 'commerce'], desc: 'Les premières pièces gauloises, copiées sur celles des Grecs : les marchands passent deux fois plus souvent.' },
   { id: 'oppidum', name: 'Oppidum', tier: 10, cost: 95, year: -150, req: ['fer', 'guerriers', 'palissade'], desc: 'Un rempart de pierre, de terre et de poutres (60 bois) et de grandes maisons gauloises : le village devient une ville.' },
-  { id: 'rome', name: 'Le contact avec Rome', tier: 11, cost: 140, year: -52, req: ['oppidum', 'monnaie', 'druides'], desc: 'Le vin, puis les légions : la Gaule entre dans l’histoire écrite. Fin de la protohistoire.' },
+  { id: 'rome', name: 'La conquête romaine', tier: 11, cost: 140, year: -52, req: ['oppidum', 'monnaie', 'druides'], desc: 'Le vin, puis les légions de César : Alésia tombe, la Gaule entre dans l’histoire écrite. Début de l’Antiquité.' },
+  // ---- Antiquité gallo-romaine (52 av. J.-C. – 476) : cité des Namnètes, port de Ratiatum (Rezé) ----
+  { id: 'pax', name: 'Paix romaine', tier: 12, cost: 100, year: -27, req: ['rome'], desc: 'Auguste organise la Gaule : les raids se font rares, mais le collecteur de la cité prélève l’impôt sur les réserves. Le chef devient magistrat.' },
+  { id: 'voie', name: 'Voie romaine', tier: 12, cost: 100, year: -20, req: ['pax'], desc: 'Une route empierrée traverse le village, avec sa borne milliaire : on marche plus vite, les marchands passent plus souvent.' },
+  { id: 'latin', name: 'Latin et écriture', tier: 12, cost: 90, year: 10, req: ['pax'], desc: 'Tablettes de cire, inscriptions sur pierre : le savoir s’accumule 30 % plus vite. Un scribe tient les comptes.' },
+  { id: 'tuiles', name: 'Tuiles et mortier', tier: 12, cost: 110, year: 30, req: ['voie'], desc: 'Maisons de pierre à toit de tuiles rouges (35 bois, 10 places) : elles remplacent le chaume, et la population peut encore grandir.' },
+  { id: 'fanum', name: 'Fanum gallo-romain', tier: 12, cost: 110, year: 50, req: ['latin', 'tuiles'], desc: 'Un temple carré à galerie (25 bois) pour les dieux gaulois et romains. Le druidisme est interdit par l’empereur Claude : le druide devient prêtre.' },
+  { id: 'vallus', name: 'Moissonneuse gauloise', tier: 12, cost: 90, year: 60, req: ['voie'], desc: 'Le vallus, décrit par Pline : une caisse à dents poussée par un bœuf. Les champs rapportent 30 % de plus.' },
+  { id: 'thermes', name: 'Thermes et aqueduc', tier: 12, cost: 120, year: 80, req: ['tuiles'], desc: 'Bains chauds, tièdes et froids (30 bois), eau courante amenée par un aqueduc : bien moins d’épidémies, meilleure santé.' },
+  { id: 'vigne', name: 'La vigne', tier: 12, cost: 100, year: 150, req: ['vallus'], desc: 'La vigne gagne la Gaule : une vigne près du village, du vin pour les fêtes et le commerce.' },
+  { id: 'theatre', name: 'Théâtre', tier: 12, cost: 120, year: 120, req: ['fanum'], desc: 'Un théâtre près du sanctuaire (35 bois), comme à Gennes en Anjou : jeux, chants et fêtes, le bien-être grimpe.' },
+  { id: 'crise', name: 'Crise du IIIe siècle', tier: 13, cost: 120, year: 260, req: ['theatre', 'thermes'], desc: 'L’Empire vacille : bandes germaniques et pirates saxons ravagent la Gaule. Les raids redeviennent fréquents.' },
+  { id: 'castrum', name: 'Castrum', tier: 13, cost: 120, year: 280, req: ['crise'], desc: 'Le rempart est renforcé de tours rondes en pierre et brique (40 bois) : les assaillants sont bien mieux repoussés.' },
+  { id: 'christ', name: 'Christianisme', tier: 13, cost: 120, year: 370, req: ['crise'], desc: 'Saint Martin évangélise les campagnes : une église (25 bois), un prêtre, plus de bien-être et de mana.' },
+  { id: 'chute', name: 'La fin de l’Empire', tier: 13, cost: 150, year: 476, req: ['castrum', 'christ'], desc: 'En 476, le dernier empereur d’Occident est déposé. Les Francs de Clovis approchent : fin de l’Antiquité.' },
 ];
 const TECH = Object.fromEntries(TECHS.map(t => [t.id, t]));
-const TIER_NAMES = ['', 'Paléolithique · Chasseurs-cueilleurs', 'Paléolithique · Artisans', 'Fin de la glaciation', 'Sédentarisation', 'Néolithique · Le village', 'Néolithique · Coutumes et ouvrages', 'Âge du cuivre', 'Âge du bronze', 'Âge du fer · Hallstatt', 'Âge du fer · Les Gaulois', 'Vers l’Antiquité'];
+const TIER_NAMES = ['', 'Paléolithique · Chasseurs-cueilleurs', 'Paléolithique · Artisans', 'Fin de la glaciation', 'Sédentarisation', 'Néolithique · Le village', 'Néolithique · Coutumes et ouvrages', 'Âge du cuivre', 'Âge du bronze', 'Âge du fer · Hallstatt', 'Âge du fer · Les Gaulois', 'Vers l’Antiquité', 'Antiquité · La Gaule romaine', 'Antiquité tardive'];
 const ERAS = [['rome', 'Antiquité', 'dans l’Antiquité'], ['fer', 'Âge du fer', 'dans l’âge du fer'], ['bronze', 'Âge du bronze', 'dans l’âge du bronze'], ['cuivre', 'Âge du cuivre', 'dans l’âge du cuivre'], ['village', 'Néolithique', 'dans le Néolithique']];
 function era() { for (const [id, n, into] of ERAS) if (tech[id]) return { n, into }; return Object.keys(tech).length >= 7 ? { n: 'Mésolithique', into: 'dans le Mésolithique' } : { n: 'Paléolithique supérieur', into: 'dans le Paléolithique supérieur' }; }
 const eraName = () => era().n;
@@ -2541,7 +2670,7 @@ function research(id) {
   sfx(ERA_TEXT[id] || id === 'village' ? 'era' : 'tech');
   colony.know -= t.cost; tech[id] = true; colony.lastTech = id;
   const eraBefore = eraName();
-  colony.year = Math.max(colony.year + 150, t.year);
+  colony.year = Math.max(colony.year + (tech.pax ? 10 : 150), t.year);   // l'Antiquité est datée finement
   log(`La tribu découvre : ${t.name}. Nous voici en ${yearText(colony.year)}.`, 'know');
   if (eraName() !== eraBefore) log(`La tribu entre ${era().into}.`, 'know');
   manageSites();
@@ -2552,11 +2681,24 @@ function research(id) {
 
 // ================= Événements à choix =================
 const EVENTS = [
+  { when: () => tech.pax, title: 'Un marchand d’amphores', text: 'Un négociant arrivé par la voie propose du vin d’Italie, de l’huile de Bétique et du garum, la sauce de poisson dont raffolent les Romains.',
+    choices: [
+      { label: 'Acheter pour le banquet', hint: '-15 nourriture, bien-être en hausse, +6 savoir.', cond: () => colony.food >= 15, fx() { colony.food -= 15; colony.mood += 14; colony.know += 6; log('Le vin d’Italie coule au banquet du vicus.', 'good'); } },
+      { label: 'Lui vendre des tonneaux de cervoise', hint: '+10 bois, +8 savoir.', cond: () => tech.tonneau, fx() { colony.wood = Math.min(woodCap(), colony.wood + 10); colony.know += 8; log('La cervoise du vicus partira jusqu’à Burdigala.', 'good'); } },
+      { label: 'Passer son chemin', hint: 'Rien ne change.', fx() { } }] },
+  { when: () => tech.pax && !tech.crise, title: 'Le recensement', text: 'Un fonctionnaire de la cité vient compter les habitants, les terres et les bêtes, pour fixer l’impôt.',
+    choices: [
+      { label: 'Déclarer honnêtement', hint: '-12 nourriture, +10 savoir : les registres sont précis.', cond: () => colony.food >= 12, fx() { colony.food -= 12; colony.know += 10; } },
+      { label: 'Cacher une partie des récoltes', hint: 'Risqué : une amende si on découvre la ruse.', fx() { if (Math.random() < 0.4) { colony.food = Math.max(0, colony.food - 30); colony.mood -= 8; log('La ruse est découverte : lourde amende pour le vicus.', 'bad'); } else { colony.mood += 4; log('Le recenseur n’a rien vu.', 'good'); } } }] },
+  { when: () => tech.crise && COAST, title: 'Des voiles saxonnes', text: 'Des barques de pirates saxons croisent au large. Les guetteurs allument un feu sur la falaise.',
+    choices: [
+      { label: 'Les attendre sur la plage', hint: 'Un combat, mais préparé.', cond: () => villagers.filter(v => v.adult).length >= 2 && !raid, fx() { startRaid(true); } },
+      { label: 'Cacher les réserves et prier', hint: '-10 nourriture, +10 mana.', fx() { colony.food = Math.max(0, colony.food - 10); colony.mana = Math.min(100, colony.mana + 10); log('Les barques s’éloignent vers le sud.', 'power'); } }] },
   { when: () => tech.fer, title: 'Des marchands de Massalia', text: 'Des marchands grecs ont remonté le Rhône avec des amphores de vin et de la vaisselle peinte.',
     choices: [
       { label: 'Échanger du grain et des peaux', hint: '-20 nourriture, +15 savoir, bien-être en hausse.', cond: () => colony.food >= 20, fx() { colony.food -= 20; colony.know += 15; colony.mood += 12; log('Le vin grec coule au banquet du village.', 'good'); } },
       { label: 'Refuser le vin', hint: 'Le village reste sobre.', fx() { } }] },
-  { when: () => built('nemeton'), title: 'Le gui du chêne sacré', text: 'Au sixième jour de la lune, les druides veulent cueillir le gui avec une serpe d’or.',
+  { when: () => built('nemeton') && !tech.fanum, title: 'Le gui du chêne sacré', text: 'Au sixième jour de la lune, les druides veulent cueillir le gui avec une serpe d’or.',
     choices: [
       { label: 'Célébrer le rite', hint: '-10 nourriture, +25 mana, +8 savoir.', cond: () => colony.food >= 10, fx() { colony.food -= 10; colony.mana = Math.min(100, colony.mana + 25); colony.know += 8; log('Le gui est cueilli sous le chêne sacré.', 'power'); } },
       { label: 'Reporter la cérémonie', hint: 'Les druides sont mécontents.', fx() { colony.mood -= 6; } }] },
@@ -2661,14 +2803,14 @@ function startRaid(warned) {
   const n = raidSize(), a = rr(0, 6.28), c = landPoint(Math.cos(a) * 56, Math.sin(a) * 56, 6);
   raid = { n, fallen: 0, escaped: 0, loot: 0, torched: false, breached: false, warned };
   for (let i = 0; i < n; i++) { const p = landPoint(c.x, c.z, 4); raiders.push({ raider: true, x: p.x, z: p.z, face: 0, hp: 2, state: 'approach', t: 0, moving: false, walkT: rr(0, 9), carry: 0, alive: true, mesh: makeRaiderMesh() }); }
-  log(warned ? `Les ${n} pillards descendent de la colline. Aux armes !` : `Alerte ! ${n} pillards surgissent des collines. Les enfants courent se cacher.`, 'bad');
+  log(warned ? `Les ${n} pillards descendent de la colline. Aux armes !` : tech.crise ? (COAST && Math.random() < 0.5 ? `Alerte ! ${n} pirates saxons ont débarqué sur la côte. Les enfants courent se cacher.` : `Alerte ! Une bande de ${n} Germains ravage la campagne. Les enfants courent se cacher.`) : `Alerte ! ${n} pillards surgissent des collines. Les enfants courent se cacher.`, 'bad');
   cam.tx = lerp(cam.tx, c.x, 0.4); cam.tz = lerp(cam.tz, c.z, 0.4);
 }
 function nearestRaider(v) { let b = null, bd = Infinity; for (const r of raiders) { if (!r.alive || r.state === 'flee' && Math.hypot(r.x, r.z) > 40) continue; const d = (r.x - v.x) ** 2 + (r.z - v.z) ** 2; if (d < bd) { bd = d; b = r; } } return b; }
 function raiderGone(r) { r.alive = false; scene.remove(r.mesh); }
 function fight(v, r) {
   const atWall = r.state === 'siege';
-  const hit = 0.35 + (tech.bronze ? 0.1 : 0) + (tech.fer ? 0.1 : 0) + (v.job === 'guerrier' ? 0.15 : 0) + (has(v, 'chasseur') ? 0.05 : 0) + (atWall ? 0.12 : 0);
+  const hit = 0.35 + (tech.bronze ? 0.1 : 0) + (tech.fer ? 0.1 : 0) + (v.job === 'guerrier' || v.job === 'veteran' ? 0.15 : 0) + (has(v, 'chasseur') ? 0.05 : 0) + (atWall ? 0.12 + (built('castrum') ? 0.15 : 0) : 0);
   if (Math.random() < hit && --r.hp <= 0) {
     raiderGone(r); raid.fallen++; v.stats.foes = (v.stats.foes || 0) + 1; journal(v, 'Abat un pillard en défendant le village.');
     if (r.carry) colony.food = Math.min(foodCap(), colony.food + r.carry);
@@ -2730,7 +2872,7 @@ function hourly() {
   if (colony.fireLit) { colony.wood -= isNight() ? 0.45 : 0.25; if (colony.wood <= 0) { colony.wood = 0; colony.fireLit = false; log('Le feu de camp s’est éteint : plus de bois.', 'bad'); } }
   colony.food -= colony.food * (tech.fumage ? 0.0012 : 0.005) * (hasCaveRole('reserve') ? 0.75 : 1) * (hasJob('potier') ? 0.8 : 1) * (hasJob('saunier') ? 0.7 : 1);
   const adults = villagers.filter(v => v.adult).length, kids = villagers.length - adults;
-  colony.know += 0.12 * adults + 0.04 * kids + 0.1 * villagers.filter(v => v.adult && has(v, 'conteur')).length;
+  colony.know += (0.12 * adults + 0.04 * kids + 0.1 * villagers.filter(v => v.adult && has(v, 'conteur')).length) * (tech.latin ? 1.3 : 1);
   colony.mana = Math.min(100, colony.mana + (0.4 + avgHappy() / 100 * 0.28 * villagers.length) * (tech.rites ? 1.8 : 1) + 0.4 * villagers.filter(v => has(v, 'mystique')).length + 0.25 * builtMenhirs() * (builtMenhirs() >= MENHIR_COUNT ? 2 : 1));
   colony.know += 0.03 * (colony.paintings || 0);
   const pen = penBuilt();
@@ -2759,14 +2901,18 @@ function hourly() {
   colony.jobMood = (hasJob('barde') ? 3 : 0) + (hasJob('orfevre') ? 2 : 0) + (hasJob('tisserand') ? 2 : 0);
   if (hasJob('barde')) colony.know += 0.05; if (hasJob('marchand')) colony.know += 0.05;
   colony.drought = Math.max(0, (colony.drought || 0) - 1);
-  if (tech.village && !raid && villagers.length >= 6 && Math.random() < (tech.fer ? 1 / 120 : tech.bronze ? 1 / 150 : 1 / 220)) startRaid(false);
+  if (tech.village && !raid && villagers.length >= 6 && Math.random() < (tech.fer ? 1 / 120 : tech.bronze ? 1 / 150 : 1 / 220) * (tech.crise ? 1.6 : tech.pax ? 0.25 : 1)) startRaid(false);
   // les villages sédentaires, serrés et proches du bétail, connaissent des épidémies (zoonoses, dysenterie)
-  if (tech.village && villagers.length >= 8 && Math.random() < 0.0015 * (built('well') ? 0.5 : 1)) {
+  if (tech.village && villagers.length >= 8 && Math.random() < 0.0015 * (built('well') ? 0.5 : 1) * (built('thermes') ? 0.35 : 1)) {
     const victims = villagers.filter(v => !v.sick).sort(() => Math.random() - 0.5).slice(0, 2);
     victims.forEach(v => makeSick(v, 'Tombe malade lors d’une épidémie de dysenterie.'));
     if (victims.length) log('Une épidémie de dysenterie se déclare au village.', 'bad');
   }
   colony.year += yearsPerHour();
+  // à l'époque historique, le calendrier ne dépasse pas la date du prochain savoir non découvert (ni 500 après la chute de Rome)
+  if (tech.rome) { const next = TECHS.filter(t => t.tier >= 12 && !tech[t.id]).reduce((m, t) => Math.min(m, t.year), 500); colony.year = Math.min(colony.year, Math.max(next - 1, colony.year - yearsPerHour())); }
+  // une mesure par jour pour la courbe de population
+  if (!colony.hist || colony.hist[colony.hist.length - 1][0] !== dayNum()) { colony.hist = colony.hist || []; colony.hist.push([dayNum(), villagers.length]); if (colony.hist.length > 400) colony.hist.splice(1, 1); }
   if (--weather.left <= 0) nextWeather();
   if (!ship && built('jetty') && (colony.seaIce || 0) < 0.3 && Math.random() < 0.02 * (tech.monnaie ? 1.5 : 1)) spawnShip();
   // une rafale peut souffler un foyer mal protégé
@@ -2778,6 +2924,16 @@ function hourly() {
     villagers.forEach(v => journal(v, 'Danse à la fête des moissons.')); log('Fête des moissons : chants, pain frais et danses autour du feu.', 'good');
   }
   if (built('nemeton')) { colony.mana = Math.min(100, colony.mana + 0.6); colony.know += 0.15; }
+  if (built('fanum')) { colony.mana = Math.min(100, colony.mana + 0.6); colony.know += 0.1; }
+  if (built('church')) colony.mana = Math.min(100, colony.mana + 0.4);
+  // l'impôt de la cité des Namnètes, levé tous les quatre jours
+  if (tech.pax && dayNum() % 4 === 0 && Math.floor(hourOfDay()) === 10 && colony.lastTax !== dayNum()) { colony.lastTax = dayNum(); const t = Math.round(colony.food * 0.1); colony.food -= t; log(`Le collecteur de la cité des Namnètes prélève l’impôt : -${t} nourriture.`, 'bad'); }
+  // la voie amène des familles qui viennent s'installer au vicus
+  if (built('voie') && !raid && villagers.length < Math.min(popMax() - 3, housingCap()) && Math.random() < 1 / 70) {
+    const ra = colony.roadA || 0, ex = Math.cos(ra) * 45, ez = Math.sin(ra) * 45;
+    const a = addVillager({ name: freeName(), sex: 'F', age: rr(17, 30), x: ex, z: ez, sat: 50, kind: 'nomade' }), b = addVillager({ name: freeName(), sex: 'M', age: rr(18, 34), x: ex + 1, z: ez, sat: 50, kind: 'nomade' }); unite(a, b, true);
+    [a, b].forEach(v => journal(v, 'Arrive au vicus par la voie romaine.')); log(`Une famille arrive par la voie romaine : ${a.name} et ${b.name} s’installent au vicus.`, 'good');
+  }
   if (built('market') && Math.random() < 0.012 * (tech.monnaie ? 2 : 1) * (hasJob('marchand') ? 1.5 : 1)) { colony.know += 3; colony.wood = Math.min(woodCap(), colony.wood + 6); log('Des marchands de l’étain font halte au marché : bois et nouvelles d’ailleurs.', 'good'); }
   if (built('tumulus')) colony.mana = Math.min(100, colony.mana + Math.min(2, 0.05 * ancestors.filter(a => a.buried).length));
   // un chef dès que la tribu se sédentarise ; un druide quand la religion celtique apparaît
@@ -2848,7 +3004,7 @@ function tryBirth() {
   const mothers = villagers.filter(v => v.adult && v.sex === 'F' && v.age < 46 && v.cooldown <= 0 && v.happy > 50 && !v.sick && v.partner && v.partner.alive && !v.partner.sick);
   if (!mothers.length) return;
   // transition démographique du Néolithique : sédentarité et céréales font grimper la natalité
-  const fert = (tech.village ? 1.5 : 1) * (tech.meule ? 1.2 : 1) * (tech.bronze ? 1.2 : 1);
+  const fert = (tech.village ? 1.5 : 1) * (tech.meule ? 1.2 : 1) * (tech.bronze ? 1.2 : 1) * (tech.pax ? 1.25 : 1) * (built('thermes') ? 1.1 : 1);
   if (villagers.length >= popMax()) return;
   // espacement des naissances : 3 à 4 ans chez les chasseurs-cueilleurs, 2 à 3 ans chez les agriculteurs (1 an = 6 h de jeu)
   if (Math.random() < 0.04 * (1 + (avg - 50) / 50) * (colony.fertile > 0 ? 3 : 1) * fert) {
@@ -3124,6 +3280,7 @@ const CLIMATES = [
   ['Dryas récent', -12900, -11700, 'Brusque retour du froid pendant environ 1 200 ans.'],
   ['Holocène tempéré', -11700, null, 'Le climat doux actuel, qui rend l’agriculture possible.'],
   ['Optimum climatique', -7000, -3000, 'Une période un peu plus chaude qu’aujourd’hui, au cœur de l’Holocène.'],
+  ['Optimum romain', -200, 350, 'Des siècles doux et réguliers, favorables aux récoltes et à la vigne, avant le refroidissement de l’Antiquité tardive.'],
 ];
 function openTimeline() {
   const y = colony.year, era = eraName(), ph = climatePhase();
@@ -3200,7 +3357,52 @@ function openStory(v) {
 function openRoster() {
   const rows = villagers.slice().sort((a, b) => b.age - a.age).map(v => `<button class="rrow" data-story="${v.id}">${portraitSVG(v)}<span class="rn"><b>${v.name}</b><small>${gx(v, 'Homme', 'Femme')}${v.adult ? '' : ' · enfant'} · ${Math.floor(v.age)} ans${v.partner && v.partner.alive ? ' · avec ' + v.partner.name : ''}</small></span><span class="rt">${roleName(v) || jobName(v) ? `<b style="color:var(--ochre)">${cap1(roleName(v) || jobName(v))}</b> · ` : ''}${traitName(v, v.talent)} · ${traitName(v, v.temper)} · ${taskText(v)}</span></button>`).join('');
   const anc = ancestors.length ? `<h3 class="sec">Ancêtres</h3><ul class="anc">${ancestors.slice().reverse().map(a => `<li><button class="plink dead" data-story="${a.id}">${a.name} †</button> ${gx(a, 'mort', 'morte')} au jour ${a.diedDay} ${a.deathCause}, à ${Math.floor(a.age)} ans</li>`).join('')}</ul>` : '';
-  openModal(`<p class="eyebrow">${yearText(colony.year)} · ${villagers.length} habitant${villagers.length > 1 ? 's' : ''}</p><h2 id="mtitle">La tribu</h2><p class="sub">Touchez quelqu’un pour lire son histoire.</p><div class="roster">${rows}</div>${anc}<div class="mfoot"><button class="btn ghost" data-close>Fermer</button></div>`);
+  openModal(`<p class="eyebrow">${yearText(colony.year)} · ${villagers.length} habitant${villagers.length > 1 ? 's' : ''}</p><h2 id="mtitle">La tribu</h2><p class="sub">Touchez quelqu’un pour lire son histoire. <button class="btn ghost small" data-stats>Statistiques et pyramide des âges</button></p><div class="roster">${rows}</div>${anc}<div class="mfoot"><button class="btn ghost" data-close>Fermer</button></div>`);
+}
+// ---- statistiques : pyramide des âges, courbe de population, démographie des défunts, métiers ----
+function pyramidSVG() {
+  const B = 5, N = 15, W = 300, rowH = 13, H = N * rowH + 22, mid = W / 2, half = mid - 38;   // marge pour les effectifs en bout de barre
+  const m = new Array(N).fill(0), f = new Array(N).fill(0);
+  for (const v of villagers) { const i = Math.min(N - 1, Math.floor(v.age / B)); (v.sex === 'F' ? f : m)[i]++; }
+  const mx = Math.max(1, ...m, ...f);
+  let s = '';
+  for (let i = 0; i < N; i++) {
+    const y = H - 22 - (i + 1) * rowH + 1, wm = m[i] / mx * half, wf = f[i] / mx * half;
+    s += `<rect x="${(mid - 20 - wm).toFixed(1)}" y="${y}" width="${wm.toFixed(1)}" height="${rowH - 2}" rx="2" fill="#86c6d4"/><rect x="${mid + 20}" y="${y}" width="${wf.toFixed(1)}" height="${rowH - 2}" rx="2" fill="#e3a03f"/>`;
+    s += `<text x="${mid}" y="${y + rowH - 4}" font-size="8.5" text-anchor="middle" fill="#cbbfa8">${i === N - 1 ? '70+' : i * B}</text>`;
+    if (m[i]) s += `<text x="${(mid - 24 - wm).toFixed(1)}" y="${y + rowH - 4}" font-size="8" text-anchor="end" fill="#86c6d4">${m[i]}</text>`;
+    if (f[i]) s += `<text x="${(mid + 24 + wf).toFixed(1)}" y="${y + rowH - 4}" font-size="8" fill="#e3a03f">${f[i]}</text>`;
+  }
+  s += `<text x="${mid - 24}" y="${H - 6}" font-size="10" text-anchor="end" fill="#86c6d4">Hommes ${m.reduce((a, b) => a + b, 0)}</text><text x="${mid + 24}" y="${H - 6}" font-size="10" fill="#e3a03f">Femmes ${f.reduce((a, b) => a + b, 0)}</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="Pyramide des âges">${s}</svg>`;
+}
+function popCurveSVG() {
+  const h = colony.hist || []; if (h.length < 2) return '<p class="sub">La courbe apparaîtra après quelques jours.</p>';
+  const W = 300, H = 90, mx = Math.max(4, ...h.map(p => p[1])), n = h.length - 1;
+  const pts = h.map((p, i) => `${(8 + i / n * (W - 16)).toFixed(1)},${(H - 14 - p[1] / mx * (H - 26)).toFixed(1)}`).join(' ');
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart" role="img" aria-label="Population au fil des jours"><polyline points="${pts}" fill="none" stroke="#e3a03f" stroke-width="2" stroke-linejoin="round"/><text x="8" y="10" font-size="9" fill="#cbbfa8">${mx} hab.</text><text x="8" y="${H - 2}" font-size="9" fill="#cbbfa8">jour ${h[0][0]}</text><text x="${W - 8}" y="${H - 2}" font-size="9" text-anchor="end" fill="#cbbfa8">jour ${h[n][0]}</text></svg>`;
+}
+function openStats() {
+  const adults = villagers.filter(v => v.adult).length, kids = villagers.length - adults;
+  const dead = ancestors, dAll = dead.length, ages = dead.map(a => a.age);
+  const e0 = dAll ? Math.round(ages.reduce((a, b) => a + b, 0) / dAll) : null;
+  const ad = dead.filter(a => a.age >= 15), eAd = ad.length ? Math.round(ad.reduce((s, a) => s + a.age, 0) / ad.length) : null;
+  const infants = dead.filter(a => a.age < 5).length, births = colony.births || 0;
+  const causes = {}; dead.forEach(a => { const k = (a.deathCause || 'inconnue').replace(/^d’|^de |^d'|^du /, ''); causes[k] = (causes[k] || 0) + 1; });
+  const topCauses = Object.entries(causes).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const jobs = {}; villagers.forEach(v => { const k = roleName(v) || jobName(v); if (k) jobs[cap1(k)] = (jobs[cap1(k)] || 0) + 1; });
+  const oldest = villagers.slice().sort((a, b) => b.age - a.age)[0];
+  const bar = (label, n, max, col) => `<div class="sbar"><span>${label}</span><i style="width:${Math.max(4, n / max * 100)}%;background:${col}"></i><b>${n}</b></div>`;
+  openModal(`<p class="eyebrow">${yearText(colony.year)} · jour ${dayNum()}</p><h2 id="mtitle">Statistiques</h2>
+  <div class="stats"><div><b>${villagers.length}</b><span>habitants</span></div><div><b>${adults}</b><span>adultes</span></div><div><b>${kids}</b><span>enfants</span></div><div><b>${births}</b><span>naissances</span></div><div><b>${dAll}</b><span>décès</span></div>${oldest ? `<div><b>${Math.floor(oldest.age)}</b><span>ans, ${oldest.name} (doyen)</span></div>` : ''}</div>
+  <h3 class="sec">Pyramide des âges</h3>${pyramidSVG()}
+  <h3 class="sec">Population au fil des jours</h3>${popCurveSVG()}
+  <h3 class="sec">Démographie</h3>
+  <div class="stats"><div><b>${e0 ?? '–'}</b><span>ans d’espérance de vie à la naissance</span></div><div><b>${eAd ?? '–'}</b><span>ans, âge moyen au décès des adultes</span></div><div><b>${births ? Math.round(infants / births * 100) + ' %' : '–'}</b><span>d’enfants morts avant 5 ans</span></div></div>
+  <p class="sub">Avant l’époque moderne, l’espérance de vie à la naissance tournait autour de 25 à 35 ans : non parce qu’on mourait jeune adulte, mais parce qu’un enfant sur trois environ n’atteignait pas 5 ans.</p>
+  ${topCauses.length ? `<h3 class="sec">Causes de décès</h3>${topCauses.map(([k, n]) => bar(cap1(k), n, topCauses[0][1], '#b5652f')).join('')}` : ''}
+  ${Object.keys(jobs).length ? `<h3 class="sec">Rôles et métiers</h3>${Object.entries(jobs).sort((a, b) => b[1] - a[1]).map(([k, n]) => bar(k, n, Math.max(...Object.values(jobs)), '#86c6d4')).join('')}` : ''}
+  <div class="mfoot"><button class="btn ghost" data-roster>La tribu</button><button class="btn" data-close>Fermer</button></div>`);
 }
 function updateCard() {
   const v = selected; if (!v) return;
@@ -3250,6 +3452,7 @@ modal.addEventListener('click', e => {
   if (b.dataset.start !== undefined) { started = true; closeModal(); startMusic(); log(SAVED ? `La tribu reprend sa vie, jour ${dayNum()}.` : 'Quatre chasseurs-cueilleurs allument leur feu devant leurs grottes.'); return; }
   if (b.dataset.restart !== undefined || b.dataset.newgame !== undefined) { clearSave(); colony.over = true; location.reload(); return; }
   if (b.dataset.roster !== undefined) { openRoster(); return; }
+  if (b.dataset.stats !== undefined) { openStats(); return; }
   if (b.dataset.opentech !== undefined) { openTech(); return; }
   if (b.dataset.cave !== undefined) { openCave(+b.dataset.cave); return; }
   if (b.dataset.art !== undefined) { openArtwork(+b.dataset.art); return; }
@@ -3289,7 +3492,9 @@ const ERA_TEXT = {
   cuivre: ['Le cuivre brille dans le foyer', 'Vos villageois savent fondre le métal. Le Néolithique s’achève : bienvenue dans l’âge du cuivre. Une forge va être construite, la roue et l’araire sont à portée.', 'Voir les nouveaux savoirs'],
   bronze: ['L’âge du bronze', 'En mêlant le cuivre à l’étain, vos forgerons obtiennent un métal dur et doré. Les routes commerciales s’ouvrent, des chefs apparaissent, des guerriers protègent le village.', 'Voir les nouveaux savoirs'],
   fer: ['L’âge du fer', 'Le fer, plus dur et plus commun, remplace peu à peu le bronze. Les Celtes de Hallstatt puis de La Tène dominent l’Europe : soc de fer, orfèvrerie, druides, monnaie et oppida.', 'Voir les nouveaux savoirs'],
-  rome: ['La Gaule entre dans l’histoire', 'Les marchands romains apportent le vin, puis viennent les légions de César. En 52 av. J.-C., Alésia tombe. L’Antiquité arrivera dans une prochaine version : votre ville continue de vivre.', ''],
+  rome: ['La Gaule devient romaine', 'Les marchands romains ont apporté le vin, puis sont venues les légions de César. En 52 av. J.-C., Alésia tombe. Votre oppidum entre dans l’Antiquité : il deviendra un vicus de la cité des Namnètes, avec ses routes, ses temples et ses thermes.', 'Voir les nouveaux savoirs'],
+  crise: ['La crise du IIIe siècle', 'Les empereurs se succèdent, l’armée se bat contre elle-même, et les frontières cèdent : vers 275, des bandes germaniques et des pirates saxons pillent la Gaule. Partout, on resserre les villes derrière des murailles.', 'Voir les nouveaux savoirs'],
+  chute: ['La fin de l’Empire romain d’Occident', 'En 476, le jeune empereur Romulus Augustule est déposé. En Gaule, les Francs de Clovis prendront bientôt le pouvoir. Votre vicus a traversé l’Antiquité : le Moyen Âge arrivera dans une prochaine version, et la vie continue.', ''],
 };
 // ================= Premières fois : illustration + note historique =================
 // L'illustration est une vue rapprochée de la scène 3D au moment de l'événement, rendue en plein jour puis peinte par un filtre.
@@ -3325,6 +3530,13 @@ const MILESTONES = {
   'chief': ['Le premier chef de village', 'Dans les villages néolithiques, un chef ou un conseil d’anciens règle les conflits et organise les grands travaux. À l’âge du bronze, ce pouvoir s’appuie sur le contrôle du métal ; chez les Gaulois, un magistrat élu pour un an, le vergobret, gouverne la cité.', 12],
   'extinct:mammouth': ['La fin des mammouths', 'Avec le réchauffement, la steppe froide cède la place à la forêt : les mammouths perdent leurs pâturages, et les chasseurs les traquent. Ils disparaissent d’Europe vers 12 000 av. J.-C. Les derniers survivront sur l’île Wrangel, en Sibérie, jusque vers 2000 av. J.-C.', 12],
   'extinct:rhino': ['La fin du rhinocéros laineux', 'Adapté au grand froid, le rhinocéros laineux disparaît d’Europe à la fin de la glaciation, il y a environ 14 000 ans. On ne le connaît plus que par ses ossements, quelques corps gelés en Sibérie et les peintures de Chauvet.', 12],
+  'build:domus': ['La première maison de pierre', 'Murs de moellons enduits à la chaux, toit de tuiles plates et de tuiles rondes, petite galerie à colonnes : en quelques générations, les maisons de la Gaule romaine troquent le chaume contre la tuile.', 10],
+  'build:fanum': ['Le fanum', 'Une tour carrée, la cella, entourée d’une galerie : ce plan de temple n’existe qu’en Gaule et en Bretagne romaines. On y honore ensemble les dieux gaulois et romains, comme Mercure ou Apollon.', 11],
+  'build:thermes': ['Les thermes', 'Une salle froide, une tiède, une chaude chauffée par le sol (l’hypocauste) : on y vient se laver, se masser, discuter. Même les petites agglomérations de Gaule ont leurs bains publics.', 11],
+  'build:theatre': ['Le théâtre', 'En Gaule, les théâtres accompagnent souvent les grands sanctuaires de campagne, comme à Gennes en Anjou : on y donne des fêtes religieuses, des chants, des combats et des pantomimes.', 11],
+  'build:church': ['La première église', 'Évêque de Tours à partir de 371, saint Martin parcourt les campagnes, détruit les temples païens et fonde des églises. Le christianisme devient la religion de l’Empire en 380.', 11],
+  'build:voie': ['La voie romaine', 'Un lit de pierres et de graviers bombé, bordé de fossés : les voies relient les villes de la Gaule. Tous les mille pas, une borne milliaire indique la distance et le nom de l’empereur.', 10],
+  'build:castrum': ['Le castrum', 'Après les invasions de 275-276, les villes de Gaule se replient derrière des murailles neuves, bâties à la hâte avec des pierres de monuments démolis, flanquées de tours rondes et chaînées de brique.', 11],
   'cave:bergerie': ['La grotte devient bergerie', 'Les maisons suffisent désormais à loger tout le monde : on ne dort plus dans les grottes. Au Néolithique, les bergers du Midi y abritent leurs chèvres et leurs moutons ; à Fontbrégoua, en Provence, des couches de fumier fossile en témoignent encore.', 10],
   'cave:reserve': ['La grotte devient réserve', 'Plus personne n’y dort : la grotte, fraîche et sèche, sert désormais à entreposer jarres de grain, viande fumée et outils.', 8],
   'cave:sepulture': ['La grotte des ancêtres', 'Dès le Néolithique moyen, on dépose les morts ensemble dans des grottes, génération après génération. La grotte ornée devient le lieu des ancêtres.', 10],
@@ -3432,7 +3644,7 @@ const TECH_SCENES = {
   'tech:monnaie': () => `<path ${W} d="M40 151 L60 128 L262 124 L282 151 Z" fill="#5a3d22"/>` + [[110, 132, '#e0b048'], [160, 126, '#c9c9c4'], [208, 134, '#e0b048'], [140, 146, '#c9c9c4'], [190, 148, '#e0b048']].map(([x, y, c]) => `<g ${W}><ellipse cx="${x}" cy="${y}" rx="16" ry="11" fill="${c}"/><ellipse cx="${x}" cy="${y}" rx="12" ry="8" fill="none" stroke="#7a5a22" stroke-width="1"/><path d="M${x - 7} ${y + 2} C${x - 4} ${y - 4} ${x + 3} ${y - 4} ${x + 5} ${y - 1} L${x + 8} ${y - 5} M${x - 5} ${y + 2} L${x - 6} ${y + 6} M${x + 3} ${y + 1} L${x + 4} ${y + 6}" stroke="#7a5a22" stroke-width="1.3" fill="none"/></g>`).join(''),
   'tech:rome': () => human(110, 156, 1.15, 'spear', '#9a3b3b') + `<g ${W}><rect x="114" y="104" width="16" height="26" rx="3" fill="#b5452f" stroke="#e0b048" stroke-width="1.5"/><path d="M104 108 C106 100 116 100 118 108" fill="#8a8a86"/><path d="M106 101 C110 94 116 94 118 101" stroke="#a33a1f" stroke-width="3" fill="none"/></g>` + `<g ${W}><path d="M196 151 C190 138 190 116 200 104 L198 96 L208 96 L206 104 C216 116 216 138 210 151 Z" fill="#b8744a"/><path d="M196 104 C190 100 190 92 198 96 M210 104 C216 100 216 92 208 96" stroke="#b8744a" stroke-width="3" fill="none"/></g>` + human(260, 156, 1.05, 'stand', '#4f8a76'),
 };
-const TECH_ART = { pirogue: 'boat', lances: 'hunt:mammouth', paniers: 'tech:paniers', herbes: 'tech:herbes', huttes: 'build:hut', fumage: 'tech:fumage', rites: 'feast', peinture: 'tech:peinture', agri: 'harvest', domest: 'tech:domest', poterie: 'tech:poterie', village: 'tech:village', torchis: 'build:house', meule: 'tech:meule', elevage: 'build:pen', puits: 'build:well', tissage: 'tech:tissage', grenier: 'build:granary', maisonlongue: 'build:longhouse', palissade: 'build:palisade', fetes: 'feast', sepultures: 'build:tumulus', megalithes: 'cromlech', cuivre: 'tools:cuivre', roue: 'tech:roue', araire: 'tech:araire', bronze: 'tools:bronze', commerce: 'build:market', chefferie: 'build:chief', guerriers: 'raid', fer: 'tools:fer', charrue: 'tech:charrue', artisanat: 'tech:artisanat', tonneau: 'tech:tonneau', druides: 'druid', monnaie: 'tech:monnaie', oppidum: 'build:rampart', rome: 'tech:rome' };
+const TECH_ART = { pirogue: 'boat', lances: 'hunt:mammouth', paniers: 'tech:paniers', herbes: 'tech:herbes', huttes: 'build:hut', fumage: 'tech:fumage', rites: 'feast', peinture: 'tech:peinture', agri: 'harvest', domest: 'tech:domest', poterie: 'tech:poterie', village: 'tech:village', torchis: 'build:house', meule: 'tech:meule', elevage: 'build:pen', puits: 'build:well', tissage: 'tech:tissage', grenier: 'build:granary', maisonlongue: 'build:longhouse', palissade: 'build:palisade', fetes: 'feast', sepultures: 'build:tumulus', megalithes: 'cromlech', cuivre: 'tools:cuivre', roue: 'tech:roue', araire: 'tech:araire', bronze: 'tools:bronze', commerce: 'build:market', chefferie: 'build:chief', guerriers: 'raid', fer: 'tools:fer', charrue: 'tech:charrue', artisanat: 'tech:artisanat', tonneau: 'tech:tonneau', druides: 'druid', monnaie: 'tech:monnaie', oppidum: 'build:rampart', rome: 'tech:rome', pax: 'tech:pax', voie: 'build:voie', latin: 'tech:latin', tuiles: 'build:domus', fanum: 'build:fanum', vallus: 'tech:vallus', thermes: 'build:thermes', vigne: 'tech:vigne', theatre: 'build:theatre', crise: 'tech:crise', castrum: 'build:castrum', christ: 'build:church', chute: 'tech:chute' };
 const techImgCache = {};
 // vignette du savoir : illustration rendue une fois en image (plus léger qu'un SVG vivant dans la page)
 function techImg(id) {
@@ -3472,6 +3684,20 @@ const SCENES = {
   'extinct:mammouth': () => lastOfKind('mammouth', 0.62),
   'extinct:rhino': () => lastOfKind('rhino', 0.55),
   'druid': () => `<path ${W} d="M200 151 C202 126 198 104 192 88 L222 88 C216 104 212 126 214 151 Z" fill="#5a3d22"/><g ${W}><circle cx="206" cy="62" r="34" fill="#3f6f2e"/><circle cx="172" cy="78" r="24" fill="#4a7a34"/><circle cx="240" cy="76" r="26" fill="#365f28"/><circle cx="196" cy="38" r="22" fill="#4f803a"/><circle cx="226" cy="44" r="20" fill="#3a682c"/></g><circle cx="206" cy="62" r="40" fill="url(#il-hatch)" opacity=".35"/><g fill="#c8d98a" ${W}><circle cx="186" cy="74" r="7"/><circle cx="192" cy="70" r="5"/><circle cx="181" cy="69" r="4"/></g><path ${W} d="M150 151 C156 144 182 144 188 151 Z" fill="#f2efe6"/>` + human(150, 156, 1.25, 'sickle', DRUID_ROBE).replace('#8a8a86', '#e0b048') + human(110, 156, 0.95, 'stand', '#a8483a') + human(86, 158, 0.9, 'stand', '#3f6e8c'),
+  // ---- Antiquité gallo-romaine ----
+  'tech:pax': () => SH(170, 70) + `<g ${W}><rect x="176" y="62" width="3" height="89" fill="#6b4a2b"/><path d="M167 64 C171 56 177 54 177.5 58 C178 54 184 56 188 64 C183 62 180 63 177.5 66 C175 63 172 62 167 64 Z" fill="#d9a83a"/><rect x="164" y="70" width="27" height="20" fill="#a8302a"/><path d="M164 90 l3 4 l3 -4 l3 4 l3 -4 l3 4 l3 -4 l3 4 l3 -4" stroke="#d9a83a" stroke-width="1" fill="none"/></g><text x="177.5" y="84" font-size="7.5" font-family="serif" font-weight="700" fill="#f2e6c8" text-anchor="middle">SPQR</text>` + human(140, 154, 1.05, 'spear', '#9a2a22', `<rect x="127" y="118" width="13" height="22" rx="2" fill="#a8302a"/><path d="M133.5 120 V138 M128 129 H139" stroke="#d9a83a" stroke-width="1.3"/><path d="M135 108 C137 102 145 102 146 108" stroke="#c43a2a" stroke-width="2.4" fill="none"/>`) + human(222, 154, 1, 'stand', '#3f6e8c') + human(250, 156, 0.95, 'hold', '#d3a640'),
+  'build:voie': () => `<path ${W} d="M30 206 L150 120 L170 120 L290 206 Z" fill="#9b958a"/>${[130, 140, 152, 166, 184, 206].map((y, i) => `<path d="M${160 - (y - 120) * 1.4} ${y} H${160 + (y - 120) * 1.4}" stroke="#6f6a60" stroke-width="${0.6 + i * 0.25}" opacity=".6"/>`).join('')}<path d="M160 122 V206" stroke="#6f6a60" stroke-width="1" opacity=".4"/><g ${W}><rect x="238" y="108" width="16" height="43" rx="3" fill="#c2b8a5"/><rect x="234" y="148" width="24" height="5" fill="#a39a88"/></g><text x="246" y="122" font-size="5.5" font-family="serif" fill="#4a4438" text-anchor="middle">IMP</text><text x="246" y="130" font-size="5.5" font-family="serif" fill="#4a4438" text-anchor="middle">CAES</text><text x="246" y="140" font-size="6" font-family="serif" font-weight="700" fill="#4a4438" text-anchor="middle">M P XII</text>` + human(110, 168, 1.1, 'hold', '#7a5230') + human(176, 132, 0.45, 'stand', '#3f6e8c'),
+  'tech:latin': () => SH(130, 60) + `<g ${W}><rect x="70" y="72" width="120" height="79" fill="#cfc6b2"/><rect x="76" y="78" width="108" height="67" fill="none" stroke="#9a907c" stroke-width="2"/></g>${[['IOVI · OPTIMO · MAXIMO', 96, 7], ['C · IVLIVS · SECVNDVS', 110, 6.5], ['NAMNES · DECVRIO', 122, 6.5], ['V · S · L · M', 136, 7]].map(([t, y, s]) => `<text x="130" y="${y}" font-size="${s}" font-family="serif" font-weight="700" fill="#5a5244" text-anchor="middle" letter-spacing=".6">${t}</text>`).join('')}<g ${W}><rect x="214" y="112" width="34" height="24" fill="#7a5532"/><rect x="217" y="115" width="28" height="18" fill="#3b2e22"/></g><path d="M220 120 h18 M220 125 h14 M220 129 h16" stroke="#c9b48a" stroke-width="0.9"/>` + human(266, 154, 1, 'hold', '#cdbf9f'),
+  'build:domus': () => SH(160, 92) + `<rect ${W} x="88" y="106" width="144" height="45" fill="#e3d6bc"/><rect x="196" y="106" width="36" height="45" fill="url(#il-hatch)"/><path ${W} d="M74 110 L118 76 L202 76 L246 110 Z" fill="url(#il-tile)"/><path d="M202 76 L246 110 L216 110 Z" fill="#2a1a08" opacity=".2"/><rect ${W} x="80" y="128" width="160" height="5" fill="#b4553a"/>${[96, 124, 196, 224].map(x => `<rect x="${x}" y="133" width="5" height="18" fill="#d9cdb4"/>`).join('')}<rect ${W} x="150" y="124" width="20" height="27" fill="#5a3d22"/><rect x="110" y="114" width="12" height="9" fill="#3b2e22"/><rect x="196" y="114" width="12" height="9" fill="#3b2e22"/>` + human(268, 154, 1, 'stand', '#b5652f') + human(54, 154, 0.95, 'hold', '#3f6e8c'),
+  'build:fanum': () => SH(160, 100) + `<rect ${W} x="70" y="146" width="180" height="8" fill="#c2b8a5"/><rect ${W} x="76" y="118" width="168" height="28" fill="#e3d6bc"/>${[82, 104, 126, 194, 216, 238].map(x => `<rect x="${x - 2}" y="118" width="4" height="28" fill="#d0c4aa"/>`).join('')}<path ${W} d="M68 120 L96 104 L224 104 L252 120 Z" fill="url(#il-tile)"/><rect ${W} x="130" y="64" width="60" height="82" fill="#e9ddc4"/><rect x="170" y="64" width="20" height="82" fill="url(#il-hatch)"/><path ${W} d="M124 66 L160 40 L196 66 Z" fill="url(#il-tile)"/><rect ${W} x="152" y="116" width="16" height="30" fill="#4a3424"/>` + human(276, 156, 1, 'stand', '#ece8dc') + human(44, 156, 0.95, 'hold', '#8b4f7a'),
+  'build:thermes': () => SH(150, 100) + `<rect ${W} x="62" y="104" width="150" height="47" fill="#e3d6bc"/><path ${W} d="M54 108 L84 84 L190 84 L220 108 Z" fill="url(#il-tile)"/><path ${W} d="M212 151 L212 112 A30 30 0 0 1 242 142 L242 151 Z" fill="#c2b8a5"/><path ${W} d="M86 84 A24 22 0 0 1 134 84 Z" fill="#c2b8a5"/>${[80, 112, 144, 176].map(x => `<path d="M${x} 151 V126 A8 8 0 0 1 ${x + 16} 126 V151 Z" fill="#3b2e22"/>`).join('')}<path d="M100 74 C94 62 106 56 100 44 M120 72 C114 60 126 54 120 42" stroke="#e8eef0" stroke-width="3" fill="none" opacity=".6" filter="url(#il-blur)"/><rect ${W} x="254" y="140" width="48" height="11" fill="#4f86a6"/>` + human(270, 152, 0.9, 'stand', '#ece8dc') + human(290, 154, 0.85, 'stand', '#cdbf9f'),
+  'tech:vallus': () => `<g ${W}>${Array.from({ length: 26 }, (_, i) => { const x = 8 + i * 12; return `<path d="M${x} 151 V${120 + (i % 3) * 3}" stroke="#a88a3a" stroke-width="1.6"/><ellipse cx="${x}" cy="${118 + (i % 3) * 3}" rx="2.2" ry="5" fill="#e0b84a"/>`; }).join('')}</g>` + beast('aurochs', 236, 0.62, false) + `<g ${W}><rect x="118" y="112" width="58" height="26" fill="#8a6038"/><path d="M118 138 ${Array.from({ length: 9 }, (_, i) => `L${116 - (i % 2 ? 8 : 0)} ${138 - i * 3}`).join(' ')}" stroke="#4a3424" stroke-width="2" fill="none"/><circle cx="132" cy="142" r="9" fill="none" stroke="#4a3424" stroke-width="3"/><circle cx="164" cy="142" r="9" fill="none" stroke="#4a3424" stroke-width="3"/><path d="M176 122 L206 126" stroke="#6b4a2b" stroke-width="3"/></g>` + human(200, 156, 1, 'hold', '#6f7d3a'),
+  'tech:vigne': () => `<path ${W} d="M0 151 C60 112 200 104 320 126 L320 151 Z" fill="#8a9a52"/>` + [0, 1, 2, 3].map(r => Array.from({ length: 9 }, (_, i) => { const x = 20 + i * 34 + r * 8, y = 128 + r * 7; return `<path d="M${x} ${y + 14} V${y}" stroke="#5e4a2e" stroke-width="1.6"/><circle cx="${x - 3}" cy="${y + 1}" r="5" fill="#5f8a36"/><circle cx="${x + 4}" cy="${y - 1}" r="4.5" fill="#6e9a3e"/><g fill="#4e2550"><circle cx="${x}" cy="${y + 6}" r="1.6"/><circle cx="${x + 2}" cy="${y + 8}" r="1.6"/><circle cx="${x - 1}" cy="${y + 9}" r="1.5"/></g>`; }).join('')).join('') + `<path ${W} d="M262 151 C254 136 256 118 264 110 L264 102 L274 102 L274 110 C282 118 284 136 276 151 Z" fill="#b8744a"/>` + human(230, 158, 1, 'hold', '#8b4f7a') + basketSVG(212, 158),
+  'build:theatre': () => [0, 1, 2, 3, 4].map(i => `<path ${W} d="M${30 + i * 14} ${150 - i * 13} A${130 - i * 14} ${40 - i * 4} 0 0 1 ${290 - i * 14} ${150 - i * 13} L${290 - i * 14 - 6} ${156 - i * 13} A${124 - i * 14} ${36 - i * 4} 0 0 0 ${36 + i * 14} ${156 - i * 13} Z" fill="${i % 2 ? '#c2b8a5' : '#b3a994'}"/>`).join('') + `<rect ${W} x="110" y="134" width="100" height="22" fill="#e3d6bc"/>${[118, 140, 162, 184].map(x => `<rect x="${x}" y="134" width="6" height="22" fill="#d0c4aa"/>`).join('')}` + human(152, 150, 0.8, 'dance', '#a8302a') + human(172, 150, 0.8, 'hold', '#d3a640') + [60, 90, 230, 260].map(x => human(x, 128 - (x % 3) * 4, 0.45, 'stand', pick(['#3f6e8c', '#b5652f', '#6f7d3a']))).join(''),
+  'tech:crise': () => seaSVG + shipSVG.replace('#8a5a36', '#3a3530') + human(40, 156, 1, 'spear', '#2a2420') + human(64, 158, 0.95, 'spear', '#3a3530') + `<path d="M150 70 C140 50 160 40 150 20 M180 76 C170 56 190 46 182 26" stroke="#5a5550" stroke-width="7" fill="none" opacity=".5" filter="url(#il-blur)"/>`,
+  'build:castrum': () => `<rect ${W} x="20" y="98" width="280" height="53" fill="#c2b8a5"/>${[112, 126].map(y => `<rect x="20" y="${y}" width="280" height="4" fill="#a4523a"/>`).join('')}<path ${W} d="M138 151 V122 A22 22 0 0 1 182 122 V151 Z" fill="#3b2e22"/>` + [[86, 70], [234, 70]].map(([x, y]) => `<g ${W}><rect x="${x - 22}" y="${y}" width="44" height="81" rx="6" fill="#cbc1ae"/><rect x="${x - 22}" y="${y + 30}" width="44" height="4" fill="#a4523a"/><rect x="${x - 22}" y="${y + 50}" width="44" height="4" fill="#a4523a"/><path d="M${x - 26} ${y + 2} L${x} ${y - 22} L${x + 26} ${y + 2} Z" fill="url(#il-tile)"/><rect x="${x - 4}" y="${y + 12}" width="8" height="12" fill="#3b2e22"/></g>`).join('') + human(160, 156, 1, 'spear', '#7a4f2d'),
+  'build:church': () => SH(160, 96) + `<rect ${W} x="90" y="100" width="130" height="51" fill="#e3d6bc"/><path ${W} d="M80 104 L112 76 L198 76 L230 104 Z" fill="url(#il-tile)"/><path ${W} d="M220 151 V114 A26 26 0 0 1 246 140 V151 Z" fill="#d9cdb4"/><path ${W} d="M146 151 V124 A9 9 0 0 1 164 124 V151 Z" fill="#4a3424"/>${[106, 126, 186, 204].map(x => `<path d="M${x} 118 V108 A4 4 0 0 1 ${x + 8} 108 V118 Z" fill="#3b2e22"/>`).join('')}` + human(66, 156, 1.05, 'hold', '#ece8dc', `<path d="M73 128 L76 100 C76 94 84 94 82 100" stroke="#d9a83a" stroke-width="1.6" fill="none"/>`) + human(268, 156, 0.95, 'stand', '#8b4f7a') + human(288, 158, 0.6, 'stand', '#d3a640'),
+  'tech:chute': () => `<circle cx="250" cy="96" r="22" fill="#e89a4a" opacity=".85" filter="url(#il-blur)"/><rect ${W} x="70" y="146" width="160" height="7" fill="#b3a994"/>${[[90, 70], [126, 48], [196, 84]].map(([x, h]) => `<g ${W}><rect x="${x}" y="${146 - h}" width="12" height="${h}" fill="#cfc6b2"/><path d="M${x} ${146 - h} l3 -4 l3 3 l3 -5 l3 4" stroke="#cfc6b2" stroke-width="2" fill="none"/></g>`).join('')}<g ${W}><rect x="150" y="140" width="34" height="9" rx="2" fill="#cfc6b2" transform="rotate(8 167 144)"/><rect x="214" y="138" width="22" height="10" fill="#c2b8a5"/></g>` + human(268, 156, 1, 'stand', '#7a4f2d'),
   'cave:bergerie': () => caveSceneSVG() + `<g ${W}>${[0, 1, 2, 3, 4, 5, 6].map(k => `<rect x="${126 + k * 11}" y="118" width="3.5" height="34" fill="#6b4a2b"/>`).join('')}<path d="M122 126 C150 122 176 130 200 125 M122 136 C150 132 176 140 200 135 M122 146 C150 142 176 150 200 145" stroke="#9a7a4c" stroke-width="4" fill="none"/></g>` + sheepSVG(226, 150, 1) + sheepSVG(262, 154, 0.9) + human(92, 156, 1, 'stand', '#7a4f2d'),
   'cave:reserve': () => caveSceneSVG() + [[140, 1.1], [160, 0.9], [182, 1.2], [204, 0.85]].map(([x, s]) => `<path ${W} d="M${x - 8 * s} 151 C${x - 12 * s} ${151 - 12 * s} ${x - 10 * s} ${151 - 22 * s} ${x - 5 * s} ${151 - 26 * s} L${x + 5 * s} ${151 - 26 * s} C${x + 10 * s} ${151 - 22 * s} ${x + 12 * s} ${151 - 12 * s} ${x + 8 * s} 151 Z" fill="#a5643a"/>`).join('') + basketSVG(232, 152) + human(270, 156, 1, 'hold', '#9a5b48'),
   'cave:sepulture': () => caveSceneSVG() + `<path ${W} d="M168 151 L172 96 L214 100 L208 151 Z" fill="#8e877a"/><path ${W} d="M120 151 C122 140 132 136 142 140 C150 136 160 142 158 151 Z" fill="#7b7669"/><circle cx="138" cy="146" r="4" fill="#a8483a" opacity=".8"/>` + human(250, 156, 1, 'stand', '#ece8dc') + human(278, 158, 0.95, 'stand', '#7a5230'),
@@ -3495,6 +3721,7 @@ function illustrate(key) {
   <pattern id="il-hatch" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><line x1="0" y1="0" x2="0" y2="4" stroke="#1a1008" stroke-width="0.7" opacity=".4"/></pattern>
   <pattern id="il-thatch" width="3" height="9" patternUnits="userSpaceOnUse"><rect width="3" height="9" fill="#caa452"/><path d="M1 0 L1.6 9" stroke="#8a6a2a" stroke-width="0.7"/></pattern>
   <pattern id="il-stone" width="14" height="10" patternUnits="userSpaceOnUse"><rect width="14" height="10" fill="#958b7c"/><path d="M0 5 H14 M7 0 V5 M3 5 V10 M11 5 V10" stroke="#5f574c" stroke-width="0.8"/></pattern>
+  <pattern id="il-tile" width="8" height="5" patternUnits="userSpaceOnUse"><rect width="8" height="5" fill="#b4553a"/><path d="M0 4.5 H8 M4 0 V4.5" stroke="#7e3522" stroke-width="0.8"/></pattern>
   <pattern id="il-wood" width="6" height="40" patternUnits="userSpaceOnUse"><rect width="6" height="40" fill="#7a5532"/><line x1="5.5" y1="0" x2="5.5" y2="40" stroke="#4d331d" stroke-width="1"/></pattern></defs>
   <rect width="320" height="200" fill="url(#il-sky)"/>
   <path ${W} d="M0 112 L36 74 L62 92 L104 52 L146 88 L186 60 L224 90 L266 56 L320 88 L320 200 L0 200 Z" fill="#a3b1b6" opacity=".75"/>
@@ -3719,7 +3946,7 @@ function restoreGame(S) {
   // maisons puis ateliers d'abord, enceintes en dernier : sur une ancienne sauvegarde, le tracé rond est recalculé autour de tout
   S.huts.forEach(h => { addHutSite({ x: h[0], z: h[1] }, h[5] || 'hut'); Object.assign(huts[huts.length - 1], { progress: h[2], built: h[3], paid: h[4] }); syncSite(huts[huts.length - 1]); });
   const isWall = w => w[0] === 'palisade' || w[0] === 'rampart';
-  [...(S.works || []).filter(w => !isWall(w)), ...(S.works || []).filter(isWall)].forEach(w => { const o = addWork(w[0], { x: w[1], z: w[2], dx: w[6], dz: w[7] }); if (o) { Object.assign(o, { progress: w[3], built: w[4], paid: w[5] }); syncSite(o); } });
+  [...(S.works || []).filter(w => !isWall(w) && w[0] !== 'castrum'), ...(S.works || []).filter(isWall), ...(S.works || []).filter(w => w[0] === 'castrum')].forEach(w => { const o = addWork(w[0], { x: w[1], z: w[2], dx: w[6], dz: w[7] }); if (o) { Object.assign(o, { progress: w[3], built: w[4], paid: w[5] }); syncSite(o); } });
   const pen = penBuilt(); if (pen) for (let i = 0; i < (S.sheep || 0); i++) spawnSheep(pen.x + rr(-2, 2), pen.z + rr(-2, 2));
   if (builtMenhirs() >= MENHIR_COUNT) { colony.cromlechDeco = false; addCromlechDeco(); }
   refreshWall();
