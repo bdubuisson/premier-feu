@@ -173,6 +173,7 @@ svg.pt.dead{filter:grayscale(1) brightness(.8)}
 .bcard b{font-family:var(--display);font-size:15px;color:var(--ochre)}.bcard span{font-size:13px;line-height:1.35}.bcard em{font-style:normal;font-size:12.5px;font-weight:700;color:var(--moss)}
 .bcard.ok{border-color:var(--ochre)}.bcard.poor em{color:#e0605a}.bcard.done,.bcard.busy,.bcard.full,.bcard.cant{opacity:.55;cursor:default}.bcard.done em,.bcard.busy em,.bcard.full em,.bcard.cant em{color:var(--bone-dim)}
 .auto{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--bone-dim)}
+.tip.warn{background:rgba(224,96,90,.12);border-left-color:#e0605a}
 .tip{background:rgba(227,160,63,.1);border-left:3px solid var(--ochre);padding:8px 10px;border-radius:6px}
 @media (max-width:640px){ #top{display:flex;flex-wrap:wrap;gap:6px} .hudchips{display:contents} .speed{position:static;margin-left:auto} }
 @media (max-width:440px){
@@ -2091,6 +2092,15 @@ const handPath = (dx, dy) => { const P = (x, y) => `${(x + dx).toFixed(1)} ${(y 
   + ` L${P(47, 62.5)} L${P(49, 42)} C${P(49.5, 38)} ${P(54.5, 39)} ${P(53.8, 43)} L${P(52.6, 63.5)}`   // annulaire
   + ` L${P(54, 65.5)} L${P(58, 52.5)} C${P(59.3, 49)} ${P(63.5, 50.5)} ${P(62.2, 54.5)} L${P(58.6, 69)}`   // auriculaire
   + ` C${P(58.5, 76)} ${P(56.5, 82)} ${P(54, 88)} C${P(53, 91)} ${P(52, 93)} ${P(51, 94)} Z`; };
+// main négative réaliste (Gargas, Cosquer, Chauvet) : doigts longs et fins, pouce écarté, départ de l'avant-bras
+// (sur les parois, le pigment soufflé dessine aussi le poignet). Coordonnées dans une case de 160 × 120.
+const stencilPath = (dx, dy) => { const P = (x, y) => `${(x + dx).toFixed(1)} ${(y + dy).toFixed(1)}`; return `M${P(36.5, 116)} C${P(36.5, 108)} ${P(35.5, 101)} ${P(34.5, 95)} C${P(33.5, 89)} ${P(32.5, 84)} ${P(32.8, 79)}`
+  + ` C${P(29.5, 77)} ${P(26, 73)} ${P(23, 68)} C${P(20.5, 64)} ${P(18.5, 60)} ${P(19.5, 57.5)} C${P(20.5, 55.5)} ${P(23, 56)} ${P(24.8, 58.5)} C${P(27.5, 62.5)} ${P(31, 66.5)} ${P(34.2, 68)}`   // pouce
+  + ` C${P(33.4, 60)} ${P(31.6, 50)} ${P(30.4, 42.5)} C${P(30, 39.6)} ${P(34.6, 38.6)} ${P(35.2, 41.6)} C${P(36.4, 48)} ${P(37.8, 57)} ${P(39.2, 64.5)}`   // index
+  + ` C${P(39.8, 56)} ${P(39.8, 44)} ${P(40.1, 34.6)} C${P(40.3, 31.4)} ${P(45.1, 31.4)} ${P(45.1, 34.6)} C${P(45.3, 44)} ${P(45.6, 55)} ${P(45.8, 64)}`   // majeur
+  + ` C${P(47, 55)} ${P(48.4, 45)} ${P(49.6, 37.8)} C${P(50.2, 34.8)} ${P(54.8, 35.8)} ${P(54.2, 38.9)} C${P(53.4, 46)} ${P(52.8, 56)} ${P(52.4, 65)}`   // annulaire
+  + ` C${P(54, 59)} ${P(56.2, 52)} ${P(57.8, 47.4)} C${P(58.8, 44.6)} ${P(62.8, 46)} ${P(62, 49)} C${P(60.8, 54)} ${P(59.4, 61)} ${P(58.8, 69)}`   // auriculaire
+  + ` C${P(58.8, 76)} ${P(57.6, 83)} ${P(55.8, 89)} C${P(54.6, 94)} ${P(54, 100)} ${P(54, 107)} C${P(54, 110)} ${P(54.2, 113)} ${P(54.5, 116)} Z`; };
 const SIGN_DOTS = []; for (let i = 0; i < 11; i++) { SIGN_DOTS.push([22 + i * 8.5, 40 + 12 * Math.sin(i / 10 * Math.PI)]); SIGN_DOTS.push([26 + i * 8, 64 + 10 * Math.sin(i / 10 * Math.PI + 0.6)]); }
 // signes de Lascaux : rangées de points et « blason » quadrillé (cases teintes)
 const SIGN_LINES = 'M116 30 h32 v26 h-32 Z M116 39 h32 M116 48 h32 M126.6 30 v26 M137.3 30 v26 M120 70 L120 96 M132 66 L132 98 M144 70 L144 94';
@@ -2112,7 +2122,7 @@ const ART = {
     body: 'M24 62 C30 50 50 44 70 44 C84 44 94 38 102 40 C110 42 118 48 124 54 C132 58 140 62 144 66 C146 70 144 74 140 74 C132 74 124 74 118 76 C114 80 112 84 112 88 L114 100 L108 100 L106 88 L100 88 L100 100 L94 100 L94 88 C80 92 56 92 44 88 L44 100 L38 100 L37 86 L33 86 L31 98 L26 98 L26 82 C20 76 20 68 24 62 Z',
     fills: ['M136 62 C140 52 146 44 154 40 C150 48 146 56 142 64 Z', 'M126 56 C128 50 132 46 136 44 C134 50 132 54 130 58 Z'],
     lines: [['M116 48 L111 41 L119 46', 1.8], ['M50 90 l-1 6 M60 91 l0 6 M70 91 l0 6 M80 91 l1 6 M30 66 l-5 -3', 1.5]] },
-  mains: { label: 'des mains négatives', kind: 'hands', hands: [[14, 4], [62, -10]] },
+  mains: { label: 'des mains négatives', kind: 'hands', hands: [[6, 2], [72, -12]] },
   signes: { label: 'des signes et des ponctuations', kind: 'signs' },
   chasse: { label: 'une scène de chasse au bison', c: [98, 68], eye: [130, 64],
     body: 'M64 60 C70 46 86 38 100 40 C110 40 118 44 124 52 C130 56 136 62 136 70 C136 76 132 78 128 76 C124 82 120 86 118 90 L120 104 L114 104 L112 92 L104 92 L104 104 L98 104 L96 92 C88 94 78 94 72 92 L72 104 L66 104 L64 90 C60 84 60 70 64 60 Z',
@@ -2132,10 +2142,21 @@ function artSVG(key, ci, animate) {
     + `<filter id="${id}p"><feTurbulence type="fractalNoise" baseFrequency="0.35" numOctaves="3" seed="${artUid % 7}" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.4 0 0 0 2.2" result="m"/><feComposite in="SourceGraphic" in2="m" operator="in"/></filter>`;
   let body = '';
   if (A.kind === 'hands') {
-    defs += `<mask id="${id}m"><rect width="160" height="120" fill="white"/>${A.hands.map(([x, y]) => `<path d="${handPath(x, y)}" fill="black"/>`).join('')}</mask><filter id="${id}b"><feGaussianBlur stdDeviation="2.2"/></filter>`;
-    const R = srand(97 + ci * 31); let dots = '';
-    for (const [x, y] of A.hands) { const cx = x + 44, cy = y + 64; for (let i = 0; i < 70; i++) { const a = R() * 6.28, r = Math.sqrt(R()) * 30; dots += `<circle cx="${(cx + Math.cos(a) * r).toFixed(1)}" cy="${(cy + Math.sin(a) * r * 1.2).toFixed(1)}" r="${(2 + R() * 5).toFixed(1)}" fill="${R() < 0.5 ? c1 : c2}" opacity="${(0.25 + R() * 0.35).toFixed(2)}"/>`; } }
-    body = `<g mask="url(#${id}m)"><g filter="url(#${id}b)" class="af"${d(0.2)}>${dots}</g></g>`;
+    // pigment soufflé à la bouche autour de la main posée sur la paroi : très dense contre le contour,
+    // qui s'estompe vers l'extérieur avec un bord irrégulier, et un semis de fines gouttelettes
+    defs += `<mask id="${id}m"><rect width="160" height="120" fill="white"/>${A.hands.map(([x, y]) => `<path d="${stencilPath(x, y)}" fill="black" filter="url(#${id}f)"/>`).join('')}</mask>`
+      + `<filter id="${id}f"><feGaussianBlur stdDeviation="0.45"/></filter>`
+      + `<filter id="${id}h" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceGraphic" stdDeviation="1.6" result="b"/><feTurbulence type="fractalNoise" baseFrequency="0.07" numOctaves="2" seed="${3 + ci}" result="t"/><feDisplacementMap in="b" in2="t" scale="7" xChannelSelector="R" yChannelSelector="G"/></filter>`
+      + `<filter id="${id}r" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.8"/></filter>`;
+    const R = srand(97 + ci * 31); let dots = '', halo = '', rim = '';
+    for (const [x, y] of A.hands) {
+      const p = stencilPath(x, y);
+      // couches de plus en plus fines et denses vers le contour, comme le pigment qui s'accumule au bord de la main
+      for (let w = 34; w >= 4; w -= 3) halo += `<path d="${p}" fill="none" stroke="${w < 12 ? c2 : c1}" stroke-width="${w}" stroke-linejoin="round" opacity="${(0.06 + (34 - w) * 0.003).toFixed(3)}"/>`;
+      const cx = x + 42, cy = y + 72;
+      for (let i = 0; i < 260; i++) { const a = R() * 6.28, r = 14 + Math.pow(R(), 1.6) * 34; dots += `<circle cx="${(cx + Math.cos(a) * r * 0.85).toFixed(1)}" cy="${(cy + Math.sin(a) * r * 1.15).toFixed(1)}" r="${(0.25 + R() * 0.9).toFixed(2)}" fill="${R() < 0.6 ? c1 : c2}" opacity="${(0.35 + R() * 0.5).toFixed(2)}"/>`; }
+    }
+    body = `<g mask="url(#${id}m)" class="af"${d(0.2)}><g filter="url(#${id}h)">${halo}</g>${dots}</g>`;
   } else if (A.kind === 'signs') {
     body = SIGN_DOTS.map(([x, y], i) => `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="4.6" ry="6" fill="${c1 === PIG[1][0] ? '#c0582f' : c1}" filter="url(#${id}p)" class="af"${d(i * 0.08)}/>`).join('')
       + `<g filter="url(#${id}p)" class="af"${d(1.4)}>${BLASON.map(([x, y, c]) => `<rect x="${x}" y="${y}" width="10.6" height="9" fill="${c}" opacity=".85"/>`).join('')}</g>` + line(SIGN_LINES, 2.4, 1.8);
@@ -2168,9 +2189,16 @@ function drawArtCanvas(key, ci) {
   const A = ART[key], [c1, c2, c3] = PIG[ci] || PIG[0], cv = document.createElement('canvas'); cv.width = 320; cv.height = 240;
   const g = cv.getContext('2d'); g.scale(2, 2); g.lineCap = g.lineJoin = 'round';
   if (A.kind === 'hands') {
+    // même technique que l'illustration, sans filtre (Safari) : traits de plus en plus fins et denses vers le contour
     const R = srand(97 + ci * 31);
-    for (const [x, y] of A.hands) { const cx = x + 44, cy = y + 64; for (let i = 0; i < 160; i++) { const a = R() * 6.28, r = Math.sqrt(R()) * 30; g.globalAlpha = 0.12 + R() * 0.2; g.fillStyle = R() < 0.5 ? c1 : c2; g.beginPath(); g.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r * 1.2, 2 + R() * 5, 0, 7); g.fill(); } }
-    g.globalAlpha = 1; g.globalCompositeOperation = 'destination-out'; for (const [x, y] of A.hands) g.fill(new Path2D(handPath(x, y)));
+    for (const [x, y] of A.hands) {
+      const p = new Path2D(stencilPath(x, y));
+      for (let w = 34; w >= 4; w -= 2) { g.globalAlpha = 0.045 + (34 - w) * 0.0022; g.strokeStyle = w < 12 ? c2 : c1; g.lineWidth = w; g.stroke(p); }
+      const cx = x + 42, cy = y + 72;
+      for (let i = 0; i < 420; i++) { const a = R() * 6.28, r = 14 + Math.pow(R(), 1.6) * 34; g.globalAlpha = 0.3 + R() * 0.5; g.fillStyle = R() < 0.6 ? c1 : c2; g.beginPath(); g.arc(cx + Math.cos(a) * r * 0.85, cy + Math.sin(a) * r * 1.15, 0.25 + R() * 0.9, 0, 7); g.fill(); }
+    }
+    g.globalAlpha = 1; g.globalCompositeOperation = 'destination-out';
+    for (const [x, y] of A.hands) { const p = new Path2D(stencilPath(x, y)); g.fill(p); g.globalAlpha = 0.45; g.lineWidth = 1.1; g.stroke(p); g.globalAlpha = 1; }
   } else if (A.kind === 'signs') {
     g.fillStyle = ci === 1 ? '#c0582f' : c1; g.globalAlpha = 0.9; for (const [x, y] of SIGN_DOTS) { g.beginPath(); g.ellipse(x, y, 4.6, 6, 0, 0, 7); g.fill(); }
     for (const [x, y, c] of BLASON) { g.fillStyle = c; g.fillRect(x, y, 10.6, 9); }
@@ -2407,7 +2435,8 @@ function placeBuild(kind) {
   if (kind === 'palisade' || kind === 'rampart' || kind === 'voie' || kind === 'castrum') return !!addWork(kind, { x: 0, z: 0 });
   if (kind === 'jetty') { const s = jettySpot(); return !!(s && addWork('jetty', s)); }
   if (kind === 'menhirs') {
-    if (!colony.cromlech) { const c = findSpot(16, 26, 9); if (c) { colony.cromlech = c; clearArea(c.x, c.z, 6.5); } }
+    // un terrain dégagé pour le cercle : d'abord près du village, sinon plus loin (jusqu'au pied des collines)
+    if (!colony.cromlech) { const c = findSpot(16, 26, 9) || findSpot(12, 36, 8) || findSpot(10, 46, 7); if (c) { colony.cromlech = c; clearArea(c.x, c.z, 6.5); } }
     if (!colony.cromlech) return false;
     // tout le cercle est mis en chantier d'un coup : les équipes lèvent les pierres en parallèle
     for (let i = works.filter(w => w.kind === 'menhir').length; i < MENHIR_COUNT; i++) { const a = i / MENHIR_COUNT * Math.PI * 2; addWork('menhir', { x: colony.cromlech.x + Math.cos(a) * 4.2, z: colony.cromlech.z + Math.sin(a) * 4.2 }); }
@@ -2419,14 +2448,14 @@ function placeBuild(kind) {
 function orderBuild(kind) {
   const B = BUILDS.find(x => x.kind === kind); if (!B || buildState(B) !== 'ok') return;
   const cost = buildCost(B), before = new Set([...huts, ...fields, ...works]);
-  if (!placeBuild(kind)) { showHint('Les villageois ne trouvent pas de place pour ce chantier.', 2600); return; }
+  if (!placeBuild(kind)) { log(`Pas de place pour : ${B.name().toLowerCase()}.`, 'bad'); openBuild(true, `Les villageois ne trouvent pas de terrain libre pour : ${B.name().toLowerCase()}. Il faut un endroit plat et dégagé, hors de l’eau et des chemins vers les portes.`); return; }
   colony.wood -= cost;
   // le bois est mis de côté tout de suite : le nouveau chantier est payé
   for (const s of [...huts, ...fields, ...works]) if (!before.has(s)) s.paid = true;
   log(`Vous ordonnez : ${B.name().toLowerCase()}${cost ? ` (-${cost} bois)` : ''}. Les villageois choisissent l’emplacement.`, 'power');
-  sfx('tech'); openBuild(true);
+  sfx('tech'); closeModal(); showHint(`Chantier lancé : ${B.name().toLowerCase()}. Les villageois s’y mettent !`, 3000);
 }
-function openBuild(keepScroll) {
+function openBuild(keepScroll, warn) {
   const card = B => {
     const st = buildState(B); if (st === 'locked') return '';
     const cost = buildCost(B), foot = { ok: `Bâtir · ${cost ? cost + ' bois' : 'travail seulement'}`, poor: `Il manque ${Math.ceil(cost - colony.wood)} bois`, done: 'Déjà construit', busy: 'Un chantier est déjà en cours', full: 'Maximum atteint', cant: 'Impossible ici pour l’instant' }[st];
@@ -2434,7 +2463,7 @@ function openBuild(keepScroll) {
   };
   const sites = [...huts, ...fields, ...works].filter(s => !s.built && !s.gone && s.kind !== 'menhir').length + (works.some(w => w.kind === 'menhir' && !w.built) ? 1 : 0);
   openModal(`<p class="eyebrow">Bois disponible : ${Math.floor(colony.wood)} · ${villagers.length} habitants pour ${housingCap()} places</p><h2 id="mtitle">Que doit bâtir la tribu ?</h2>
-  <p class="sub">Vous décidez quoi construire ; les villageois choisissent l’emplacement et bâtissent. ${sites ? `${sites} chantier${sites > 1 ? 's' : ''} en cours.` : ''}</p>
+  ${warn ? `<p class="tip warn">⚠️ ${warn}</p>` : ''}<p class="sub">Vous décidez quoi construire ; les villageois choisissent l’emplacement et bâtissent. ${sites ? `${sites} chantier${sites > 1 ? 's' : ''} en cours.` : ''}</p>
   <div class="bgrid">${BUILDS.map(card).join('')}</div>
   <label class="auto"><input type="checkbox" data-autohomes ${colony.autoHomes !== false ? 'checked' : ''}> La tribu bâtit seule ses maisons et ses champs quand elle en a besoin</label>
   <div class="mfoot"><button class="btn" data-close>Fermer</button></div>`, keepScroll);
