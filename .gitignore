@@ -1,0 +1,6 @@
+# pages de test temporaires
+_*.html
+# fichiers système
+.DS_Store
+Thumbs.db
+desktop.ini
