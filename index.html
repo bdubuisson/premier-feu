@@ -180,7 +180,7 @@ svg.pt.dead{filter:grayscale(1) brightness(.8)}
 .pw svg.i{width:26px;height:26px}
 .pw .nm{font-family:var(--display);font-size:12.5px;letter-spacing:.02em;white-space:nowrap}
 .pw .cost{font-size:11px;color:var(--spirit);font-variant-numeric:tabular-nums}
-.pw[data-power="feu"] svg{color:var(--ember)}.pw[data-power="pluie"] svg{color:var(--spirit)}.pw[data-power="foudre"] svg{color:#e8e4a0}.pw[data-power="crue"] svg{color:#5fa8d3}.pw[data-power="fleurs"] svg{color:#e87aa0}.pw[data-power="tornade"] svg{color:#b8b4ac}.pw[data-power="benir"] svg{color:var(--gold)}.pw[data-power="gibier"] svg{color:var(--moss)}
+.pw[data-power="feu"] svg{color:var(--ember)}.pw[data-power="pluie"] svg{color:var(--spirit)}.pw[data-power="foudre"] svg{color:#e8e4a0}.pw[data-power="crue"] svg{color:#5fa8d3}.pw[data-power="fleurs"] svg{color:#e87aa0}.pw[data-power="tornade"] svg{color:#b8b4ac}.pw[data-power="tourbillon"] svg{color:#4fa3c8}.pw[data-power="benir"] svg{color:var(--gold)}.pw[data-power="gibier"] svg{color:var(--moss)}
 .pw.armed{background:rgba(227,160,63,.2);box-shadow:inset 0 0 0 1.5px var(--ochre)}
 .pw.poor{opacity:.42}
 .pw.tech{margin-left:4px;border-left:1px solid var(--edge);border-radius:0 10px 10px 0;color:var(--ochre)}
@@ -298,6 +298,7 @@ svg.pt.dead{filter:grayscale(1) brightness(.8)}
   <button class="pw" data-power="arc"><svg class="i" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M3 18a9 9 0 0 1 18 0" stroke="#e05a4a"/><path d="M6 18a6 6 0 0 1 12 0" stroke="#f2d06b"/><path d="M9 18a3 3 0 0 1 6 0" stroke="#6fb0d8"/></svg><span class="nm">Arc-en-ciel</span><span class="cost">20</span></button>
   <button class="pw" data-power="fleurs"><svg class="i" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="6.5" r="2.6"/><circle cx="16.8" cy="10" r="2.6"/><circle cx="15" cy="15.2" r="2.6"/><circle cx="9" cy="15.2" r="2.6"/><circle cx="7.2" cy="10" r="2.6"/><circle cx="12" cy="11" r="2.2" fill="#f2d24b"/></svg><span class="nm">Fleurs</span><span class="cost">10</span></button>
   <button class="pw" data-power="tornade"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 4h18M5 8h14M7 12h10M9 16h6M11 20h3"/></svg><span class="nm">Tornade</span><span class="cost">40</span></button>
+  <button class="pw" data-power="tourbillon"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 12c0-1 1-1.6 1.8-1.2 1.4.7 1 3-.6 3.6-2.2.8-4.2-1.2-3.8-3.4.5-3 4-4.4 6.6-3 3.4 1.8 3.4 6.8.2 8.8-3.8 2.4-9 .4-9.8-4"/></svg><span class="nm">Tourbillon</span><span class="cost">25</span></button>
   <button class="pw" data-power="crue"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M3 14c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M3 19c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg><span class="nm">Inondation</span><span class="cost">35</span></button>
   <button class="pw" data-power="benir"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg><span class="nm">Bénir</span><span class="cost">40</span></button>
   <button class="pw" data-power="gibier"><svg class="i" viewBox="0 0 24 24"><path d="M8 20c-2-2-1-6 4-6s6 4 4 6-6 2-8 0z"/><circle cx="6" cy="11" r="1.8"/><circle cx="9.5" cy="7" r="1.8"/><circle cx="14.5" cy="7" r="1.8"/><circle cx="18" cy="11" r="1.8"/></svg><span class="nm">Gibier</span><span class="cost">30</span></button>
@@ -3035,6 +3036,7 @@ const POWERS = {
   arc: { name: 'Arc-en-ciel', cost: 20, cast: castRainbow, can: () => isNight() ? 'Pas d’arc-en-ciel la nuit : il faut le soleil pour éclairer les gouttes de pluie.' : null, desc: 'un arc-en-ciel se dresse dans le ciel : ceux qui le voient retrouvent le sourire. Après une pluie, il est double !' },
   fleurs: { name: 'Fleurs', cost: 10, cast: castFlowers, can: () => seasonName() === 'hiver' ? 'En hiver, les fleurs ne poussent pas : attends le printemps.' : null, desc: 'fait pousser un bouquet de fleurs sauvages de l’époque, différentes selon le climat et les savoirs. Touche-les ensuite pour savoir lesquelles.' },
   tornade: { name: 'Tornade', cost: 40, cast: castTornado, desc: 'une tornade descend du ciel et erre quelques secondes : elle arrache les arbres, emporte les huttes de branchages et les chantiers, renverse les villageois et balaie les pillards. À manier avec précaution !' },
+  tourbillon: { name: 'Tourbillon', cost: 25, cast: castWhirlpool, can: (x, z) => x !== undefined && !waterAt(x, z) ? 'Le tourbillon ne peut naître que dans l’eau : touche la mer ou un lac (pas la glace).' : null, desc: 'à lancer sur la mer ou un lac : l’eau tourne en entonnoir, les pirogues tournent en rond, le navire marchand fait demi-tour, et à la fin des poissons étourdis remontent pour les pêcheurs.' },
   crue: { name: 'Inondation', cost: 35, cast: castFlood, desc: 'la rivière déborde : l’eau éteint les incendies, emporte les pillards et noie les champs… puis laisse un limon fertile qui rendra les prochaines récoltes plus belles.' },
   foudre: { name: 'Foudre', cost: 30, cast: castLightning, desc: 'un éclair tombe exactement là où vous touchez : il foudroie villageois et pillards, tue les bêtes et enflamme les arbres. À manier avec précaution !' },
   benir: { name: 'Bénédiction', cost: 40, cast: castBless, desc: 'soigne les malades et redonne santé, énergie et moral dans le cercle doré. La tribu fait plus d’enfants pendant une journée.' },
@@ -3171,6 +3173,45 @@ function castTornado(x, z) {
     return true;
   } });
   log('Le ciel tourne au vert, une tornade descend des nuages !', 'power');
+}
+// Tourbillon : seulement sur l'eau libre (mer ou lac, pas la glace). Comme le Maelström au large de la Norvège, l'eau tourne
+// en entonnoir : les pirogues sont entraînées en rond, le navire marchand fait demi-tour, et les poissons étourdis remontent.
+const WHIRL_R = 4.5, WHIRL_LIFE = 12;
+function castWhirlpool(x, z) {
+  const g = new T.Group(); g.position.set(x, -0.02, z); scene.add(g);
+  const dark = new T.MeshBasicMaterial({ color: '#173c55', transparent: true, opacity: 0, depthWrite: false, side: T.DoubleSide });
+  const foam = new T.MeshBasicMaterial({ color: '#eef6f8', transparent: true, opacity: 0, depthWrite: false });
+  // le creux : des anneaux de plus en plus sombres vers le centre, posés sur l'eau
+  const darks = [0.18, 0.3, 0.45, 0.65, 0.85].map((a, i) => { const m = dark.clone(); m.userData.a = a; const r0 = WHIRL_R * (1 - (i + 1) / 5), r1 = WHIRL_R * (1 - i / 5); const d = new T.Mesh(new T.RingGeometry(r0, r1, 36).rotateX(-Math.PI / 2), m); d.position.y = 0.03 + i * 0.002; d.renderOrder = 2; g.add(d); return m; });
+  for (let arm = 0; arm < 3; arm++) {
+    const pts = []; for (let i = 0; i <= 40; i++) { const t = i / 40, a = arm * 2.094 + t * 7, r = 0.4 + t * WHIRL_R; pts.push(new T.Vector3(Math.cos(a) * r, 0.08, Math.sin(a) * r)); }
+    const spiral = new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts), 60, 0.1, 4), foam); spiral.renderOrder = 3; g.add(spiral);
+  }
+  const ring = new T.Mesh(new T.RingGeometry(WHIRL_R - 0.3, WHIRL_R + 0.4, 40).rotateX(-Math.PI / 2), foam); ring.position.y = 0.06; ring.renderOrder = 3; g.add(ring);
+  const spun = new Set(); let t = 0, spray = 0, shipHit = false;
+  effects.push({ update(dt) {
+    const sdt = dt * Math.max(speed, 0.5); t += sdt;
+    const k = Math.min(1, t / 1.2, (WHIRL_LIFE - t) / 2);
+    for (const m of darks) m.opacity = m.userData.a * k; foam.opacity = 0.9 * k; g.rotation.y -= sdt * 2.6; g.scale.set(0.3 + 0.7 * k, 1, 0.3 + 0.7 * k);
+    if ((spray -= dt) <= 0) { spray = 0.15; const a = rr(0, 6.28); burst(x + Math.cos(a) * WHIRL_R, 0.1, z + Math.sin(a) * WHIRL_R, '#e6f2f6', 6, { spread: 1, up: 2.5, life: 0.8, size: 0.35, gravity: 6 }); }
+    const R = WHIRL_R * 1.5 * k;
+    // les pirogues prises dans le courant tournent autour du tourbillon puis s'en échappent
+    for (const v of villagers) if (v.inBoat && Math.hypot(v.x - x, v.z - z) < R) {
+      const a = Math.atan2(v.z - z, v.x - x) + sdt * 1.6, d = Math.hypot(v.x - x, v.z - z) + sdt * 0.4;
+      v.x = x + Math.cos(a) * d; v.z = z + Math.sin(a) * d; v.face = a;
+      if (!spun.has(v)) { spun.add(v); v.energy = Math.max(0, v.energy - 25); v.happy -= 8; journal(v, 'Sa pirogue a été prise dans un tourbillon.'); log(`La pirogue de ${v.name} est happée par le tourbillon et tourne, tourne…`, 'power'); }
+    }
+    if (ship && Math.hypot(ship.x - x, ship.z - z) < R + 3) { ship.face += sdt * 4; if (!shipHit) { shipHit = true; ship.state = 'out'; log('Le navire marchand est pris dans le tourbillon : il tourne sur lui-même puis repart au large sans accoster.', 'power'); } }
+    for (const w of fauna.whales) if (Math.hypot(w.x - x, w.z - z) < R + 4) { const a = Math.atan2(w.z - z, w.x - x); w.x += Math.cos(a) * sdt * 3; w.z += Math.sin(a) * sdt * 3; }
+    if (t >= WHIRL_LIFE) {
+      scene.remove(g); g.traverse(o => o.geometry && o.geometry.dispose()); darks.forEach(m => m.dispose()); dark.dispose(); foam.dispose();
+      if (hasJob('pecheur') || spun.size) { colony.food = Math.min(foodCap(), colony.food + 10); log('Le tourbillon s’apaise et remonte des poissons étourdis : les pêcheurs en remplissent leurs paniers (+10 nourriture).', 'good'); }
+      else log('Le tourbillon s’apaise ; la surface redevient calme.', 'power');
+      return false;
+    }
+    return true;
+  } });
+  log('L’eau se met à tourner : un tourbillon se creuse, comme le Maelström au large de la Norvège.', 'power');
 }
 // Inondation : l'eau monte dans les creux autour du point touché, puis redescend en laissant un limon fertile
 // (les crues de la Loire ou du Nil enrichissaient les champs des vallées)
@@ -3920,7 +3961,7 @@ function handleTap(sx, sy) {
     const p = groundPoint(sx, sy); if (!p) return;
     const pw = POWERS[armed];
     if (colony.mana < pw.cost) { showHint(`Pas assez de mana pour ${pw.name} (${pw.cost}).`, 1800); return; }
-    const why = pw.can && pw.can(); if (why) { showHint(why, 2400); return; }
+    const why = pw.can && pw.can(p.x, p.z); if (why) { showHint(why, 2400); return; }
     // on mesure l'effet du pouvoir pour la quête en cours (malades guéris, pillards frappés, foyer rallumé…)
     const sick0 = villagers.filter(v => v.sick).length, fallen0 = raid ? raid.fallen : 0, lit0 = colony.fireLit, kind = armed;
     const adults = villagers.filter(v => v.adult && Math.hypot(v.x - p.x, v.z - p.z) < 8).length;
