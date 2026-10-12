@@ -137,6 +137,23 @@ svg.pt.dead{filter:grayscale(1) brightness(.8)}
 
 /* --- fiche villageois --- */
 #card{left:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 98px);width:min(290px,calc(100% - 24px));background:var(--bark);border:1px solid var(--edge);border-radius:12px;padding:12px 14px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+/* --- passage d'un âge à l'autre --- */
+#eraT{position:fixed;inset:0;z-index:60;background:radial-gradient(ellipse at 50% 50%,rgba(60,42,20,.55),rgba(10,7,4,.92));display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;animation:etFade 3.8s ease forwards}
+#eraT .et-line{position:absolute;top:50%;left:-10%;width:120%;height:2px;background:linear-gradient(90deg,transparent,var(--ochre),transparent);animation:etLine 3.8s ease-out forwards}
+#eraT .et-prev,#eraT .et-next{position:absolute;font-family:var(--display);letter-spacing:.04em;text-align:center;width:90%}
+#eraT .et-prev{font-size:clamp(20px,4vw,34px);color:var(--bone-dim);animation:etPrev 3.8s ease forwards}
+#eraT .et-next{font-size:clamp(30px,7vw,64px);color:#f6dc8a;text-shadow:0 0 24px rgba(242,208,107,.7);opacity:0;animation:etNext 3.8s ease forwards}
+#eraT .et-year{position:absolute;top:calc(50% + 56px);font-size:16px;color:var(--bone);opacity:0;animation:etYear 3.8s ease forwards}
+#eraT .et-sparks i{position:absolute;bottom:-10px;width:5px;height:5px;border-radius:50%;background:#f6dc8a;box-shadow:0 0 8px #f2d06b;animation:etSpark 2.6s ease-out forwards;opacity:0}
+@keyframes etFade{0%{opacity:0}10%{opacity:1}88%{opacity:1}100%{opacity:0}}
+@keyframes etLine{0%{transform:scaleX(0)}40%{transform:scaleX(1)}100%{transform:scaleX(1)}}
+@keyframes etPrev{0%{transform:translate(0,-30px);opacity:0}15%{opacity:1;transform:translate(0,-30px)}45%{opacity:1;transform:translate(0,-30px)}70%{opacity:0;transform:translate(-40%,-30px)}100%{opacity:0}}
+@keyframes etNext{0%,45%{opacity:0;transform:scale(.6)}65%{opacity:1;transform:scale(1.08)}75%,100%{opacity:1;transform:scale(1)}}
+@keyframes etYear{0%,60%{opacity:0}75%,100%{opacity:1}}
+@keyframes etSpark{0%{opacity:0;transform:translateY(0)}20%{opacity:1}100%{opacity:0;transform:translateY(-70vh)}}
+.eras{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0}
+.eras p{font-size:14px;line-height:1.45}
+@media (max-width:560px){.eras{grid-template-columns:1fr}}
 /* --- fiche bâtiment --- */
 #bcard{left:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 98px);width:min(340px,calc(100% - 24px));max-height:min(62vh,520px);overflow-y:auto;background:var(--bark);border:1px solid var(--edge);border-radius:12px;padding:12px 14px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 #bcard .cid{display:flex;flex-direction:column}
@@ -163,7 +180,7 @@ svg.pt.dead{filter:grayscale(1) brightness(.8)}
 .pw svg.i{width:26px;height:26px}
 .pw .nm{font-family:var(--display);font-size:12.5px;letter-spacing:.02em;white-space:nowrap}
 .pw .cost{font-size:11px;color:var(--spirit);font-variant-numeric:tabular-nums}
-.pw[data-power="feu"] svg{color:var(--ember)}.pw[data-power="pluie"] svg{color:var(--spirit)}.pw[data-power="foudre"] svg{color:#e8e4a0}.pw[data-power="crue"] svg{color:#5fa8d3}.pw[data-power="benir"] svg{color:var(--gold)}.pw[data-power="gibier"] svg{color:var(--moss)}
+.pw[data-power="feu"] svg{color:var(--ember)}.pw[data-power="pluie"] svg{color:var(--spirit)}.pw[data-power="foudre"] svg{color:#e8e4a0}.pw[data-power="crue"] svg{color:#5fa8d3}.pw[data-power="fleurs"] svg{color:#e87aa0}.pw[data-power="benir"] svg{color:var(--gold)}.pw[data-power="gibier"] svg{color:var(--moss)}
 .pw.armed{background:rgba(227,160,63,.2);box-shadow:inset 0 0 0 1.5px var(--ochre)}
 .pw.poor{opacity:.42}
 .pw.tech{margin-left:4px;border-left:1px solid var(--edge);border-radius:0 10px 10px 0;color:var(--ochre)}
@@ -279,6 +296,7 @@ svg.pt.dead{filter:grayscale(1) brightness(.8)}
   <button class="pw" data-power="pluie"><svg class="i" viewBox="0 0 24 24"><path d="M7 14a4 4 0 0 1 .4-8 5.2 5.2 0 0 1 9.9 1.6A3.3 3.3 0 0 1 17 14z"/><path d="M8.5 17.5l-1 3M12.5 17.5l-1 3M16.5 17.5l-1 3"/></svg><span class="nm">Pluie</span><span class="cost">20</span></button>
   <button class="pw" data-power="foudre"><svg class="i" viewBox="0 0 24 24"><path d="M13.5 2.5L5.5 13.5h5l-1.5 8 8.5-11.5h-5.2l1.2-7.5z"/></svg><span class="nm">Foudre</span><span class="cost">30</span></button>
   <button class="pw" data-power="arc"><svg class="i" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M3 18a9 9 0 0 1 18 0" stroke="#e05a4a"/><path d="M6 18a6 6 0 0 1 12 0" stroke="#f2d06b"/><path d="M9 18a3 3 0 0 1 6 0" stroke="#6fb0d8"/></svg><span class="nm">Arc-en-ciel</span><span class="cost">20</span></button>
+  <button class="pw" data-power="fleurs"><svg class="i" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="6.5" r="2.6"/><circle cx="16.8" cy="10" r="2.6"/><circle cx="15" cy="15.2" r="2.6"/><circle cx="9" cy="15.2" r="2.6"/><circle cx="7.2" cy="10" r="2.6"/><circle cx="12" cy="11" r="2.2" fill="#f2d24b"/></svg><span class="nm">Fleurs</span><span class="cost">10</span></button>
   <button class="pw" data-power="crue"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M3 14c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M3 19c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg><span class="nm">Inondation</span><span class="cost">35</span></button>
   <button class="pw" data-power="benir"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg><span class="nm">Bénir</span><span class="cost">40</span></button>
   <button class="pw" data-power="gibier"><svg class="i" viewBox="0 0 24 24"><path d="M8 20c-2-2-1-6 4-6s6 4 4 6-6 2-8 0z"/><circle cx="6" cy="11" r="1.8"/><circle cx="9.5" cy="7" r="1.8"/><circle cx="14.5" cy="7" r="1.8"/><circle cx="18" cy="11" r="1.8"/></svg><span class="nm">Gibier</span><span class="cost">30</span></button>
@@ -1076,7 +1094,7 @@ function preyKilled(d, killer) {
 }
 function built(k) { return works.some(w => w.kind === k && w.built); }
 const toolsMax = () => tech.bronze ? 20 : 10;
-const workMul = () => 1 + (colony.tools || 0) * (tech.bronze ? 0.025 : 0.02);
+const workMul = () => 1 + (colony.tools || 0) * (tech.bronze ? 0.025 : 0.02) + (colony.smithFinds ? colony.smithFinds.length * 0.015 : 0);
 function updateDeer(d, gh) {
   const S = SPECIES[d.sp];
   d.fleeCd = Math.max(0, d.fleeCd - gh); d.moving = false;
@@ -1289,6 +1307,7 @@ const JOBS = {
   tuilier: { m: 'Tuilier', f: 'Tuilière', unlock: () => tech.tuiles, work: 'Moule et cuit des tuiles', talent: ['batisseur', 'robuste'], n: 1, diary: 'Défourne une fournée de tuiles rouges.' },
   scribe: { m: 'Scribe', f: 'Scribe', unlock: () => tech.latin, work: 'Tient les comptes sur des tablettes de cire', talent: ['conteur', 'reveur'], n: 1, diary: 'Grave une dédicace aux dieux sur une plaque de pierre.' },
   veteran: { m: 'Vétéran des légions', f: 'Vétérane', unlock: () => tech.pax, work: 'Entraîne la milice du vicus', talent: ['intrepide', 'chasseur'], n: p => Math.max(1, Math.floor(p / 20)), men: true, diary: 'Raconte ses vingt-cinq ans de service sur le Rhin.' },
+  boulanger: { m: 'Boulanger', f: 'Boulangère', unlock: () => tech.pax, work: 'Cuit le pain au four', talent: ['cueilleur', 'joyeux'], n: p => p >= 30 ? 2 : 1, diary: 'Défourne des pains ronds marqués de huit parts, comme à Pompéi.' },
   vigneron: { m: 'Vigneron', f: 'Vigneronne', unlock: () => tech.vigne, work: 'Taille et vendange la vigne', talent: ['cueilleur', 'joyeux'], n: 1, diary: 'Foule le raisin de la vendange.' },
   guerrier: { m: 'Guerrier', f: 'Guerrière', until: 'pax', unlock: () => tech.guerriers, work: 'Monte la garde', talent: ['chasseur', 'intrepide'], n: p => Math.max(2, Math.floor(p / 8)), men: true, diary: 'Monte la garde sur la palissade toute la nuit.' },
 };
@@ -1365,6 +1384,7 @@ function weighted(opts) { const tot = opts.reduce((s, o) => s + o[0], 0); let r 
 function think(v) {
   if (raid) return v.adult && !v.druid && !v.sick && v.health > 30 ? { type: 'defend' } : { type: 'hide' };
   if (v.adult && !colony.fireLit && colony.wood >= 3 && countTask(t => t.type === 'fire') === 0) return { type: 'fire' };
+  if (colony.feast && colony.time < colony.feast.until && !v.sick) return { type: 'dance' };
   if (isNight() || v.energy < 18 || (v.sick && v.health < 60)) return { type: 'sleep' };
   if (v.sat < 40 && colony.food >= 1) return { type: 'eat', ox: rr(-0.9, 0.9), oz: rr(0.6, 1.3) };
   if (!v.adult) return { type: 'play' };
@@ -1395,7 +1415,7 @@ function think(v) {
   if (tech.peinture && caves.length && (colony.paintings || 0) < 14 && countTask(t => t.type === 'paint') === 0)
     opts.push([has(v, 'mystique') || has(v, 'conteur') || (v.dream.includes('peindre') && !v.dreamDone) ? 0.9 : 0.12, { type: 'paint', cave: pick((ok => ok.length ? ok : caves)(caves.filter(c => caveRole(c) !== 'bergerie' && caveRole(c) !== 'reserve'))) }]);
   const forge = works.find(w => w.kind === 'forge' && w.built);
-  if (forge && !forge.res && (colony.tools || 0) < toolsMax()) opts.push([v.job === 'forgeron' ? 3 : v.smith || has(v, 'batisseur') ? 1.4 : 0.5, { type: 'smith', target: forge }]);
+  if (forge && !forge.res && ((colony.tools || 0) < toolsMax() || SMITH_FINDS.some(s => s[1]() && !(colony.smithFinds || []).includes(s[0])))) opts.push([v.job === 'forgeron' ? 3 : v.smith || has(v, 'batisseur') ? 1.4 : 0.5, { type: 'smith', target: forge }]);
   // métiers
   if (v.job && JOBS[v.job]) {
     if (JOBS[v.job].task === 'fish') { const sp = nearestShore(v); if (sp) opts.push([Math.max(1.2, foodNeed * 1.8), { type: 'fish', tx: sp.x, tz: sp.z, sh: sp, boat: !!tech.pirogue && (colony.seaIce || 0) < 0.3 && Math.random() < 0.7 }]); }
@@ -1458,7 +1478,9 @@ function runTask(v, gh) {
     case 'eat': {
       if (!t.arrived) { if (moveTo(v, FOODPILE.x + t.ox, FOODPILE.z + t.oz, gh, spd(v))) t.arrived = true; break; }
       t.t = (t.t || 0) + gh; v.face = Math.atan2(FOODPILE.x - v.x, FOODPILE.z - v.z);
-      if (t.t >= 0.5) { while (v.sat < 88 && colony.food >= 1) { colony.food -= 1; v.sat += 26; } v.sat = Math.min(100, v.sat); endTask(v); }
+      if (!t.dish) { t.dish = pickDish(); v.lastDish = t.dish[2]; }
+      // le pain du boulanger cale davantage
+      if (t.t >= 0.5) { const per = hasJob('boulanger') ? 32 : 26; while (v.sat < 88 && colony.food >= 1) { colony.food -= 1; v.sat += per; } v.sat = Math.min(100, v.sat); endTask(v); }
       break;
     }
     case 'gather': {
@@ -1482,6 +1504,7 @@ function runTask(v, gh) {
         // les grosses bêtes ne se chassent qu'en équipe : on attend les autres chasseurs
         const team = villagers.filter(h => h.task && h.task.type === 'hunt' && h.task.target === d && h.task.phase !== 'back');
         if (S.hunters > 1 && team.length < Math.min(2, S.hunters) && t.total < 6) break;
+        if (tech.lances && dd > 2) shoot(v, d, bowKnown() ? 'arrow' : 'spear');
         if (Math.random() < S.hit + (tech.lances ? 0.15 : 0) + (tech.bronze ? 0.1 : 0) + (tech.fer ? 0.05 : 0) + (hasJob('tailleur') ? 0.05 : 0) + (has(v, 'chasseur') ? 0.15 : 0)) {
           if (--d.hp <= 0) preyKilled(d, v);
         } else if (S.danger && Math.random() < S.danger) {
@@ -1532,6 +1555,7 @@ function runTask(v, gh) {
       if (t.t >= 3) {
         f.res = null; colony.tools = Math.min(toolsMax(), (colony.tools || 0) + 1);
         if (!v.smith) { v.smith = true; journal(v, `Devient ${gx(v, 'forgeron', 'forgeronne')} du village.`); }
+        smithDiscover(v, f);
         milestone(tech.fer ? 'tools:fer' : tech.bronze ? 'tools:bronze' : 'tools:cuivre', f.x, f.z);
         if (colony.tools % 5 === 0) log(`${v.name} forge des outils ${tech.bronze ? 'de bronze' : 'de cuivre'} : le travail va plus vite.`, 'good');
         endTask(v);
@@ -1565,6 +1589,16 @@ function runTask(v, gh) {
       if (t.tx === undefined) { const q = v.hut ? nearestQuarter(v.hut.x, v.hut.z) : { x: 0, z: 0, i: 0 }, a = rr(0, 6.28), r = q.i ? rr(0.8, 3.2) : rr(2.6, t.type === 'play' ? 7 : 5.5); t.tx = q.x + Math.cos(a) * r; t.tz = q.z + Math.sin(a) * r; t.dur = rr(0.5, 1.6); }
       if (!t.arrived) { if (moveTo(v, t.tx, t.tz, gh, spd(v) * (t.type === 'play' ? 1.15 : 0.55))) t.arrived = true; break; }
       t.t = (t.t || 0) + gh; if (t.t >= t.dur) endTask(v);
+      break;
+    }
+    case 'dance': {
+      // ronde autour de la place : chacun rejoint sa place dans le cercle, puis tout le monde tourne en sautillant
+      const F = colony.feast; if (!F || colony.time >= F.until) { endTask(v); break; }
+      if (t.a === undefined) t.a = rr(0, 6.28);
+      const R = F.R, tx = Math.cos(t.a) * R, tz = Math.sin(t.a) * R;
+      if (!t.arrived) { if (moveTo(v, tx, tz, gh, spd(v))) t.arrived = true; break; }
+      t.a += gh * 0.7; v.x = Math.cos(t.a) * R; v.z = Math.sin(t.a) * R; v.face = t.a + Math.PI;
+      v.happy = Math.min(100, v.happy + gh * 4);
       break;
     }
     case 'flee': { if (moveTo(v, t.tx, t.tz, gh, spd(v) * 1.7)) endTask(v); break; }
@@ -1604,12 +1638,34 @@ function runTask(v, gh) {
       if (!raid) { endTask(v); break; }
       let r = t.foe; if (!r || !r.alive) { r = t.foe = nearestRaider(v); }
       if (!r) { endTask(v); break; }
-      if (Math.hypot(r.x - v.x, r.z - v.z) > 1.4) { moveTo(v, r.x, r.z, gh, spd(v) * 1.15); t.t = 0; break; }
+      // les archers tirent de loin, les autres vont au corps à corps
+      const dr = Math.hypot(r.x - v.x, r.z - v.z);
+      if (isArcher(v) && dr > 2 && dr < 9) {
+        v.face = Math.atan2(r.x - v.x, r.z - v.z); v.working = true; t.t = (t.t || 0) + gh;
+        if (t.t >= 0.6) { t.t = 0; shoot(v, r, 'arrow');
+          if (Math.random() < 0.25 + (v.job === 'guerrier' ? 0.1 : 0) + (has(v, 'chasseur') ? 0.1 : 0) && --r.hp <= 0) { raiderGone(r); raid.fallen++; v.stats.foes = (v.stats.foes || 0) + 1; journal(v, 'Abat un pillard d’une flèche en défendant le village.'); if (r.carry) colony.food = Math.min(foodCap(), colony.food + r.carry); } }
+        break;
+      }
+      if (dr > 1.4) { moveTo(v, r.x, r.z, gh, spd(v) * 1.15); t.t = 0; break; }
       v.face = Math.atan2(r.x - v.x, r.z - v.z); v.working = true; t.t = (t.t || 0) + gh;
       if (t.t >= 0.4) { t.t = 0; fight(v, r); }
       break;
     }
   }
+}
+// ---- armes de jet : sagaie lancée au propulseur au Paléolithique, puis l'arc (les plus anciennes flèches connues,
+// à Stellmoor en Allemagne, ont environ 12 000 ans) ----
+const bowKnown = () => colony.year > -12000;
+const isArcher = v => bowKnown() && (has(v, 'chasseur') || v.id % 2 === 0);
+const ARROW_GEO = merge([new T.CylinderGeometry(0.02, 0.02, 0.8, 4).rotateX(Math.PI / 2), new T.ConeGeometry(0.05, 0.14, 4).rotateX(Math.PI / 2).translate(0, 0, 0.45)]);
+const SPEAR_GEO = merge([new T.CylinderGeometry(0.03, 0.03, 1.7, 4).rotateX(Math.PI / 2), new T.ConeGeometry(0.06, 0.22, 4).rotateX(Math.PI / 2).translate(0, 0, 0.95)]);
+const BOW_GEO = new T.TorusGeometry(0.36, 0.025, 4, 12, Math.PI).rotateZ(-Math.PI / 2).translate(0.3, 0.95, 0.12);
+function shoot(a, b, kind) {
+  const m = new T.Mesh(kind === 'arrow' ? ARROW_GEO : SPEAR_GEO, VM.spear); scene.add(m);
+  const ax = a.x, az = a.z, ay = Math.max(heightAt(ax, az), 0) + 1.2, bx = b.x, bz = b.z, by = Math.max(heightAt(bx, bz), 0) + 0.8;
+  const D = Math.hypot(bx - ax, bz - az), arc = D * 0.12, dur = kind === 'arrow' ? 0.35 : 0.5; let t = 0;
+  const at = k => _v.set(ax + (bx - ax) * k, ay + (by - ay) * k + Math.sin(k * Math.PI) * arc, az + (bz - az) * k);
+  effects.push({ update(dt) { t += dt / dur; if (t >= 1) { scene.remove(m); return false; } m.position.copy(at(t)); const nx = _v.x, ny = _v.y, nz = _v.z; at(Math.min(1, t + 0.05)); m.lookAt(_v.x, _v.y, _v.z); m.position.set(nx, ny, nz); return true; } });
 }
 function makeFlee(v) { endTask(v); v.carry = null; const a = rr(0, 6.28); v.task = { type: 'flee', tx: Math.cos(a) * 3.5, tz: Math.sin(a) * 3.5 }; }
 
@@ -2976,6 +3032,7 @@ const POWERS = {
   feu: { name: 'Feu', cost: 25, cast: castFire, desc: 'brûle tout dans un petit cercle : arbres, gibier, maisons… et pillards. Rallume aussi le foyer éteint. Attention aux villageois !' },
   pluie: { name: 'Pluie', cost: 20, desc: 'arrose une zone : éteint les incendies, fait pousser les champs et les baies plus vite.', cast: (x, z) => { startRain(x, z); log('Des nuages noirs s’amoncellent. La pluie tombe.', 'power'); } },
   arc: { name: 'Arc-en-ciel', cost: 20, cast: castRainbow, can: () => isNight() ? 'Pas d’arc-en-ciel la nuit : il faut le soleil pour éclairer les gouttes de pluie.' : null, desc: 'un arc-en-ciel se dresse dans le ciel : ceux qui le voient retrouvent le sourire. Après une pluie, il est double !' },
+  fleurs: { name: 'Fleurs', cost: 10, cast: castFlowers, can: () => seasonName() === 'hiver' ? 'En hiver, les fleurs ne poussent pas : attends le printemps.' : null, desc: 'fait pousser un bouquet de fleurs sauvages de l’époque, différentes selon le climat et les savoirs. Touche-les ensuite pour savoir lesquelles.' },
   crue: { name: 'Inondation', cost: 35, cast: castFlood, desc: 'la rivière déborde : l’eau éteint les incendies, emporte les pillards et noie les champs… puis laisse un limon fertile qui rendra les prochaines récoltes plus belles.' },
   foudre: { name: 'Foudre', cost: 30, cast: castLightning, desc: 'un éclair tombe exactement là où vous touchez : il foudroie villageois et pillards, tue les bêtes et enflamme les arbres. À manier avec précaution !' },
   benir: { name: 'Bénédiction', cost: 40, cast: castBless, desc: 'soigne les malades et redonne santé, énergie et moral dans le cercle doré. La tribu fait plus d’enfants pendant une journée.' },
@@ -3010,6 +3067,61 @@ function castRainbow(x, z) {
   for (const v of villagers) if (Math.hypot(v.x - x, v.z - z) < R * 1.6) { v.happy = Math.min(100, v.happy + (double ? 35 : 25)); n++; if (!v.adult) journal(v, 'A couru vers l’arc-en-ciel.'); }
   colony.mood += double ? 10 : 6;
   log(double ? `Un double arc-en-ciel après la pluie ! ${n ? n + ' villageois le regardent, émerveillés.' : ''}` : n ? `Un arc-en-ciel s’élève. ${n} villageois s’arrêtent pour l’admirer, les enfants courent vers lui.` : 'Un arc-en-ciel s’élève au-dessus des collines.', 'power');
+}
+// Fleurs : un bouquet de fleurs sauvages de l'époque (pollens et graines retrouvés par les archéologues),
+// des fleurs de la toundra pendant la glaciation, celles des prés et des sous-bois ensuite, les « mauvaises herbes »
+// des moissons avec l'agriculture, puis les fleurs des jardins romains.
+const FLOWERS = {
+  dryade: ['Dryade à huit pétales', '#f6f4ea', 'Une petite fleur blanche de la toundra. Elle a donné son nom aux périodes froides de la fin de la glaciation, les « Dryas », car son pollen abonde dans les couches de cette époque.'],
+  saxifrage: ['Saxifrage', '#f2b6cf', 'Une fleur des rochers et des sols gelés ; son nom veut dire « qui brise la pierre ».'],
+  gentiane: ['Gentiane', '#3f5fc8', 'Une fleur d’un bleu intense, des prairies froides et des montagnes.'],
+  linaigrette: ['Linaigrette', '#ffffff', 'Ses pompons blancs comme du coton couvrent les marais de la toundra.'],
+  primevere: ['Primevère', '#f3d65a', 'Une des premières fleurs du printemps, dans les sous-bois et les prés.'],
+  jacinthe: ['Jacinthe des bois', '#6a5ad0', 'Au printemps, elle couvre d’un tapis bleu-violet les forêts de chênes de l’Ouest.'],
+  marguerite: ['Marguerite', '#fbfbf2', 'La grande fleur blanche des prairies, au cœur jaune.'],
+  boutondor: ['Bouton d’or', '#f5d22a', 'Une petite fleur jaune et brillante des prés humides.'],
+  bruyere: ['Bruyère', '#c86aa8', 'Un petit arbuste aux fleurs roses qui couvre les landes de l’Ouest.'],
+  coquelicot: ['Coquelicot', '#e03a2a', 'Il est arrivé avec les premiers paysans, ses graines mêlées à celles des céréales : depuis le Néolithique, il pousse dans les champs.'],
+  bleuet: ['Bleuet', '#3f7fe0', 'Lui aussi est venu du Proche-Orient avec le blé : il fleurit dans les moissons.'],
+  nielle: ['Nielle des blés', '#9a4fb0', 'Une fleur pourpre des champs de céréales, compagne des moissons depuis le Néolithique.'],
+  rose: ['Rose', '#d84a6a', 'Les Romains adorent les roses : ils en font des couronnes et des parfums, et en jettent les pétales pendant les fêtes.'],
+  lys: ['Lys blanc', '#fbf6e6', 'Les Romains le plantent dans leurs jardins pour son parfum, et en tirent un onguent.'],
+  violette: ['Violette', '#7a4fc0', 'Les Romains en tressent des couronnes et en parfument leur vin.'],
+  souci: ['Souci', '#f39a1a', 'Une fleur orange des jardins romains, utilisée comme remède et pour teindre.'],
+};
+function flowerPool() {
+  if (colony.year < -11700) return ['dryade', 'saxifrage', 'gentiane', 'linaigrette'];
+  const wild = ['primevere', 'jacinthe', 'marguerite', 'boutondor', 'bruyere'];
+  if (tech.pax) return ['rose', 'lys', 'violette', 'souci', 'coquelicot', 'bleuet', ...wild];
+  if (tech.agri) return ['coquelicot', 'bleuet', 'nielle', ...wild];
+  return wild;
+}
+const MAX_PATCHES = 40, PATCH_N = 30;
+const FLOWER_STEM = new T.InstancedMesh(new T.CylinderGeometry(0.018, 0.022, 0.36, 4).translate(0, 0.18, 0), lam('#4f8a36'), MAX_PATCHES * PATCH_N);
+const FLOWER_HEAD = new T.InstancedMesh(new T.IcosahedronGeometry(0.085, 0).scale(1, 0.7, 1).translate(0, 0.38, 0), lam('#ffffff'), MAX_PATCHES * PATCH_N);
+for (const im of [FLOWER_STEM, FLOWER_HEAD]) { im.count = 0; im.frustumCulled = false; scene.add(im); }
+function syncFlowers() {
+  const P = colony.flowers || []; let k = 0;
+  for (const pt of P) for (let i = 0; i < PATCH_N; i++) {
+    const a = hash(pt.s + i, 3) * 6.28, r = Math.sqrt(hash(pt.s + i, 7)) * 3.2, x = pt.x + Math.cos(a) * r, z = pt.z + Math.sin(a) * r, h = heightAt(x, z);
+    if (h < 0.5 || h > 10) continue;
+    const s = 0.8 + hash(pt.s + i, 11) * 0.5; _q.setFromAxisAngle(UP, a); _s.set(s, s, s); _p.set(x, h - 0.02, z); _m.compose(_p, _q, _s);
+    FLOWER_STEM.setMatrixAt(k, _m); FLOWER_HEAD.setMatrixAt(k, _m); FLOWER_HEAD.setColorAt(k, _c.set(FLOWERS[pt.sp[i % pt.sp.length]][1])); k++;
+  }
+  FLOWER_STEM.count = FLOWER_HEAD.count = k;
+  FLOWER_STEM.instanceMatrix.needsUpdate = FLOWER_HEAD.instanceMatrix.needsUpdate = true; if (FLOWER_HEAD.instanceColor) FLOWER_HEAD.instanceColor.needsUpdate = true;
+}
+function castFlowers(x, z) {
+  const pool = flowerPool().slice().sort(() => Math.random() - 0.5), sp = pool.slice(0, 3);
+  colony.flowers = colony.flowers || []; colony.flowers.push({ x, z, s: (Math.random() * 1e6) | 0, sp });
+  if (colony.flowers.length > MAX_PATCHES) colony.flowers.shift();
+  syncFlowers();
+  burst(x, Math.max(heightAt(x, z), 0) + 0.6, z, FLOWERS[sp[0]][1], 40, { spread: 3, up: 2, life: 1.6, size: 0.4, gravity: 1 });
+  let n = 0; for (const v of villagers) if (Math.hypot(v.x - x, v.z - z) < 9) { v.happy = Math.min(100, v.happy + 10); n++; }
+  colony.mood += 3;
+  // les fleurs attirent abeilles et papillons : les champs voisins poussent un peu mieux
+  for (const f of fields) if (f.built && Math.hypot(f.x - x, f.z - z) < 8) { f.growth = Math.min(1, f.growth + 0.1); syncField(f); }
+  log(`Des fleurs sortent de terre : ${sp.map(s => FLOWERS[s][0].toLowerCase()).join(', ')}.${n ? ' Les villageois s’arrêtent pour les sentir.' : ''}`, 'power');
 }
 // Inondation : l'eau monte dans les creux autour du point touché, puis redescend en laissant un limon fertile
 // (les crues de la Loire ou du Nil enrichissaient les champs des vallées)
@@ -3128,13 +3240,19 @@ const canResearch = t => !tech[t.id] && t.req.every(r => tech[r]) && !(t.need &&
 function research(id) {
   const t = TECH[id]; if (!t || !canResearch(t)) return;
   sfx(ERA_TEXT[id] || id === 'village' ? 'era' : 'tech');
-  colony.know -= t.cost; tech[id] = true; colony.lastTech = id; onPower('savoir', {});
   const eraBefore = eraName();
+  colony.know -= t.cost; tech[id] = true; colony.lastTech = id; onPower('savoir', {});
   colony.year = Math.max(colony.year + (tech.pax ? 10 : 150), t.year);   // l'Antiquité est datée finement
   log(`La tribu découvre : ${t.name}. Nous voici en ${yearText(colony.year)}.`, 'know');
-  if (eraName() !== eraBefore) log(`La tribu entre ${era().into}.`, 'know');
+  const eraAfter = eraName();
+  if (eraAfter !== eraBefore) log(`La tribu entre ${era().into}.`, 'know');
   manageSites();
-  if (id === 'village') { colony.won = true; showVictory(); return; }
+  // changement d'âge : courte animation, puis l'écran qui raconte l'âge qui s'achève et celui qui commence ; la tribu fait la fête
+  if (eraAfter !== eraBefore) {
+    if (id === 'village') colony.won = true;
+    eraTransition(eraBefore, eraAfter, () => { if (id === 'village') showVictory(eraBefore); else showEra(ERA_TEXT[id] ? id : null, eraBefore, eraAfter); if (started && villagers.length) startFestival(); });
+    return;
+  }
   if (ERA_TEXT[id]) { showEra(id); return; }
   openTech(true);
 }
@@ -3208,7 +3326,7 @@ const EVENTS = [
       { label: 'Les renvoyer', hint: 'Le village garde ses réserves.', fx() { colony.mood -= 4; } }] },
   { title: 'Pleine lune', text: 'La lune est ronde et brillante. Les anciens proposent une fête autour du feu.',
     choices: [
-      { label: 'Festoyer', hint: '-15 nourriture, bien-être en hausse, naissances favorisées.', cond: () => colony.food >= 15, fx() { colony.food -= 15; colony.mood += 18; colony.fertile = 24; log('Chants et danses jusqu’à l’aube.', 'good'); } },
+      { label: 'Festoyer', hint: '-15 nourriture, bien-être en hausse, naissances favorisées.', cond: () => colony.food >= 15, fx() { colony.food -= 15; colony.mood += 18; colony.fertile = 24; log('Chants et danses jusqu’à l’aube.', 'good'); startFestival(); } },
       { label: 'Rationner', hint: '+5 savoir : on observe les étoiles.', fx() { colony.know += 5; } }] },
   { title: 'Le conteur', text: 'Le plus âgé de la tribu veut transmettre les histoires des ancêtres.',
     choices: [
@@ -3358,13 +3476,10 @@ function hourly() {
     for (const o of villagers) if (o !== v && !o.sick && (o.x - v.x) ** 2 + (o.z - v.z) ** 2 < 6.5 && Math.random() < 0.06 * (has(o, 'robuste') ? 0.4 : 1)) { makeSick(o, `Attrape la fièvre de ${v.name}.`); log(`${o.name} attrape la fièvre de ${v.name}.`, 'bad'); }
   }
   tryBirth(); tryPairing();
-  // les petites bandes préhistoriques survivaient en se regroupant : une tribu trop réduite peut être rejointe par une autre bande
-  if (villagers.length > 0 && villagers.filter(v => v.adult).length < 4 && Math.random() < 0.012) {
-    const a = addVillager({ name: freeName(), sex: 'F', age: rr(16, 26), x: rr(-4, 4), z: rr(5, 7), sat: 50, kind: 'nomade' });
-    const b = addVillager({ name: freeName(), sex: 'M', age: rr(16, 28), x: rr(-4, 4), z: rr(5, 7), sat: 50, kind: 'nomade' });
-    unite(a, b, true); [a, b].forEach(v => journal(v, 'Rejoint la tribu après la dispersion de sa bande.'));
-    log(`${a.name} et ${b.name}, survivants d’une autre bande, rejoignent la tribu.`, 'good');
-  }
+  // les petites communautés survivaient en accueillant des étrangers : plus la tribu est réduite, plus vite ils arrivent
+  const adultsN = villagers.filter(v => v.adult).length;
+  const joinP = !villagers.length ? 0 : adultsN <= 1 ? 0.06 : adultsN < 4 ? 0.025 : villagers.length < 8 ? 0.006 : 0;
+  if (joinP && !raid && Math.random() < joinP) strangersArrive();
   // métiers et drames
   assignJobs();
   colony.jobMood = (hasJob('barde') ? 3 : 0) + (hasJob('orfevre') ? 2 : 0) + (hasJob('tisserand') ? 2 : 0);
@@ -3387,10 +3502,12 @@ function hourly() {
   // une rafale peut souffler un foyer mal protégé
   if (weather.kind === 'vent' && colony.fireLit && !huts.some(h => h.built) && Math.random() < 0.03) { colony.fireLit = false; log('Une rafale a soufflé le feu de camp.', 'bad'); }
   // coutumes et ouvrages
+  checkDishes();
   if (tech.fetes && dayNum() % 10 === 0 && Math.floor(hourOfDay()) === 18 && colony.lastFeast !== dayNum() && villagers.length) {
     colony.lastFeast = dayNum(); colony.food = Math.max(0, colony.food - 10); colony.mood += tech.tonneau ? 30 : 20; colony.fertile = 24;
     milestone('feast', 0, 2);
     villagers.forEach(v => journal(v, 'Danse à la fête des moissons.')); log('Fête des moissons : chants, pain frais et danses autour du feu.', 'good');
+    startFestival();
   }
   if (built('nemeton')) { colony.mana = Math.min(100, colony.mana + 0.6); colony.know += 0.15; }
   if (built('fanum')) { colony.mana = Math.min(100, colony.mana + 0.6); colony.know += 0.1; }
@@ -3466,6 +3583,52 @@ function hourly() {
   for (const r of rains) if (r.left > 0) { r.left--; for (const t of trees) if (t.state === 'burning' && Math.hypot(t.x - r.x, t.z - r.z) < r.R) setTreeState(t, t.burn >= 3 ? 'ash' : 'alive'); }
   if (--colony.eventIn <= 0 && villagers.length && !colony.over) triggerEvent();
 }
+// ================= Fêtes : ronde autour de la place, fanions, confettis de pétales et musique =================
+const FEAST_HOURS = 4, FEAST_COLORS = ['#e0453a', '#f2d24b', '#4a90d0', '#5fb34a', '#f08a2c', '#8a4fb0', '#f4f1e8'];
+const PENNANT_GEO = new T.BufferGeometry().setAttribute('position', new T.BufferAttribute(new Float32Array([-0.22, 0, 0, 0.22, 0, 0, 0, -0.45, 0]), 3)); PENNANT_GEO.computeVertexNormals();
+let feastDeco = null;
+function startFestival() {
+  const n = villagers.length, R = clamp(2.6 + n * 0.15, centerStage() === 'fire' ? 3 : PLAZA_R() + 0.8, 8);
+  colony.feast = { until: colony.time + FEAST_HOURS, R };
+  for (const v of villagers) if (!v.inBoat && !v.sick) { endTask(v); v.sleeping = false; }
+  // mâts et guirlandes de fanions autour de la ronde
+  if (feastDeco) scene.remove(feastDeco);
+  const g = new T.Group(), y0 = campY, Rp = R + 1.6, poles = 8, mats = FEAST_COLORS.map(c => new T.MeshLambertMaterial({ color: c, side: T.DoubleSide }));
+  for (let i = 0; i < poles; i++) {
+    const a = i / poles * Math.PI * 2, x = Math.cos(a) * Rp, z = Math.sin(a) * Rp, h = heightAt(x, z);
+    const pole = new T.Mesh(new T.CylinderGeometry(0.05, 0.06, 2.8, 5).translate(0, 1.4, 0), PEN_WOOD); pole.position.set(x, h, z); g.add(pole);
+    const a2 = (i + 1) / poles * Math.PI * 2, x2 = Math.cos(a2) * Rp, z2 = Math.sin(a2) * Rp, h2 = heightAt(x2, z2);
+    for (let k = 1; k < 6; k++) { const t = k / 6, px = x + (x2 - x) * t, pz = z + (z2 - z) * t, py = h + (h2 - h) * t + 2.7 - Math.sin(t * Math.PI) * 0.5;
+      const p = new T.Mesh(PENNANT_GEO, mats[(i * 5 + k) % mats.length]); p.position.set(px, py, pz); p.rotation.y = -Math.atan2(z2 - z, x2 - x); g.add(p); }
+  }
+  scene.add(g); feastDeco = g;
+  let t = 0, beat = 0;
+  effects.push({ update(dt) {
+    t += dt; beat -= dt;
+    const on = colony.feast && colony.time < colony.feast.until;
+    if (!on) { if (feastDeco === g) { scene.remove(g); feastDeco = null; } colony.feast = null; return false; }
+    if (speed > 0 && beat <= 0) { beat = 1.1; sfx('dance'); burst(rr(-R, R) * 0.5, y0 + 3.5, rr(-R, R) * 0.5, pick(FEAST_COLORS), 14, { spread: 3, up: 2, life: 2.2, size: 0.35, gravity: 1.2 }); }
+    return true;
+  } });
+}
+// des étrangers rejoignent la tribu : qui ils sont dépend de l'époque
+const STRANGERS = [
+  [() => tech.pax, 'des colons venus d’une autre cité de la Gaule romaine', 'Arrive d’une autre cité pour s’installer au vicus.'],
+  [() => tech.fer, 'une famille gauloise chassée de sa tribu par la guerre', 'Rejoint le village après avoir fui la guerre entre tribus.'],
+  [() => tech.cuivre, 'des voyageurs arrivés avec les marchands de métal', 'S’installe au village après un long voyage avec les marchands.'],
+  [() => tech.village, 'une famille de paysans venue de la vallée voisine', 'Quitte sa vallée pour cultiver de nouvelles terres.'],
+  [() => true, 'des survivants d’une autre bande de chasseurs', 'Rejoint la tribu après la dispersion de sa bande.'],
+];
+function strangersArrive() {
+  const [, who, diary] = STRANGERS.find(s => s[0]());
+  const a0 = rr(0, 6.28); let p = landPoint(Math.cos(a0) * 34, Math.sin(a0) * 34, 8); if (!validLand(p.x, p.z)) p = { x: rr(-4, 4), z: rr(5, 7) };
+  const a = addVillager({ name: freeName(), sex: 'F', age: rr(17, 30), x: p.x, z: p.z, sat: 50, kind: 'nomade' });
+  const b = addVillager({ name: freeName(), sex: 'M', age: rr(18, 32), x: p.x + 0.8, z: p.z, sat: 50, kind: 'nomade' });
+  unite(a, b, true); const vs = [a, b];
+  if (Math.random() < 0.45) vs.push(addVillager({ name: freeName(), sex: Math.random() < 0.5 ? 'F' : 'M', age: rr(3, 10), x: p.x, z: p.z + 0.8, sat: 50, kind: 'nomade' }));
+  vs.forEach(v => journal(v, diary));
+  log(`Des étrangers arrivent : ${who}. ${vs.map(v => v.name).join(', ')} rejoignent la tribu.`, 'good'); sfx('chime');
+}
 function tryBirth() {
   const pop = villagers.length;
   if (pop >= housingCap() || colony.food < pop * 3) return;
@@ -3523,12 +3686,20 @@ function syncVillager(v, dt) {
   if (speed > 0) v.walkT += dt * speed;
   if (v.sleeping) { m.rotation.x = -Math.PI / 2; m.position.y = y + 0.22; }
   else { m.rotation.x = v.working ? Math.max(0, Math.sin(v.walkT * 9)) * 0.35 : 0; if (v.moving) m.position.y += Math.abs(Math.sin(v.walkT * 12)) * 0.09; }
+  // danse : petits sauts et balancement des épaules
+  const dancing = v.task && v.task.type === 'dance' && v.task.arrived && !v.sleeping;
+  m.rotation.z = dancing ? Math.sin(v.walkT * 5 + v.id) * 0.18 : 0;
+  if (dancing) m.position.y += Math.abs(Math.sin(v.walkT * 9 + v.id)) * 0.3;
   const k = v.adult ? 1 : 0.5 + 0.5 * v.age / ADULT_AGE;
   m.scale.set(k * v.look.w, k * v.look.h, k * v.look.w);
   if (v.beardMesh) v.beardMesh.visible = v.adult;
   v.hairMat.color.copy(v.hairBase).lerp(GREY_HAIR, smooth(44, 64, v.age));
   v.pack.visible = !!v.carry; if (v.carry) v.pack.material = v.carry.kind === 'food' ? VM.food : VM.wood;
-  v.spear.visible = !!(v.task && (v.task.type === 'hunt' || v.task.type === 'fish') && !v.carry);   // lance, harpon ou pagaie
+  // armes : arc pour les archers et, après son invention, pour les chasseurs ; sinon lance, harpon ou pagaie
+  const tt2 = v.task && !v.carry ? v.task.type : '', archer = (tt2 === 'hunt' && tech.lances && bowKnown()) || (tt2 === 'defend' && isArcher(v));
+  v.spear.visible = !archer && (tt2 === 'hunt' || tt2 === 'fish' || tt2 === 'defend');
+  if (archer && !v.bow) { v.bow = new T.Mesh(BOW_GEO, VM.spear); v.mesh.add(v.bow); }
+  if (v.bow) v.bow.visible = archer;
   v.headMat.color.copy(v.skin); if (v.sick) v.headMat.color.lerp(SICK, 0.55);
 }
 function syncDeer(d, dt) {
@@ -3826,6 +3997,12 @@ Object.assign(BINFO, {
 });
 function openBuilding(key, site, kind = 'b') {
   if (kind === true) kind = 'a';
+  if (key === 'flowers') {
+    select(null);
+    $('#bname').textContent = 'Fleurs sauvages'; $('#bera').textContent = colony.year < -11700 ? 'Fleurs de la toundra glaciaire' : tech.pax ? 'Fleurs des jardins et des champs' : tech.agri ? 'Fleurs des prés et des moissons' : 'Fleurs des prés et des sous-bois';
+    $('#bbody').innerHTML = site.sp.map(s => `<h4><span style="color:${FLOWERS[s][1]}">●</span> ${FLOWERS[s][0]}</h4><p>${FLOWERS[s][2]}</p>`).join('') + '<p class="tip">Dans le jeu : les fleurs rendent les villageois heureux et attirent les abeilles, qui aident les champs voisins à pousser.</p>';
+    $('#bcard').hidden = false; sfx('tech'); return;
+  }
   const B = { b: BINFO, a: AINFO, c: CINFO }[kind][key]; if (!B) return;
   const H = INFO_HEADS[kind];
   select(null);
@@ -3852,6 +4029,7 @@ function pickBuilding(p) {
   if (!best && WALL) { const a = Math.atan2(p.z, p.x); if (Math.abs(Math.hypot(p.x, p.z) - profR(WALL.prof, a)) < 1.6) { const w = works.find(w => w.kind === 'rampart' && w.built) || works.find(w => w.kind === 'palisade'); if (w) best = [w.kind === 'rampart' && works.some(x => x.kind === 'castrum' && x.built) ? 'castrum' : w.kind, w]; } }
   if (!best) { const v = works.find(w => w.kind === 'voie' && Math.hypot(w.x - p.x, w.z - p.z) < 3); if (v) best = ['voie', v]; }
   if (!best && onStreet(p.x, p.z, 0.6)) best = ['street:' + streetKind(), null];
+  if (!best) { const fl = (colony.flowers || []).find(pt => Math.hypot(pt.x - p.x, pt.z - p.z) < 3.4); if (fl) best = ['flowers', fl]; }
   return best;
 }
 function syncFollowBtn() { $('#cfollow').classList.toggle('on', cam.follow); $('#cfollow').textContent = cam.follow ? 'Suivi' : 'Suivre'; }
@@ -3888,11 +4066,12 @@ function openTimeline() {
   <h3 class="sec">Les périodes climatiques</h3><ul class="tl">${CLIMATES.map(c => row(c, c[0] === ph)).join('')}</ul>
   <div class="mfoot"><button class="btn" data-close>Fermer</button></div>`);
 }
-const TASK_LABEL = { sleep: 'Dort', eat: 'Mange au camp', gather: 'Cueille des baies', hunt: 'Chasse le cerf', chop: 'Coupe du bois', farm: 'Récolte le champ', fire: 'Rallume le feu', idle: 'Flâne près du feu', play: 'Joue autour du camp', flee: 'Fuit !', herd: 'Garde les moutons', paint: 'Peint sur la paroi de la grotte', pray: 'Officie au sanctuaire', smith: 'Forge des outils' };
+const TASK_LABEL = { sleep: 'Dort', eat: 'Mange au camp', gather: 'Cueille des baies', hunt: 'Chasse le cerf', chop: 'Coupe du bois', farm: 'Récolte le champ', fire: 'Rallume le feu', idle: 'Flâne près du feu', play: 'Joue autour du camp', flee: 'Fuit !', herd: 'Garde les moutons', paint: 'Peint sur la paroi de la grotte', pray: 'Officie au sanctuaire', smith: 'Forge des outils', dance: 'Danse à la fête' };
 function taskText(v) {
   if (!v.alive) return '';
   let task = v.task ? TASK_LABEL[v.task.type] || '' : 'Réfléchit';
   if (v.task && v.task.type === 'build') task = BUILD_LABEL[v.task.site.kind];
+  if (v.task && v.task.type === 'eat') task = v.task.dish ? `Mange ${v.task.dish[2]}` : 'Va manger';
   if (v.task && v.task.type === 'craft' && JOBS[v.job]) task = JOBS[v.job].work;
   if (v.task && v.task.type === 'defend') task = 'Défend le village !';
   if (v.task && v.task.type === 'hide') task = 'Se cache des pillards';
@@ -3920,7 +4099,7 @@ function portraitSVG(v) {
   return `<svg class="pt${v.alive ? '' : ' dead'}" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="50" fill="#3a2e22"/>${back}<path d="M18 100 C18 76 32 68 50 68 C68 68 82 76 82 100 Z" fill="${L.tunic}"/><rect x="44" y="58" width="12" height="13" fill="${skin}"/>${cape}<ellipse cx="50" cy="45" rx="18" ry="21" fill="${skin}"/>${front}${eyes}<path d="${mouth}" stroke="#4a2a1c" stroke-width="2" fill="none" stroke-linecap="round"/>${deco}</svg>`;
 }
 // petite icône au-dessus des personnages qui ont un rôle ou un métier d'artisan (pas les chasseurs ni les paysans)
-const JOB_ICON = { tailleur: '🪨', potier: '🏺', tisserand: '🧵', forgeron: '⚒️', marchand: '⚖️', charron: '☸️', saunier: '🧂', orfevre: '💍', tonnelier: '🛢️', barde: '🎵', guerrier: '⚔️', tuilier: '🧱', scribe: '📜', veteran: '🛡️', vigneron: '🍇' };
+const JOB_ICON = { tailleur: '🪨', potier: '🏺', tisserand: '🧵', forgeron: '⚒️', marchand: '⚖️', charron: '☸️', saunier: '🧂', orfevre: '💍', tonnelier: '🛢️', barde: '🎵', guerrier: '⚔️', tuilier: '🧱', scribe: '📜', veteran: '🛡️', vigneron: '🍇', boulanger: '🍞' };
 const roleIcon = v => v.chief ? '👑' : v.druid ? (tech.christ ? '✝️' : tech.fanum ? '🏛️' : '🌿') : (v.job && JOB_ICON[v.job]) || '';
 function updateLabels() {
   camera.updateMatrixWorld();
@@ -4094,8 +4273,8 @@ function openTech(keepScroll) {
     if (card) panel.scrollTop += card.getBoundingClientRect().top - panel.getBoundingClientRect().top - 90;
   }
 }
-function showVictory() {
-  openModal(`<p class="eyebrow">Jour ${dayNum()} · Âge nouveau</p><h2 id="mtitle">Votre tribu devient un village</h2><p>Les huttes, les champs et les jarres ont remplacé la vie nomade. Vos chasseurs-cueilleurs sont entrés dans le Néolithique, vers ${yearText(colony.year)}.</p>
+function showVictory(prev) {
+  openModal(`<p class="eyebrow">Jour ${dayNum()} · Âge nouveau</p><h2 id="mtitle">Votre tribu devient un village</h2><p>Les huttes, les champs et les jarres ont remplacé la vie nomade. Vos chasseurs-cueilleurs sont entrés dans le Néolithique, vers ${yearText(colony.year)}.</p>${eraBlocks(prev, 'Néolithique')}
   <p>De nouveaux savoirs sont disponibles : maisons en torchis et maisons longues, meule, élevage, tissage, puits, greniers, palissade, fêtes, tumulus et mégalithes.</p>
   <div class="stats"><div><b>${villagers.length}</b><span>habitants</span></div><div><b>${colony.births}</b><span>naissances</span></div><div><b>${colony.deaths}</b><span>décès</span></div><div><b>${dayNum()}</b><span>jours</span></div></div>
   <div class="mfoot"><button class="btn ghost" data-close>Plus tard</button><button class="btn" data-opentech>Voir les nouveaux savoirs</button></div>`);
@@ -4123,7 +4302,7 @@ const MILESTONES = {
   'build:granary': ['Le grenier sur pilotis', 'Surélevé pour échapper aux rongeurs et à l’humidité, il protège les semences de l’année suivante.', 7],
   'build:palisade': ['La palissade', 'Des centaines de troncs taillés en pointe : au Néolithique, les raids entre villages deviennent fréquents.', 12],
   'build:tumulus': ['Le tumulus des ancêtres', 'Une chambre de pierre recouverte d’un tertre de terre : les tombes collectives monumentales apparaissent en Europe de l’Ouest vers 4800 av. J.-C.', 12],
-  'build:forge': ['La forge', 'Le minerai est chauffé à plus de 1000 °C dans un foyer attisé au soufflet. Ötzi, mort vers 3300 av. J.-C., portait déjà une hache de cuivre.', 8],
+  'build:forge': ['La forge', 'Le minerai est chauffé à plus de 1000 °C dans un foyer attisé au soufflet. À cette époque, un voyageur des Alpes, Ötzi, portait déjà une hache de cuivre.', 8],
   'build:market': ['Le marché', 'L’étain des Cornouailles et le cuivre des Alpes voyagent sur des centaines de kilomètres : sans commerce, pas de bronze.', 10],
   'build:rampart': ['Le rempart de l’oppidum', 'Le murus gallicus : pierres, terre et poutres clouées. César le décrit dans la Guerre des Gaules, il résiste au feu comme au bélier.', 14],
   'boat': ['La première pirogue', 'Creusée au feu et à l’herminette dans un tronc de chêne, la pirogue monoxyle est le plus vieux bateau connu : celle de Pesse, aux Pays-Bas, a environ 10 000 ans. On y pêche au harpon, à la ligne ou au filet.', 10],
@@ -4339,6 +4518,23 @@ const SCENES = {
   'sky:grues': () => [[200, 46], [190, 54], [210, 54], [180, 62], [220, 62], [170, 70], [230, 70], [160, 78], [240, 78]].map(([x, y]) => `<path d="M${x - 7} ${y + 2} q4 -5 7 0 q3 -5 7 0" stroke="#3a3530" stroke-width="1.8" fill="none" stroke-linecap="round"/>`).join('') + human(120, 156, 1.05, 'stand', '#a8483a') + human(146, 158, 0.65, 'stand', '#d3a640'),
   'raid': () => stakes(0, 150, 100) + human(70, 158, 1, 'spear', '#a8483a') + human(110, 160, 1, 'spear', '#3f6e8c') + `<path ${W} d="M170 151 C210 116 270 108 320 118 L320 151 Z" fill="#6f7d4a" opacity=".6"/>` + human(240, 128, 0.7, 'spear', '#2a2420') + human(268, 124, 0.7, 'spear', '#2a2420') + human(292, 126, 0.7, 'spear', '#2a2420'),
 };
+// illustrations des plats : le feu, un convive, et le plat en grand
+const amphora = (x, c) => `<path ${W} d="M${x - 6} 92 L${x + 6} 92 L${x + 5} 100 C${x + 22} 106 ${x + 22} 132 ${x + 2} 150 L${x - 2} 150 C${x - 22} 132 ${x - 22} 106 ${x - 5} 100 Z" fill="${c}"/><path d="M${x - 6} 98 C${x - 16} 96 ${x - 16} 108 ${x - 10} 110 M${x + 6} 98 C${x + 16} 96 ${x + 16} 108 ${x + 10} 110" stroke="${c}" stroke-width="3" fill="none"/>`;
+const DISH_ART = {
+  poisson: `<path d="M150 104 L262 96" stroke="#6b4a2b" stroke-width="2.5"/><g ${W}><ellipse cx="205" cy="112" rx="34" ry="11" fill="#8a8f7a"/><path d="M239 112 L256 100 L256 124 Z" fill="#7a7f6a"/></g><circle cx="182" cy="109" r="2.4" fill="#1d1712"/>`,
+  fume: `<g ${W}><rect x="160" y="90" width="4" height="61" fill="#5a3d22"/><rect x="250" y="90" width="4" height="61" fill="#5a3d22"/><rect x="156" y="88" width="102" height="4" fill="#6b4a2b"/>${[176, 196, 216, 236].map((x, i) => `<path d="M${x} 92 L${x + 8} 92 L${x + 6} ${122 + i % 2 * 6} L${x + 2} ${122 + i % 2 * 6} Z" fill="${i % 2 ? '#8a8f7a' : '#7a3a26'}"/>`).join('')}</g><path d="M190 150 C180 130 205 125 195 104 M220 150 C212 132 236 126 226 108" stroke="#b8b0a4" stroke-width="7" fill="none" opacity=".45" filter="url(#il-blur)"/>`,
+  ragout: potSVG(205, 56, 44, '#9a6a44') + `<path d="M196 104 C190 94 202 90 196 80 M214 104 C208 94 220 90 214 80" stroke="#efe6d6" stroke-width="3" fill="none" opacity=".6" filter="url(#il-blur)"/>`,
+  bouillie: `<g ${W}><path d="M170 124 Q205 158 240 124 Z" fill="#8a5a34"/><ellipse cx="205" cy="124" rx="35" ry="7" fill="#e3cf95"/></g><path d="M196 116 C192 106 202 102 198 94" stroke="#efe6d6" stroke-width="3" fill="none" opacity=".6" filter="url(#il-blur)"/>`,
+  galette: `<g ${W}><path d="M160 151 C164 136 246 134 252 151 Z" fill="url(#il-stoneg)"/><ellipse cx="190" cy="136" rx="20" ry="5" fill="#d8b070"/><ellipse cx="226" cy="134" rx="18" ry="4.5" fill="#cfa362"/></g>`,
+  fromage: `<g ${W}>${potSVG(180, 40, 30, '#b07a4a')}<ellipse cx="236" cy="138" rx="22" ry="13" fill="#f4eedc"/></g>${[170, 178, 186, 174, 182].map((x, i) => `<circle cx="${x}" cy="${132 + (i > 2 ? 8 : 0)}" r="1.6" fill="#4a2e18"/>`).join('')}`,
+  cervoise: potSVG(205, 46, 52, '#a8784a') + `<ellipse ${W} cx="205" cy="99" rx="17" ry="6" fill="#f6f0e0"/>`,
+  pain: `<g ${W}><ellipse cx="205" cy="134" rx="38" ry="18" fill="#c8904a"/></g><path d="M182 128 L196 140 M200 124 L214 140 M218 124 L228 136" stroke="#7a4a20" stroke-width="2"/>`,
+  jambon: `<g ${W}><rect x="160" y="84" width="96" height="4" fill="#6b4a2b"/><path d="M196 88 L204 88 C226 100 230 140 200 146 C176 144 176 104 196 88 Z" fill="#a8483a"/><path d="M200 140 C190 132 192 112 200 102" stroke="#f0d8c8" stroke-width="4" fill="none"/></g>`,
+  painRomain: `<g ${W}><path d="M232 151 C232 112 290 112 290 151 Z" fill="#a4523a"/><path d="M252 151 C252 136 270 136 270 151 Z" fill="#2e1e12"/><circle cx="196" cy="134" r="22" fill="#c8904a"/></g>${[0, 1, 2, 3].map(i => `<path d="M${196 + Math.cos(i * Math.PI / 4) * 20} ${134 + Math.sin(i * Math.PI / 4) * 20} L${196 - Math.cos(i * Math.PI / 4) * 20} ${134 - Math.sin(i * Math.PI / 4) * 20}" stroke="#7a4a20" stroke-width="1.6"/>`).join('')}`,
+  garum: amphora(210, '#b4704a') + `<path ${W} d="M232 151 C232 140 256 140 256 151 Z" fill="#7a3a26"/>`,
+  vin: amphora(200, '#a4603a') + `<path ${W} d="M232 128 L250 128 L246 140 L236 140 Z M240 140 L242 151" fill="#7a2a3a" stroke="#7a5532" stroke-width="2"/>`,
+};
+for (const id of Object.keys(DISH_ART)) SCENES['dish:' + id] = () => SH(170, 80) + fireSVG(80, 150, 1) + human(122, 156, 1, 'hold', '#8a5a34') + DISH_ART[id];
 function illustrate(key) {
   const c = climateC(), grass = TC.g2.clone().lerp(TC.steppe, steppeK(c)).getStyle(), hill = TC.g3.clone().lerp(TC.tundra, steppeK(c)).getStyle(), snowy = c < 0.55;
   return `<svg class="ill" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -4363,10 +4559,62 @@ function illustrate(key) {
 }
 // pour certaines premières, une petite liste pédagogique sous l'image (à quoi ça sert, comment c'est fait)
 const MILESTONE_LIST = {
+  'build:forge': ['Qui était Ötzi ?', ['Un homme mort dans les Alpes, entre l’Italie et l’Autriche, vers 3300 av. J.-C., à l’âge du cuivre', 'Son corps, gelé dans un glacier, s’est conservé plus de 5 000 ans : deux randonneurs l’ont découvert en 1991. On l’a appelé Ötzi, d’après la vallée de l’Ötztal', 'Il portait un manteau de peaux, un bonnet en fourrure d’ours et des chaussures de cuir rembourrées de foin', 'Dans son équipement : une hache à lame de cuivre, un poignard de silex, un arc, des flèches et de quoi allumer un feu', 'Une pointe de flèche plantée dans son épaule montre qu’il a été tué : la plus vieille enquête criminelle du monde !']],
   'tools:cuivre': ['À quoi servent ces outils', ['Hache : abattre les arbres et tailler les poutres des maisons', 'Poignard : chasser, découper la viande et les peaux', 'Poinçon : une pointe pour percer le cuir et coudre vêtements et sacs', 'Comment on les fait : la malachite, une pierre verte, est chauffée dans un four d’argile attisé au soufflet ; le cuivre fondu coule au fond, puis on le martèle']],
   'tools:bronze': ['À quoi servent ces outils', ['Hache à douille : le manche s’enfonce dans le métal, elle ne se démanche plus', 'Épée et lance : pour la chasse et pour défendre le village', 'Bracelet : un bijou qui montre la richesse de son propriétaire', 'Comment on les fait : neuf parts de cuivre pour une part d’étain, fondues dans un creuset puis versées dans un moule de pierre']],
   'tools:fer': ['À quoi servent ces outils', ['Soc d’araire : la pointe qui fend la terre pour labourer les champs', 'Faucille : couper les épis de blé à la moisson', 'Épée : la longue épée des guerriers gaulois', 'Comment on les fait : le minerai est chauffé au charbon de bois dans un bas fourneau, puis la loupe de fer est martelée et forgée sur l’enclume']],
 };
+// ================= Les repas : ce que mange la tribu, d'une époque à l'autre =================
+// [id, disponible ?, nom, explication] ; les premiers sont toujours là, les suivants arrivent avec les savoirs
+const DISHES = [
+  ['viande', () => true, 'de la viande grillée', 'Cerf, renne ou cheval, grillés sur les braises ou cuits sur une pierre chaude.'],
+  ['baies', () => true, 'des baies et des noisettes', 'Mûres, myrtilles, noisettes et racines ramassées par les cueilleurs.'],
+  ['poisson', () => tech.paniers, 'du poisson grillé', 'Truites, saumons et brochets, grillés sur une broche de bois au-dessus du feu.'],
+  ['fume', () => tech.fumage, 'de la viande et du poisson fumés', 'Suspendus au-dessus d’un feu qui fume beaucoup, viande et poisson sèchent et se gardent des semaines.'],
+  ['ragout', () => tech.poterie, 'un ragoût cuit dans une marmite', 'Dans un pot de terre posé sur les braises, on fait mijoter viande, herbes et racines : c’est l’ancêtre de la soupe !'],
+  ['bouillie', () => tech.agri, 'une bouillie d’orge', 'Les grains d’orge ou de blé, concassés et cuits longtemps dans l’eau ou le lait : le plat de tous les jours des premiers paysans.'],
+  ['galette', () => tech.meule, 'des galettes cuites sur la pierre', 'La farine moulue sur la meule, mêlée d’eau, est étalée sur une pierre brûlante : c’est un pain plat, sans levain.'],
+  ['fromage', () => tech.elevage, 'du lait caillé et du fromage frais', 'Des faisselles en terre cuite percées de petits trous, vieilles de plus de 7 000 ans, prouvent qu’on faisait déjà du fromage au Néolithique.'],
+  ['cervoise', () => tech.tonneau, 'de la cervoise', 'La bière des Gaulois, brassée avec de l’orge germée. Sans houblon : il n’arrivera qu’au Moyen Âge.'],
+  ['pain', () => tech.tonneau, 'du pain gaulois levé', 'D’après Pline l’Ancien, les Gaulois ajoutent à la pâte l’écume de la cervoise : le pain lève et devient plus léger que celui des autres peuples.'],
+  ['jambon', () => tech.fer && hasJob('saunier'), 'du jambon et du porc salé', 'Grâce au sel du saunier, les Gaulois préparent des jambons salés et fumés si réputés qu’on les vend jusqu’à Rome.'],
+  ['painRomain', () => tech.pax, 'du pain de boulanger', 'À l’époque romaine, des boulangers de métier cuisent le pain dans de grands fours de briques et le vendent dans leur boutique.'],
+  ['garum', () => tech.pax, 'des plats au garum', 'Le garum est une sauce de poisson fermenté au soleil, très salée : les Romains en mettent dans presque tous leurs plats.'],
+  ['vin', () => tech.vigne, 'du vin coupé d’eau', 'Coupé d’eau, parfois parfumé au miel, le vin accompagne les repas des Gallo-Romains.'],
+];
+for (const [id, , name, text] of DISHES.slice(2)) MILESTONES['dish:' + id] = [`Au menu : ${name}`, text, 7];
+// au repas, on mange plutôt les plats les plus récents, avec un peu de tout
+function pickDish() { const ok = DISHES.filter(d => d[1]()); return pick(ok.slice(-4).concat(ok.slice(-2))); }
+function checkDishes() { for (const d of DISHES.slice(2)) if (d[1]()) milestone('dish:' + d[0], FOODPILE.x, FOODPILE.z); }
+// ================= Découvertes du forgeron : comment travailler le métal et faire des alliages =================
+// Chacune rend les outils un peu meilleurs (le travail va plus vite) et s'affiche avec une explication.
+const SMITH_FINDS = [
+  ['martelage', () => tech.cuivre, 'Le cuivre martelé', 'Martelé à froid, le cuivre devient plus dur : le tranchant des haches tient mieux. Mais trop martelé, il finit par se fendre.'],
+  ['recuit', () => tech.cuivre, 'Le recuit', 'En réchauffant le métal au rouge avant de le marteler à nouveau, le forgeron l’empêche de se fendre : il peut lui donner toutes les formes.'],
+  ['arsenic', () => tech.cuivre, 'Le cuivre à l’arsenic', 'Certains minerais de cuivre contiennent de l’arsenic : le métal obtenu est plus dur. Les premiers forgerons ne savaient pas que ses fumées étaient toxiques.'],
+  ['moule', () => tech.cuivre, 'Le moule de pierre', 'Une forme creusée dans la pierre où l’on verse le métal fondu : on fabrique d’un coup des haches toutes pareilles.'],
+  ['etain', () => tech.bronze, 'Le bon mélange', 'Neuf parts de cuivre pour une part d’étain : c’est le bronze le plus solide. Avec plus d’étain, il devient cassant comme du verre ; avec moins, il reste mou.'],
+  ['cire', () => tech.bronze, 'La fonte à la cire perdue', 'On sculpte l’objet en cire d’abeille, on l’entoure d’argile, puis on chauffe : la cire fond et s’écoule, et le métal prend sa place. Ainsi naissent bijoux et statuettes.'],
+  ['tole', () => tech.bronze, 'La tôle de bronze', 'Martelée très finement, une plaque de bronze devient une tôle : on en fait des chaudrons, des casques et des boucliers.'],
+  ['loupe', () => tech.fer, 'La loupe de fer', 'Le fer ne fond pas dans le bas fourneau : il en sort une boule spongieuse pleine de scories, la loupe. Le forgeron la martèle au rouge pour en chasser les impuretés.'],
+  ['acier', () => tech.fer, 'L’acier', 'Chauffé longtemps dans le charbon de bois, le fer absorbe un peu de carbone et devient de l’acier, bien plus dur : on le garde pour les tranchants.'],
+  ['trempe', () => tech.fer, 'La trempe', 'Plongée encore rouge dans l’eau froide, une lame d’acier devient très dure. Trop trempée, elle casse : tout l’art est de choisir le bon moment.'],
+  ['soudure', () => tech.fer, 'La soudure à la forge', 'Deux morceaux de fer chauffés à blanc, frappés l’un contre l’autre, n’en font plus qu’un : on assemble ainsi les longues épées gauloises.'],
+  ['etamage', () => tech.fer, 'L’étamage', 'Les Gaulois savent couvrir le cuivre d’une fine couche d’étain : les chaudrons brillent comme de l’argent. Pline l’Ancien, un savant romain, attribue cette invention aux Gaulois.'],
+  ['laiton', () => tech.rome, 'Le laiton', 'Les Romains mêlent le cuivre à un minerai de zinc, la calamine : on obtient le laiton, un métal doré dont on frappe les grosses pièces de monnaie, les sesterces.'],
+  ['plomb', () => tech.rome, 'Les tuyaux de plomb', 'Le plomb fond très facilement : les Romains en font des tuyaux pour amener l’eau des aqueducs jusqu’aux fontaines et aux thermes.'],
+];
+for (const [id] of SMITH_FINDS) SCENES['smith:' + id] = () => SH(250, 60) + TOOL_SCENE[['martelage', 'recuit', 'arsenic', 'moule'].includes(id) ? 'cuivre' : ['etain', 'cire', 'tole'].includes(id) ? 'bronze' : 'fer']();
+for (const [id, , title, text] of SMITH_FINDS) MILESTONES['smith:' + id] = [`Le forgeron découvre : ${title.charAt(0).toLowerCase() + title.slice(1)}`, text, 6];
+function smithDiscover(v, f) {
+  colony.smithFinds = colony.smithFinds || [];
+  const next = SMITH_FINDS.find(s => s[1]() && !colony.smithFinds.includes(s[0]));
+  if (!next || Math.random() > 0.3) return;
+  colony.smithFinds.push(next[0]);
+  journal(v, `Découvre ${next[2].charAt(0).toLowerCase() + next[2].slice(1)}.`);
+  log(`${v.name} ${gx(v, 'le forgeron', 'la forgeronne')} découvre ${next[2].charAt(0).toLowerCase() + next[2].slice(1)} : les outils sont meilleurs.`, 'know');
+  colony.know += 4; milestone('smith:' + next[0], f.x, f.z);
+}
 function milestone(key, x, z) {
   if (!started || !MILESTONES[key]) return;
   colony.firsts = colony.firsts || {}; if (colony.firsts[key]) return;
@@ -4400,9 +4648,33 @@ function flushSplash() {
   ${s.list ? `<h3 class="sec">${s.listTitle || 'Ce qui va changer'}</h3><ul class="clist">${s.list.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}
   <div class="mfoot"><button class="btn" data-close>Continuer</button></div>`);
 }
-function showEra(id) {
-  const [title, text, more] = ERA_TEXT[id];
-  openModal(`<p class="eyebrow">${yearText(colony.year)} · Âge nouveau</p><h2 id="mtitle">${title}</h2><p>${text}</p>
+// ce qu'était chaque âge, en quelques phrases (pour l'écran de passage d'un âge à l'autre)
+const ERA_SUMMARY = {
+  'Paléolithique supérieur': 'Le temps des chasseurs-cueilleurs de la glaciation : de petites bandes nomades suivent les rennes, les chevaux et les mammouths, taillent le silex, cousent des vêtements de peau et peignent les grottes, comme à Chauvet et à Lascaux.',
+  'Mésolithique': 'La glace fond et la forêt remplace la steppe. Les chasseurs-cueilleurs chassent le cerf et le sanglier à l’arc, pêchent, ramassent coquillages et noisettes, et campent au bord des rivières et de la mer.',
+  'Néolithique': 'Les premiers paysans arrivent du Proche-Orient : on cultive le blé et l’orge, on élève moutons et vaches, on fabrique des poteries et des haches de pierre polie, et on dresse des menhirs.',
+  'Âge du cuivre': 'On apprend à fondre le cuivre, le premier métal. La pierre reste très utilisée, mais les chefs portent des poignards et des haches de cuivre, comme Ötzi, l’homme retrouvé dans un glacier des Alpes.',
+  'Âge du bronze': 'Le bronze, du cuivre mêlé d’étain, donne des outils et des armes solides. L’étain vient de loin : le commerce s’étend, et les chefs et les guerriers prennent de l’importance.',
+  'Âge du fer': 'Le fer, que l’on trouve presque partout, équipe tout le monde : socs, faucilles, épées. C’est le temps des Gaulois, de leurs druides, de leurs oppida et de leurs premières pièces de monnaie.',
+  'Antiquité': 'La Gaule devient romaine : villes de pierre, routes dallées, temples, thermes et théâtres, et l’écriture latine. Elle durera jusqu’à la fin de l’Empire romain d’Occident, en 476.',
+};
+function eraBlocks(prev, next) {
+  if (!prev || !next) return '';
+  return `<div class="eras"><div><h3 class="sec">L’âge qui s’achève · ${prev}</h3><p>${ERA_SUMMARY[prev] || ''}</p></div><div><h3 class="sec">L’âge qui commence · ${next}</h3><p>${ERA_SUMMARY[next] || ''}</p></div></div>`;
+}
+// animation du passage d'un âge à l'autre : la frise défile, l'ancien nom s'efface, le nouveau apparaît dans la lumière
+function eraTransition(prev, next, done) {
+  modalOpen = true; sfx('era');
+  burst(0, campY + 1, 0, '#f2d06b', 120, { spread: 6, up: 9, life: 2.6, size: 0.9, gravity: 2 });
+  const el = document.createElement('div'); el.id = 'eraT';
+  el.innerHTML = `<div class="et-line"></div><div class="et-prev">${prev}</div><div class="et-next">${next}</div><div class="et-year">${yearText(colony.year)}</div><div class="et-sparks">${Array.from({ length: 26 }, (_, i) => `<i style="left:${(i * 37) % 100}%;animation-delay:${(i % 9) * 0.18}s"></i>`).join('')}</div>`;
+  document.body.appendChild(el);
+  let over = false; const finish = () => { if (over) return; over = true; el.remove(); modalOpen = false; done(); };
+  el.addEventListener('click', finish); setTimeout(finish, 3800);
+}
+function showEra(id, prev, next) {
+  const [title, text, more] = id ? ERA_TEXT[id] : [next, '', 'Voir les nouveaux savoirs'];
+  openModal(`<p class="eyebrow">${yearText(colony.year)} · Âge nouveau</p><h2 id="mtitle">${title}</h2>${text ? `<p>${text}</p>` : ''}${eraBlocks(prev, next)}
   <div class="stats"><div><b>${villagers.length}</b><span>habitants</span></div><div><b>${sheep.length}</b><span>moutons</span></div><div><b>${colony.paintings || 0}</b><span>peintures</span></div><div><b>${huts.filter(h => h.built).length}</b><span>maisons</span></div></div>
   <div class="mfoot">${more ? `<button class="btn ghost" data-close>Plus tard</button><button class="btn" data-opentech>${more}</button>` : '<button class="btn" data-close>Continuer à jouer</button>'}</div>`);
 }
@@ -4486,6 +4758,7 @@ function sfx(kind) {
   else if (kind === 'birth') [86, 90, 93].forEach((m, i) => pluck(m, t + i * 0.08, 0.08, fx));
   else if (kind === 'death') [62, 57].forEach((m, i) => pluck(m, t + i * 0.35, 0.12, fx));
   else if (kind === 'event') { drum(t); drum(t + 0.28); }
+  else if (kind === 'dance') { drum(t); drum(t + 0.55); const S = [74, 76, 78, 81, 83, 86]; for (let i = 0; i < 4; i++) pluck(S[Math.floor(Math.random() * S.length)], t + i * 0.27, 0.09, fx); }
   else if (kind === 'alarm') { horn(t); horn(t + 1.1); }
   else if (kind === 'mystic') mysticChant(t);
 }
@@ -4649,6 +4922,9 @@ function restoreGame(S) {
     if (fields.some(f => f.built)) colony.firsts.harvest = true;
     if (colony.births) colony.firsts.birth = true;
   }
+  syncFlowers();
+  // partie déjà avancée : les plats déjà connus ne déclenchent pas une rafale d'écrans au chargement
+  for (const d of DISHES.slice(2)) if (d[1]()) colony.firsts['dish:' + d[0]] = true;
 }
 function newWorld() {
   placeTrees(); placeBushes(); placeCaves();
