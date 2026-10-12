@@ -3078,6 +3078,10 @@ const FLOWERS = {
   saxifrage: ['Saxifrage', '#f2b6cf', 'Une fleur des rochers et des sols gelés ; son nom veut dire « qui brise la pierre ».'],
   gentiane: ['Gentiane', '#3f5fc8', 'Une fleur d’un bleu intense, des prairies froides et des montagnes.'],
   linaigrette: ['Linaigrette', '#ffffff', 'Ses pompons blancs comme du coton couvrent les marais de la toundra.'],
+  potentille: ['Potentille', '#f2c935', 'Une petite fleur jaune à cinq pétales. Son pollen abonde dans les couches de la fin de la glaciation, au milieu de celui des herbes de la steppe.'],
+  silene: ['Silène acaule', '#d8406a', 'Un coussin de mousse couvert de petites fleurs rose vif, qui pousse au ras du sol dans la toundra et en haute montagne.'],
+  compagnon: ['Compagnon rouge', '#d0305a', 'Une fleur rouge rosé des lisières et des haies, bien avant l’arrivée des premiers paysans.'],
+  myosotis: ['Myosotis', '#5a8ae0', 'De minuscules fleurs bleu ciel au cœur jaune, au bord des ruisseaux. On l’appelle aussi « ne-m’oubliez-pas ».'],
   primevere: ['Primevère', '#f3d65a', 'Une des premières fleurs du printemps, dans les sous-bois et les prés.'],
   jacinthe: ['Jacinthe des bois', '#6a5ad0', 'Au printemps, elle couvre d’un tapis bleu-violet les forêts de chênes de l’Ouest.'],
   marguerite: ['Marguerite', '#fbfbf2', 'La grande fleur blanche des prairies, au cœur jaune.'],
@@ -3091,16 +3095,20 @@ const FLOWERS = {
   violette: ['Violette', '#7a4fc0', 'Les Romains en tressent des couronnes et en parfument leur vin.'],
   souci: ['Souci', '#f39a1a', 'Une fleur orange des jardins romains, utilisée comme remède et pour teindre.'],
 };
+// familles de couleurs (rouge/rose, jaune/orange, blanc, bleu/violet), d'après la couleur de chaque fleur
+const FLOWER_TINTS = [['#e03a2a', '#d84a6a', '#d8406a', '#d0305a', '#c86aa8', '#f2b6cf'], ['#f3d65a', '#f5d22a', '#f39a1a', '#f2c935'], ['#f6f4ea', '#ffffff', '#fbfbf2', '#fbf6e6'], ['#3f5fc8', '#6a5ad0', '#3f7fe0', '#5a8ae0', '#7a4fc0', '#9a4fb0']];
 function flowerPool() {
-  if (colony.year < -11700) return ['dryade', 'saxifrage', 'gentiane', 'linaigrette'];
-  const wild = ['primevere', 'jacinthe', 'marguerite', 'boutondor', 'bruyere'];
+  if (colony.year < -11700) return ['dryade', 'saxifrage', 'gentiane', 'linaigrette', 'potentille', 'silene'];
+  const wild = ['primevere', 'jacinthe', 'marguerite', 'boutondor', 'bruyere', 'compagnon', 'myosotis'];
   if (tech.pax) return ['rose', 'lys', 'violette', 'souci', 'coquelicot', 'bleuet', ...wild];
   if (tech.agri) return ['coquelicot', 'bleuet', 'nielle', ...wild];
   return wild;
 }
 const MAX_PATCHES = 40, PATCH_N = 30;
 const FLOWER_STEM = new T.InstancedMesh(new T.CylinderGeometry(0.018, 0.022, 0.36, 4).translate(0, 0.18, 0), lam('#4f8a36'), MAX_PATCHES * PATCH_N);
-const FLOWER_HEAD = new T.InstancedMesh(new T.IcosahedronGeometry(0.085, 0).scale(1, 0.7, 1).translate(0, 0.38, 0), lam('#ffffff'), MAX_PATCHES * PATCH_N);
+const FLOWER_HEAD = new T.InstancedMesh(new T.IcosahedronGeometry(0.12, 0).scale(1, 0.6, 1).translate(0, 0.4, 0), lam('#ffffff'), MAX_PATCHES * PATCH_N);
+// les couleurs par fleur doivent exister avant le premier affichage, sinon three.js les ignore
+for (let i = 0; i < MAX_PATCHES * PATCH_N; i++) FLOWER_HEAD.setColorAt(i, _c.set('#ffffff'));
 for (const im of [FLOWER_STEM, FLOWER_HEAD]) { im.count = 0; im.frustumCulled = false; scene.add(im); }
 function syncFlowers() {
   const P = colony.flowers || []; let k = 0;
@@ -3108,13 +3116,16 @@ function syncFlowers() {
     const a = hash(pt.s + i, 3) * 6.28, r = Math.sqrt(hash(pt.s + i, 7)) * 3.2, x = pt.x + Math.cos(a) * r, z = pt.z + Math.sin(a) * r, h = heightAt(x, z);
     if (h < 0.5 || h > 10) continue;
     const s = 0.8 + hash(pt.s + i, 11) * 0.5; _q.setFromAxisAngle(UP, a); _s.set(s, s, s); _p.set(x, h - 0.02, z); _m.compose(_p, _q, _s);
-    FLOWER_STEM.setMatrixAt(k, _m); FLOWER_HEAD.setMatrixAt(k, _m); FLOWER_HEAD.setColorAt(k, _c.set(FLOWERS[pt.sp[i % pt.sp.length]][1])); k++;
+    FLOWER_STEM.setMatrixAt(k, _m); FLOWER_HEAD.setMatrixAt(k, _m); FLOWER_HEAD.setColorAt(k, _c.set(FLOWERS[pt.sp[Math.floor(a / 6.2832 * pt.sp.length) % pt.sp.length]][1])); k++;
   }
   FLOWER_STEM.count = FLOWER_HEAD.count = k;
   FLOWER_STEM.instanceMatrix.needsUpdate = FLOWER_HEAD.instanceMatrix.needsUpdate = true; if (FLOWER_HEAD.instanceColor) FLOWER_HEAD.instanceColor.needsUpdate = true;
 }
 function castFlowers(x, z) {
-  const pool = flowerPool().slice().sort(() => Math.random() - 0.5), sp = pool.slice(0, 3);
+  // un bouquet de toutes les couleurs : une fleur rouge (ou rose), une jaune, une blanche et une bleue (ou violette)
+  const pool = flowerPool().slice().sort(() => Math.random() - 0.5), sp = [];
+  for (const tint of FLOWER_TINTS) { const s = pool.find(id => tint.includes(FLOWERS[id][1]) && !sp.includes(id)); if (s) sp.push(s); }
+  for (const id of pool) if (sp.length < 4 && !sp.includes(id)) sp.push(id);
   colony.flowers = colony.flowers || []; colony.flowers.push({ x, z, s: (Math.random() * 1e6) | 0, sp });
   if (colony.flowers.length > MAX_PATCHES) colony.flowers.shift();
   syncFlowers();
