@@ -3718,7 +3718,7 @@ function handleTap(sx, sy) {
     const c = caves.find(c => Math.hypot(c.cx - p.x, c.cz - p.z) < 4.5);
     if (c) { openCave(caves.indexOf(c)); return; }
     const f = fields.find(f => Math.hypot(f.x - p.x, f.z - p.z) < 2.8);
-    if (f) { showHint(fieldText(f), 2600); return; }
+    if (f) { openBuilding(f.crop || 'ble', f, 'c'); return; }
     const b = pickBuilding(p);
     if (b) { openBuilding(b[0], b[1]); return; }
   }
@@ -3803,13 +3803,22 @@ function pickAnimal(sx, sy) {
   for (const [k, x, y, z, r] of C) { _v.set(x, y, z).project(camera); if (_v.z > 1) continue; const d = Math.hypot((_v.x + 1) / 2 * innerWidth - sx, (1 - _v.y) / 2 * innerHeight - sy); if (d < r && d < bd) { bd = d; best = k; } }
   return best;
 }
-const INFO_HEADS = { b: ['À quoi ça sert', 'Comment on le construit'], a: ['Qui est-ce ?', 'Les hommes et lui'] };
-function openBuilding(key, site, animal) {
-  const B = (animal ? AINFO : BINFO)[key]; if (!B) return;
-  const H = INFO_HEADS[animal ? 'a' : 'b'];
+// ================= Fiches des cultures =================
+const CINFO = {
+  ble: ['Blé amidonnier', 'Depuis le Néolithique', 'Une des toutes premières céréales cultivées, venue du Proche-Orient avec les premiers paysans. Ses grains restent enfermés dans leur enveloppe : il faut les piler avant de les moudre.', 'On défriche, on retourne la terre avec un bâton à fouir puis avec l’araire, on sème à la volée. À la moisson, on coupe les épis à la faucille, d’abord en silex, puis en métal. Le grain moulu sur une meule de pierre donne galettes et bouillies.', 'Un champ mûr rapporte 14 de nourriture à la récolte.'],
+  orge: ['Orge', 'Depuis le Néolithique', 'L’autre grande céréale des premiers paysans, plus résistante que le blé au froid et aux sols pauvres.', 'On la sème et on la moissonne comme le blé. On en fait des bouillies et des galettes, et les Gaulois en brassaient la cervoise, leur bière.', 'Un champ mûr rapporte 12 de nourriture à la récolte.'],
+  lin: ['Lin', 'Depuis le Néolithique', 'Une plante aux jolies fleurs bleues. Dans ses tiges se cachent de longues fibres très solides.', 'On arrache les tiges, on les laisse tremper (c’est le rouissage), puis on les bat pour en tirer les fibres, qu’on file et qu’on tisse : c’est la toile de lin. Ses graines donnent aussi de l’huile.', 'Peu de nourriture (4 par récolte), mais des vêtements : le froid fait moins de mal.'],
+  vigne: ['Vigne', 'Époque romaine', 'Des ceps alignés en rangs et accrochés à des piquets. Les Grecs l’avaient apportée près de Marseille ; elle gagne toute la Gaule à l’époque romaine.', 'À la fin de l’été, on vendange les grappes, on les foule aux pieds dans une cuve, et le jus fermente en vin. On le conserve dans des amphores, puis dans des tonneaux, une invention gauloise.', 'Du vin pour les fêtes et le commerce : 10 de nourriture par récolte.'],
+};
+const INFO_HEADS = { b: ['À quoi ça sert', 'Comment on le construit'], a: ['Qui est-ce ?', 'Les hommes et lui'], c: ['Qu’est-ce que c’est ?', 'Comment on le cultive'] };
+function openBuilding(key, site, kind = 'b') {
+  if (kind === true) kind = 'a';
+  const B = { b: BINFO, a: AINFO, c: CINFO }[kind][key]; if (!B) return;
+  const H = INFO_HEADS[kind];
   select(null);
   let extra = '';
-  if (site && !site.built) extra += `<p class="bwip">En construction : ${Math.round(site.progress * 100)} %</p>`;
+  if (kind === 'c') extra += `<p class="bwip">${fieldText(site)}${site.silt > 0 ? ' · enrichi par le limon de la crue' : ''}</p>`;
+  else if (site && !site.built) extra += `<p class="bwip">En construction : ${Math.round(site.progress * 100)} %</p>`;
   if (site && HOME[site.kind] && site.built) { const who = villagers.filter(v => v.hut === site).map(v => v.name); extra += `<p class="bwho">${who.length ? 'Y habitent : ' + who.join(', ') : 'Personne n’y habite pour l’instant.'}</p>`; }
   const castrum = key === 'rampart' && works.some(w => w.kind === 'castrum' && w.built) ? ' À la fin de l’Empire, on l’a renforcé de tours rondes en pierre et brique : c’est devenu un castrum.' : '';
   $('#bname').textContent = B[0]; $('#bera').textContent = B[1];
