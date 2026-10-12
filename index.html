@@ -50,6 +50,7 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 
 /* --- étiquettes des villageois --- */
 #labels{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.vicon{position:absolute;left:0;top:0;font-size:18px;line-height:1;padding:2px 3px;border-radius:9px;background:rgba(28,22,16,.55);filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}
 .vl{position:absolute;left:0;top:0;display:flex;align-items:center;gap:4px;padding:2px 7px 2px 4px;border-radius:999px;background:rgba(22,16,11,.66);color:var(--bone);font-size:12px;font-weight:700;line-height:1.2;white-space:nowrap;will-change:transform}
 .vl i{width:9px;height:9px;border-radius:50%;box-shadow:0 0 0 1.5px rgba(240,230,208,.5)}
 .vl.kid{font-size:10.5px;font-weight:500}
@@ -86,6 +87,7 @@ svg.pt.dead{filter:grayscale(1) brightness(.8)}
 .journal li{display:grid;grid-template-columns:38px 1fr;gap:6px;line-height:1.35}
 .journal time{color:var(--bone-dim);font-variant-numeric:tabular-nums;font-size:12.5px;padding-top:1px}
 .roster{display:grid;gap:6px;margin-top:8px}
+.clist{margin:4px 0 4px;padding-left:20px;display:grid;gap:4px;line-height:1.4}.clist li::marker{color:var(--ochre)}
 .chart{display:block;width:100%;max-width:460px;height:auto;margin:2px auto 6px}
 .sbar{display:grid;grid-template-columns:minmax(90px,38%) 1fr 30px;align-items:center;gap:8px;font-size:13px;margin:3px 0}.sbar i{display:block;height:9px;border-radius:5px}.sbar b{text-align:right;font-variant-numeric:tabular-nums}
 .btn.small{padding:4px 10px;font-size:12px;margin-left:6px}
@@ -135,6 +137,13 @@ svg.pt.dead{filter:grayscale(1) brightness(.8)}
 
 /* --- fiche villageois --- */
 #card{left:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 98px);width:min(290px,calc(100% - 24px));background:var(--bark);border:1px solid var(--edge);border-radius:12px;padding:12px 14px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+/* --- fiche bâtiment --- */
+#bcard{left:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 98px);width:min(340px,calc(100% - 24px));max-height:min(62vh,520px);overflow-y:auto;background:var(--bark);border:1px solid var(--edge);border-radius:12px;padding:12px 14px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+#bcard .cid{display:flex;flex-direction:column}
+#bcard h4{margin:10px 0 3px;font-family:var(--display);font-size:14px;letter-spacing:.03em;color:var(--ochre)}
+#bcard p{margin:0;font-size:14px;line-height:1.42;color:var(--bone)}
+#bcard .tip{margin-top:10px}
+#bcard .bwip,#bcard .bwho{margin-top:6px;color:var(--bone-dim);font-size:13px}
 .ch{display:flex;align-items:center;gap:8px}
 .ch b{font-family:var(--display);font-size:20px;letter-spacing:.03em}
 .ch span{color:var(--bone-dim);font-size:13px}
@@ -154,22 +163,18 @@ svg.pt.dead{filter:grayscale(1) brightness(.8)}
 .pw svg.i{width:26px;height:26px}
 .pw .nm{font-family:var(--display);font-size:12.5px;letter-spacing:.02em;white-space:nowrap}
 .pw .cost{font-size:11px;color:var(--spirit);font-variant-numeric:tabular-nums}
-.pw[data-power="feu"] svg{color:var(--ember)}.pw[data-power="pluie"] svg{color:var(--spirit)}.pw[data-power="maladie"] svg{color:var(--blight)}.pw[data-power="benir"] svg{color:var(--gold)}.pw[data-power="gibier"] svg{color:var(--moss)}
+.pw[data-power="feu"] svg{color:var(--ember)}.pw[data-power="pluie"] svg{color:var(--spirit)}.pw[data-power="foudre"] svg{color:#e8e4a0}.pw[data-power="crue"] svg{color:#5fa8d3}.pw[data-power="benir"] svg{color:var(--gold)}.pw[data-power="gibier"] svg{color:var(--moss)}
 .pw.armed{background:rgba(227,160,63,.2);box-shadow:inset 0 0 0 1.5px var(--ochre)}
 .pw.poor{opacity:.42}
 .pw.tech{margin-left:4px;border-left:1px solid var(--edge);border-radius:0 10px 10px 0;color:var(--ochre)}
 .pw.tech .cost{color:var(--ochre)}
 .badge{position:absolute;top:4px;right:8px;width:9px;height:9px;border-radius:50%;background:var(--ochre);box-shadow:0 0 0 2px var(--bark-solid)}
 #hint{left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 96px);background:var(--bark);border:1px solid var(--ochre);color:var(--bone);border-radius:14px;padding:8px 14px;font-size:14px;line-height:1.35;text-align:center;width:max-content;max-width:min(560px,calc(100% - 24px));pointer-events:none}
-#quest{right:12px;width:min(250px,calc(100% - 24px));display:grid;gap:3px;text-align:left;padding:9px 12px;background:var(--bark);border:1px solid var(--edge);border-left:4px solid var(--ochre);border-radius:12px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);font:inherit;color:var(--bone);cursor:pointer}
-#quest b{font-family:var(--display);font-size:14px;letter-spacing:.03em;color:var(--ochre)}#quest .qp{font-size:13px}#quest small{font-size:11px;color:var(--bone-dim)}
-#quest.urgent{border-left-color:#e0605a}#quest.urgent b{color:#f08a7a}
-@keyframes qglow{0%,100%{box-shadow:0 0 0 0 rgba(242,208,107,0)}50%{box-shadow:0 0 0 3px rgba(242,208,107,.85),0 0 16px rgba(242,208,107,.6)}}
-.pw.qglow{animation:qglow 1.4s ease-in-out infinite;border-radius:10px}
 .tip{background:rgba(227,160,63,.1);border-left:3px solid var(--ochre);padding:8px 10px;border-radius:6px}
+@media (max-width:600px){ .pw{width:44px}.pw .nm{display:none} }
 @media (max-width:640px){ #top{display:flex;flex-wrap:wrap;gap:6px} .hudchips{display:contents} .speed{position:static;margin-left:auto} }
 @media (max-width:440px){
-  .pw{width:50px}.pw .nm{font-size:11px}.pw svg.i{width:23px;height:23px}
+  .pw svg.i{width:23px;height:23px}
   .chip{padding:6px 8px;gap:5px}.mbar{width:44px}
   #card{bottom:calc(env(safe-area-inset-bottom,0px) + 92px)}
 }
@@ -262,13 +267,19 @@ svg.pt.dead{filter:grayscale(1) brightness(.8)}
   <div class="cact"><button id="cstory">Son histoire</button><button id="cfollow">Suivre</button></div>
 </section>
 
+<section id="bcard" class="hud" hidden>
+  <div class="ch"><div class="cid"><b id="bname"></b><span id="bera"></span></div><span class="sp"></span><button id="bclose" aria-label="Fermer la fiche">✕</button></div>
+  <div id="bbody"></div>
+</section>
+
 <div id="hint" class="hud" hidden></div>
-<button id="quest" class="hud" hidden aria-label="Quête en cours"></button>
 
 <nav id="powers" class="hud" aria-label="Pouvoirs divins">
   <button class="pw" data-power="feu"><svg class="i" viewBox="0 0 24 24"><path d="M12 2.5c.8 4 5.5 6 5.5 11.5a5.5 5.5 0 0 1-11 0c0-3 1.8-4.6 2.3-6.6 1 1 1.7 2.2 1.9 3.4.3-3.6.4-5.8 1.3-8.3z"/></svg><span class="nm">Feu</span><span class="cost">25</span></button>
   <button class="pw" data-power="pluie"><svg class="i" viewBox="0 0 24 24"><path d="M7 14a4 4 0 0 1 .4-8 5.2 5.2 0 0 1 9.9 1.6A3.3 3.3 0 0 1 17 14z"/><path d="M8.5 17.5l-1 3M12.5 17.5l-1 3M16.5 17.5l-1 3"/></svg><span class="nm">Pluie</span><span class="cost">20</span></button>
-  <button class="pw" data-power="maladie"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="9" r="3.6"/><circle cx="16" cy="11" r="2.6"/><circle cx="10" cy="16.5" r="2.2"/><circle cx="16" cy="17.5" r="1.4"/></svg><span class="nm">Maladie</span><span class="cost">35</span></button>
+  <button class="pw" data-power="foudre"><svg class="i" viewBox="0 0 24 24"><path d="M13.5 2.5L5.5 13.5h5l-1.5 8 8.5-11.5h-5.2l1.2-7.5z"/></svg><span class="nm">Foudre</span><span class="cost">30</span></button>
+  <button class="pw" data-power="arc"><svg class="i" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M3 18a9 9 0 0 1 18 0" stroke="#e05a4a"/><path d="M6 18a6 6 0 0 1 12 0" stroke="#f2d06b"/><path d="M9 18a3 3 0 0 1 6 0" stroke="#6fb0d8"/></svg><span class="nm">Arc-en-ciel</span><span class="cost">20</span></button>
+  <button class="pw" data-power="crue"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M3 14c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M3 19c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg><span class="nm">Inondation</span><span class="cost">35</span></button>
   <button class="pw" data-power="benir"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg><span class="nm">Bénir</span><span class="cost">40</span></button>
   <button class="pw" data-power="gibier"><svg class="i" viewBox="0 0 24 24"><path d="M8 20c-2-2-1-6 4-6s6 4 4 6-6 2-8 0z"/><circle cx="6" cy="11" r="1.8"/><circle cx="9.5" cy="7" r="1.8"/><circle cx="14.5" cy="7" r="1.8"/><circle cx="18" cy="11" r="1.8"/></svg><span class="nm">Gibier</span><span class="cost">30</span></button>
   <button class="pw tech" id="techbtn"><svg class="i" viewBox="0 0 24 24"><path d="M12 21V11M12 11L7 6M12 11l5-5M12 15l-4-3M12 15l4-3"/><circle cx="7" cy="5" r="1.8"/><circle cx="17" cy="5" r="1.8"/><circle cx="12" cy="3.5" r="1.5"/></svg><span class="nm">Savoir</span><span class="cost" id="techcost">0</span><i class="badge" id="techbadge" hidden></i></button>
@@ -286,9 +297,12 @@ const SEC_PER_HOUR = 3.5;          // secondes réelles par heure de jeu, à vit
 const YEARS_PER_DAY = 4;           // âge gagné par jour de jeu
 const ADULT_AGE = 14;
 const NIGHT_START = 21, NIGHT_END = 6;
-const WORLD = 170, HALF = WORLD / 2, SEG = 120;
-const WORK_RADIUS = 46;            // rayon d'action autour du camp
-const MAX_TREES = 280, MAX_BUSHES = 42, DOTS_PER_BUSH = 5, BERRY_MAX = 6;
+// carte agrandie : le relief du village est inchangé jusqu'à 42 pas du centre (les anciennes parties restent intactes) ;
+// au-delà, les montagnes reculent et laissent place à de nouvelles collines, forêts et lacs.
+const WORLD = 240, HALF = WORLD / 2, SEG = 150;
+const MTN_START = 62, MTN_END = 112, FLAT_IN = 5.1, FLAT_OUT = 18.7, LAND_R = 90;
+const WORK_RADIUS = 64;            // rayon d'action autour du camp
+const MAX_TREES = 440, MAX_BUSHES = 42, DOTS_PER_BUSH = 5, BERRY_MAX = 6;
 const SAVE_KEY = 'premierFeu.save.v1';
 function loadSave() { try { const s = localStorage.getItem(SAVE_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
 function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) { } }
@@ -331,11 +345,11 @@ const forestNoise = (x, z) => fbm(x * 0.05 + 3, z * 0.05 + 9, 2);
 const COAST = SAVED ? !!SAVED.coast : true;
 const COAST_DIR = hash(7, 11) * Math.PI * 2, COAST_X = Math.cos(COAST_DIR), COAST_Z = Math.sin(COAST_DIR);
 function heightAt(x, z) {
-  const d = Math.hypot(x, z) / HALF;
+  const d = Math.hypot(x, z);
   const h = (fbm(x * 0.035 + 11, z * 0.035 + 7, 4) - 0.42) * 11;
   const ridge = 1 - Math.abs(fbm(x * 0.05 + 40, z * 0.05 - 13, 3) * 2 - 1);
-  let m = smooth(0.5, 0.95, d) * (10 + ridge * 17);
-  const f = smooth(0.06, 0.22, d);
+  let m = smooth(MTN_START, MTN_END, d) * (10 + ridge * 17);
+  const f = smooth(FLAT_IN, FLAT_OUT, d);
   let y = h * f + 1.4 * (1 - f);
   if (COAST) {
     const along = x * COAST_X + z * COAST_Z, side = -x * COAST_Z + z * COAST_X;
@@ -344,7 +358,7 @@ function heightAt(x, z) {
   }
   return y + m;
 }
-function validLand(x, z) { if (Math.hypot(x, z) > 60) return false; const h = heightAt(x, z); return h > 0.35 && h < 11; }
+function validLand(x, z) { if (Math.hypot(x, z) > LAND_R) return false; const h = heightAt(x, z); return h > 0.35 && h < 11; }
 function landPoint(x, z, r) {
   for (let k = 0; k < 14; k++) { const a = rr(0, Math.PI * 2), d = rr(r * 0.3, r); const px = x + Math.cos(a) * d, pz = z + Math.sin(a) * d; if (validLand(px, pz)) return { x: px, z: pz }; }
   return { x, z };
@@ -358,12 +372,12 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = T.PCFSoftShadowMap;
 const scene = new T.Scene();
 scene.background = new T.Color('#a8d4ea');
-scene.fog = new T.Fog('#a8d4ea', 95, 240);
+scene.fog = new T.Fog('#a8d4ea', 120, 310);
 const camera = new T.PerspectiveCamera(50, 1, 0.5, 600);
 function resize() {
   renderer.setSize(innerWidth, innerHeight, false);
   camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
-  $('#log').style.top = $('#quest').style.top = ($('#top').getBoundingClientRect().bottom + 8) + 'px';
+  $('#log').style.top = ($('#top').getBoundingClientRect().bottom + 8) + 'px';
 }
 addEventListener('resize', resize);
 
@@ -417,7 +431,7 @@ function buildTerrain() {
 const steppeK = c => { const sp = seasonPhase(), green = smooth(0.1, 0.25, sp) * smooth(0.45, 0.33, sp); return clamp((1 - c) * 1.7, 0, 1) * (1 - green * 0.4); };
 function recolorTerrain(c) {
   const col = terrain.geometry.attributes.color, a = col.array, F = TFACE, snowline = lerp(7.5, 19, c), k = new T.Color(), stK = steppeK(c), snow = colony.snow || 0;
-  const pathC = tech.fer ? PATH_C.road : tech.village ? PATH_C.dirt : PATH_C.trail, pathK = tech.fer ? 0.85 : tech.village ? 0.72 : 0.5;
+  const pathC = tech.fer ? PATH_C.road : tech.village ? PATH_C.dirt : PATH_C.trail, pathK = tech.fer ? 0.5 : tech.village ? 0.45 : 0.4;   // sentiers d'usure discrets : les vrais chemins sont dessinés à part
   for (let i = 0; i < F.h.length; i++) {
     const h = F.h[i], ny = F.ny[i], v = F.v[i], f = F.f[i];
     if (h < 0.45) k.copy(TC.sand);
@@ -450,7 +464,7 @@ const FLOE_STEP = 2.2, FLOE_GEO = new T.CylinderGeometry(1, 1, 0.14, 6).translat
 const FLOES = [];
 for (let x = -HALF * 1.1; x <= HALF * 1.1; x += FLOE_STEP) for (let z = -HALF * 1.1; z <= HALF * 1.1; z += FLOE_STEP) {
   const fx = x + (hash(x * 3.1, z * 1.7) - 0.5) * 1.2, fz = z + (hash(z * 2.3, x * 4.1) - 0.5) * 1.2, h = heightAt(fx, fz);
-  if (h > 0.1) continue;
+  if (h > 0.1 || Math.hypot(fx, fz) > HALF * 0.98) continue;
   const along = fx * COAST_X + fz * COAST_Z, sea = COAST && along > 32 + (fbm((-fx * COAST_Z + fz * COAST_X) * 0.04 + 50, 3.7, 3) - 0.5) * 22 - 6;
   const r = hash(fx * 7.7, fz * 5.3);
   // seuil de gel : lacs et rivage d'abord, le large en dernier (et jamais entièrement soudé)
@@ -502,7 +516,7 @@ function makeWhale() {
   const spots = new T.Mesh(merge([0, 1, 2, 3, 4, 5].map(i => new T.SphereGeometry(0.16, 5, 4).scale(1, 0.3, 1).translate((i % 2 ? 0.5 : -0.45), 0.66, -2 + i * 0.75))), FAUNA_MAT.whaleSpot);
   const fluke = new T.Mesh(merge([new T.BoxGeometry(0.5, 0.25, 1.6).translate(0, 0, -4.6), new T.ConeGeometry(1.5, 1.2, 3).rotateX(-Math.PI / 2).scale(1, 0.12, 1).translate(0, 0, -5.6)]), FAUNA_MAT.whale);
   const spout = new T.Mesh(merge([[0, 0.5, 0, 0.22], [0.1, 1.1, 0.05, 0.3], [-0.15, 1.7, 0, 0.38], [0.2, 2.1, -0.1, 0.42], [-0.3, 2.5, 0.1, 0.36], [0.35, 2.6, 0.15, 0.3]].map(([x, y, z, r]) => new T.IcosahedronGeometry(r, 0).translate(x, y, z))), FAUNA_MAT.spout.clone());   // souffle : gerbe de vapeur spout.position.set(0, 0.6, 2.6); spout.visible = false;
-  g.add(body, spots, fluke, spout); g.userData = { fluke, spout }; body.castShadow = true; return g;
+  g.add(body, spots, fluke, spout); g.userData = { fluke, spout }; return g;
 }
 function makeDolphin() {
   return new T.Mesh(merge([new T.SphereGeometry(1, 8, 5).scale(0.32, 0.3, 1.25), new T.ConeGeometry(0.1, 0.5, 4).scale(1, 1, 2).translate(0, 0.4, 0.05).rotateX(-0.4), new T.ConeGeometry(0.45, 0.4, 3).rotateX(-Math.PI / 2).scale(1, 0.15, 1).translate(0, 0, -1.3), new T.ConeGeometry(0.1, 0.5, 5).rotateX(Math.PI / 2).translate(0, -0.05, 1.45)]), FAUNA_MAT.dolphin);
@@ -703,8 +717,30 @@ function updateClimate(force) {
   const hi = heinrichNow();
   if (COAST && hi >= 0 && colony.heinrichSeen !== hi && started) { colony.heinrichSeen = hi; log('Des icebergs dérivent au large ! Venus de l’immense glacier d’Amérique du Nord, ils annoncent un hiver plus rude encore.', 'power'); }
   const ph = climatePhase();
-  if (phaseShown && ph !== phaseShown) log(PHASE_MSG[ph], 'power');
+  if (phaseShown && ph !== phaseShown) { log(PHASE_MSG[ph], 'power'); climateSplash(phaseShown, ph); }
   phaseShown = ph;
+}
+// Écran de changement de climat : la phase qui s'achève, la nouvelle, et ce qui va changer dans le jeu
+const CLIMATE_INFO = {
+  'Période glaciaire': { text: 'Le grand froid de la dernière glaciation : une steppe sèche et sans arbres, balayée par le vent, où paissent mammouths, rhinocéros laineux et rennes.',
+    changes: ['Hivers rudes : plaines enneigées, lacs gelés, banquise sur la mer', 'Étés courts et frais, la steppe verdit puis jaunit', 'Peu de baies : la chasse au gros gibier nourrit la tribu', 'Mammouths et rhinocéros laineux sont nombreux'] },
+  'Maximum glaciaire': { text: 'Le moment le plus froid de la glaciation. Les glaciers couvrent le nord de l’Europe et la mer est 120 mètres plus basse qu’aujourd’hui.',
+    changes: ['Températures sous zéro en moyenne : chaque hiver est une épreuve', 'La banquise reste longtemps sur la mer, les pêcheurs ne sortent plus', 'Neige plus fréquente, baies plus rares', 'Le feu et les abris deviennent vitaux'] },
+  'Fin de la glaciation': { text: 'Le climat se réchauffe par à-coups. Les glaciers reculent, les bouleaux et les pins reviennent sur la steppe.',
+    changes: ['Hivers plus doux, moins de neige et de glace', 'La steppe reverdit, les arbres perdent leur neige', 'Mammouths et rhinocéros laineux commencent à disparaître', 'Les buissons donnent plus de baies'] },
+  'Dryas récent': { text: 'Un brusque retour du froid, pendant environ 1 200 ans, peut-être dû à l’arrivée d’eau douce glacée dans l’Atlantique.',
+    changes: ['La neige et la glace reviennent', 'La steppe jaunit de nouveau', 'Les buissons donnent moins de baies', 'Il faut tenir jusqu’au retour de la chaleur'] },
+  'Holocène tempéré': { text: 'La glaciation est finie : c’est le climat doux dans lequel nous vivons encore. Forêts de chênes, prairies et rivières abondantes.',
+    changes: ['Prairies vertes et grandes forêts', 'Lacs et mer ne gèlent plus, la neige devient rare', 'L’agriculture devient possible', 'Les grands animaux de la glaciation ont disparu : place aux cerfs et aux aurochs'] },
+  'Optimum climatique': { text: 'Quelques millénaires un peu plus chauds qu’aujourd’hui, au cœur de l’Holocène : les étés sont longs et les récoltes généreuses.',
+    changes: ['Étés plus chauds, plus d’orages', 'Champs et baies poussent mieux', 'Lucioles les nuits d’été', 'Récoltes abondantes : moins de famines'] },
+  'Optimum romain': { text: 'Des siècles doux et réguliers, favorables aux récoltes et à la vigne, qui remonte vers le nord de la Gaule.',
+    changes: ['Bonnes récoltes, moins de disettes', 'La vigne prospère', 'Hivers doux, neige rare', 'Avant le refroidissement de la fin de l’Antiquité'] },
+};
+function climateSplash(prev, ph) {
+  const I = CLIMATE_INFO[ph]; if (!I) return;
+  let art = ''; try { art = illustrate('climate:' + ph); } catch (e) { }
+  splashQueue.push({ year: colony.year, eyebrow: `Fin de « ${prev} »`, title: ph, art, text: I.text, list: I.changes });
 }
 // neige qui tombe autour de la caméra quand il gèle
 const SNOW_N = 900, snowGeo = new T.BufferGeometry(), snowPos = new Float32Array(SNOW_N * 3);
@@ -747,13 +783,15 @@ function nextWeather() {
   if (K !== 'clair' && started) log(WX_MSG[K], 'power');
 }
 const BOLT_MAT = new T.LineBasicMaterial({ color: '#f4f6ff', transparent: true });
-function lightning() {
-  const a = rr(0, 6.28), d = rr(10, 45), x = cam.tx + Math.cos(a) * d, z = cam.tz + Math.sin(a) * d, y0 = Math.max(heightAt(x, z), 0);
+// éclair d'orage au hasard autour de la caméra, ou ciblé (pouvoir Foudre) quand (tx, tz) est donné
+function lightning(tx, tz) {
+  const aimed = tx !== undefined, a = rr(0, 6.28), d = aimed ? Math.hypot(tx - cam.tx, tz - cam.tz) : rr(10, 45), x = aimed ? tx : cam.tx + Math.cos(a) * d, z = aimed ? tz : cam.tz + Math.sin(a) * d, y0 = Math.max(heightAt(x, z), 0);
   const pts = []; let px = x, pz = z; for (let y = y0 + 45; y > y0; y -= rr(3, 6)) { pts.push(new T.Vector3(px, y, pz)); px += rr(-1.6, 1.6); pz += rr(-1.6, 1.6); }
   pts.push(new T.Vector3(x, y0, z));
   const line = new T.Line(new T.BufferGeometry().setFromPoints(pts), BOLT_MAT.clone()); scene.add(line);
   effects.push({ age: 0, update(dt) { this.age += dt; line.material.opacity = 1 - this.age / 0.35; if (this.age >= 0.35) { scene.remove(line); line.geometry.dispose(); return false; } return true; } });
   weather.flash = 1; flash(x, z, 0xdde6ff); thunder(d);
+  if (aimed) return;
   // la foudre peut embraser un arbre isolé, hors de la zone où il pleut
   if (Math.random() < 0.3) { const t = trees.filter(t => t.state === 'alive' && Math.hypot(t.x - x, t.z - z) < 8 && !inRain(t.x, t.z))[0]; if (t) { setTreeState(t, 'burning'); log('La foudre frappe un arbre, qui s’embrase !', 'bad'); } }
 }
@@ -847,9 +885,9 @@ function writeTree(tr) {
   other.setColorAt(tr.i, tint);
   treesDirty = true;
 }
-function placeTrees() {
+function placeTrees(minD = 0) {
   const tryAdd = (x, z, p) => {
-    const d = Math.hypot(x, z); if (d < 9 || d > 62) return;
+    const d = Math.hypot(x, z); if (d < 9 || d > LAND_R + 2) return;
     const h = heightAt(x, z); if (h < 0.7 || h > 12) return;
     if (Math.random() > p) return;
     if (Math.abs(heightAt(x + 1, z) - h) + Math.abs(heightAt(x, z + 1) - h) > 1.6) return;
@@ -858,8 +896,8 @@ function placeTrees() {
     const col = new T.Color(type ? pick(['#5e9a3c', '#6aa443', '#77ad48', '#4f8c36']) : pick(['#2f6b3a', '#336f3b', '#2a6233', '#3b7840']));
     trees.push({ i: trees.length, x, z, y: h - 0.1, s: rr(0.8, 1.25), rot: rr(0, 6.28), type, col, state: 'alive', grow: 1, wood: 8, burn: 0, regrow: 0, res: null, flame: null });
   };
-  for (let k = 0; k < 7000 && trees.length < MAX_TREES - 40; k++) { const x = rr(-62, 62), z = rr(-62, 62); const f = forestNoise(x, z); tryAdd(x, z, f > 0.55 ? 0.9 : f > 0.47 ? 0.35 : 0.04); }
-  for (let k = 0; k < 3000 && trees.filter(t => Math.hypot(t.x, t.z) < 28).length < 30 && trees.length < MAX_TREES; k++) { const a = rr(0, 6.28), r = rr(10, 28); tryAdd(Math.cos(a) * r, Math.sin(a) * r, 0.5); }
+  for (let k = 0; k < 14000 && trees.length < MAX_TREES - 40; k++) { const x = rr(-92, 92), z = rr(-92, 92); if (Math.hypot(x, z) < minD) continue; const f = forestNoise(x, z); tryAdd(x, z, f > 0.55 ? 0.9 : f > 0.47 ? 0.35 : 0.04); }
+  for (let k = 0; k < 3000 && !minD && trees.filter(t => Math.hypot(t.x, t.z) < 28).length < 30 && trees.length < MAX_TREES; k++) { const a = rr(0, 6.28), r = rr(10, 28); tryAdd(Math.cos(a) * r, Math.sin(a) * r, 0.5); }
   trunkIM.count = pineIM.count = leafIM.count = trees.length;
   trees.forEach(writeTree);
 }
@@ -1198,6 +1236,7 @@ class Villager {
     applyRoleLook(this);
     // étiquette flottante
     this.label = document.createElement('span'); this.label.className = 'vl'; this.label.hidden = true;
+    this.icon = document.createElement('span'); this.icon.className = 'vicon'; this.icon.hidden = true; $('#labels').appendChild(this.icon);
     setLabel(this);
     labelsEl.appendChild(this.label);
   }
@@ -1375,10 +1414,11 @@ function launchBoat(v, t) {
   for (let d = 3; d <= 11; d += 1) { const x = t.tx + t.sh.dx * d, z = t.tz + t.sh.dz * d; if (heightAt(x, z) < -0.4) { sx = x; sz = z; } else if (sx !== null) break; }
   if (sx === null) { t.boat = false; return; }   // simple mare : on pêche depuis la rive
   t.sx = sx; t.sz = sz; t.stage = 'out'; v.inBoat = true;
-  if (!v.boatMesh) { v.boatMesh = new T.Mesh(BOAT_GEO, BOAT_MAT); v.boatMesh.castShadow = true; scene.add(v.boatMesh); }
-  v.boatMesh.visible = true;
+  // pas d'ombre sur le fond : elle ferait croire que la barque vole
+  if (!v.boatMesh) { v.boatMesh = new T.Mesh(BOAT_GEO, BOAT_MAT); v.boatMesh.castShadow = false; scene.add(v.boatMesh); }
+  v.boatMesh.visible = true; if (v.mesh) v.mesh.traverse(o => { if (o.isMesh) o.castShadow = false; });
 }
-function landBoat(v) { v.inBoat = false; if (v.boatMesh) v.boatMesh.visible = false; }
+function landBoat(v) { v.inBoat = false; if (v.boatMesh) v.boatMesh.visible = false; if (v.mesh) v.mesh.traverse(o => { if (o.isMesh) o.castShadow = true; }); }
 function catchFish(v, x, z, boat) {
   v.carry = { kind: 'food', n: Math.round((boat ? 11 : 6) * (tech.fer ? 1.3 : 1)) };
   burst(x, 0.1, z, '#d8eef8', 14, { spread: 1.2, up: 2.5, life: 0.9, size: 0.35, gravity: 6, normal: true });
@@ -1507,7 +1547,8 @@ function runTask(v, gh) {
       if (t.t >= 1.5 / workMul()) {
         const C = CROPS[f.crop];
         f.growth = 0; f.res = null; syncField(f);
-        v.carry = { kind: 'food', n: Math.round(C.food * (f.crop !== 'lin' && tech.meule ? 1.4 : 1) * (tech.araire ? 1.5 : 1) * (tech.charrue ? 1.4 : 1) * (tech.vallus && f.crop !== 'vigne' ? 1.3 : 1)) }; t.phase = 'back'; colony.harvests = (colony.harvests || 0) + 1;
+        const silt = f.silt > 0 ? 1.5 : 1; if (f.silt > 0) f.silt--;
+        v.carry = { kind: 'food', n: Math.round(silt * C.food * (f.crop !== 'lin' && tech.meule ? 1.4 : 1) * (tech.araire ? 1.5 : 1) * (tech.charrue ? 1.4 : 1) * (tech.vallus && f.crop !== 'vigne' ? 1.3 : 1)) }; t.phase = 'back'; colony.harvests = (colony.harvests || 0) + 1;
         milestone('harvest', f.x, f.z);
         if (f.crop === 'lin') { colony.mood += 3; journal(v, 'Récolte le lin pour tisser des vêtements.'); }
       }
@@ -1619,7 +1660,7 @@ function updateVillager(v, gh) {
 }
 function killVillager(v, cause) {
   v.alive = false; v.diedDay = dayNum(); v.deathCause = cause; sfx('death');
-  endTask(v); scene.remove(v.mesh); v.label.remove(); colony.deaths++; ancestors.push(v);
+  endTask(v); scene.remove(v.mesh); v.label.remove(); if (v.icon) v.icon.remove(); colony.deaths++; ancestors.push(v);
   if (selected === v) select(null);
   colony.mood -= 10;
   log(`${v.druid ? 'Le druide ' : ''}${v.name} est ${v.sex === 'F' ? 'morte' : 'mort'} ${cause}, à ${Math.floor(v.age)} ans.`, 'bad');
@@ -1785,7 +1826,7 @@ function roadPath(a0) {
       if (h > 4.5) cost += 50;
       if (!best || cost < best.cost) best = { a, nx, nz, h, cost };
     }
-    if (best.h < 0.45 || best.h > 5 || Math.hypot(best.nx, best.nz) > 76) break;   // rivage (le port), pied des collines ou bord de carte
+    if (best.h < 0.45 || best.h > 5 || Math.hypot(best.nx, best.nz) > 105) break;   // rivage (le port), pied des collines ou bord de carte
     dir = best.a; x = best.nx; z = best.nz; pts.push([x, best.h, z, dir]);
   }
   return pts;
@@ -1810,7 +1851,7 @@ function spawnShip() {
   const j = works.find(w => w.kind === 'jetty' && w.built); if (!j) return;
   const ex = j.x + j.dx * 9, ez = j.z + j.dz * 9;
   for (let d = 0; d <= 50; d += 3) if (heightAt(ex + j.dx * d, ez + j.dz * d) > -0.5) return;   // pas d'accès au large
-  const g = new T.Group(); const add = (geo, mat) => { const m = new T.Mesh(geo, mat); m.castShadow = true; g.add(m); };
+  const g = new T.Group(); const add = (geo, mat) => { const m = new T.Mesh(geo, mat); m.castShadow = false; g.add(m); };   // l'ombre sur le fond marin donnait l'impression d'un navire qui vole
   add(SHIP_G.hull, DARK_WOOD); add(SHIP_G.mast, PEN_WOOD); add(SHIP_G.yard, PEN_WOOD); add(SHIP_G.sail, SAIL_MAT); scene.add(g);
   ship = { g, x: ex + j.dx * 55, z: ez + j.dz * 55, ex, ez, fx: ex + j.dx * 55, fz: ez + j.dz * 55, state: 'in', t: 0, face: 0, moving: false };
   log('Une voile apparaît au large.');
@@ -1833,6 +1874,7 @@ const MENHIR_GEO = merge([new T.DodecahedronGeometry(1, 0).scale(0.42, 1.45, 0.3
 const MENHIR_MAT = lam('#8e8a80');
 const STONE_MAT = lam('#8d887b'), STONE2 = new T.MeshLambertMaterial({ color: '#8d887b', side: T.DoubleSide }), WATER_MAT = lam('#2f5f7a');
 const WELL = { ring: new T.CylinderGeometry(0.85, 0.9, 0.7, 10, 1, true).translate(0, 0.35, 0), water: new T.CircleGeometry(0.82, 10).rotateX(-Math.PI / 2).translate(0, 0.2, 0), post: new T.BoxGeometry(0.12, 1.7, 0.12).translate(0, 0.85, 0), bar: new T.CylinderGeometry(0.06, 0.06, 2.0, 5).rotateZ(Math.PI / 2).translate(0, 1.55, 0), bucket: new T.CylinderGeometry(0.15, 0.12, 0.22, 6).translate(0, 1.05, 0) };
+const HORREUM = { walls: new T.BoxGeometry(3.0, 1.6, 2.0).translate(0, 0.8, 0), roof: new T.ConeGeometry(2.3, 1.0, 4).rotateY(Math.PI / 4).scale(1.05, 1, 0.72).translate(0, 2.1, 0), buttress: new T.BoxGeometry(0.3, 1.1, 0.25).translate(0, 0.55, 0), door: new T.BoxGeometry(0.7, 1.1, 0.1).translate(0, 0.55, 1.01) };
 const GRANARY = { post: new T.BoxGeometry(0.14, 1.15, 0.14).translate(0, 0.57, 0), body: new T.BoxGeometry(2.0, 1.2, 1.5).translate(0, 1.75, 0), roof: HOUSE.roof.clone().scale(0.8, 0.8, 0.85).translate(0, 1.31, 0) };
 const STAKE = merge([new T.CylinderGeometry(0.11, 0.12, 1.7, 5).translate(0, 0.85, 0), new T.ConeGeometry(0.11, 0.3, 5).translate(0, 1.85, 0)]);
 const TUMULUS = { mound: merge([new T.IcosahedronGeometry(1, 2)]).scale(3.6, 1.7, 3.6), stone: new T.BoxGeometry(0.5, 1.3, 0.5).translate(0, 0.65, 0), lintel: new T.BoxGeometry(1.8, 0.4, 0.6), door: new T.BoxGeometry(0.75, 1.1, 0.1).translate(0, 0.55, 0) };
@@ -1887,6 +1929,70 @@ function circleProfile(cx, cz, R) {
   for (let i = 0; i < WALL_N; i++) { const a = i / WALL_N * Math.PI * 2, cu = cx * Math.cos(a) + cz * Math.sin(a); prof[i] = cu + Math.sqrt(Math.max(0, R * R - c2 + cu * cu)); }
   return prof;
 }
+// Rempart de l'oppidum, en « éperon barré » comme les oppida des Vénètes (César, Guerre des Gaules III, 12) : un grand cercle
+// autour de la ville, qui se déforme pour contourner les lacs par la terre ferme. Le mur ne se dresse que sur la terre (jamais
+// les pieds dans l'eau) ; là où la mer, un lac ou la montagne barrent le passage, l'enceinte reste ouverte : l'eau protège ce côté.
+// Le castrum romain du Bas-Empire fermera ensuite le côté mer par un mur.
+const RAMP_V = 3, RAMP_RMIN = 40, RAMP_RMAX = 60, RAMP_SHORE = 1.5, RAMP_SPACING = 1.1, RAMP_GAP = 2.3, RAMP_IN = 9, RAMP_OUT = 5, RAMP_MINRUN = 6;
+const rampWet = (x, z) => { const h = heightAt(x, z); return h < 0.7 || h > 10; };
+// un point du tracé où le mur peut se dresser : terre ferme, et pas d'eau juste devant ni juste derrière
+function rampDry(a, r) { const c = Math.cos(a), s = Math.sin(a); return !rampWet(c * r, s * r) && !rampWet(c * (r + 1.7), s * (r + 1.7)) && !rampWet(c * (r - 1.7), s * (r - 1.7)); }
+function rampRing(Rt, minR) {
+  // on fait le tour en partant d'un point sec ; chaque point cherche la terre ferme près du précédent (le mur ne zigzague pas)
+  // tout en revenant doucement vers le cercle
+  const prof = new Float32Array(WALL_N); let dry = 0, prev = -1;
+  let i0 = 0; while (i0 < WALL_N && !rampDry(i0 / WALL_N * Math.PI * 2, Math.max(Rt, minR[i0]))) i0++; if (i0 === WALL_N) i0 = 0;
+  for (let k = 0; k < WALL_N; k++) {
+    const i = (i0 + k) % WALL_N, a = i / WALL_N * Math.PI * 2, lo = Math.max(Rt - RAMP_IN, minR[i]), hi = Rt + RAMP_OUT;
+    const want = clamp(prev >= 0 ? prev * 0.75 + Rt * 0.25 : Rt, lo, hi); let best = -1;
+    for (let d = 0; d <= RAMP_IN + RAMP_OUT && best < 0; d += 0.5) for (const r of [want - d, want + d]) if (best < 0 && r >= lo && r <= hi && rampDry(a, r)) best = r;
+    if (best >= 0 && prev >= 0 && Math.abs(best - prev) > 3) best = -1;   // un saut : on laisse un trou plutôt qu'un zigzag
+    if (best >= 0) { prof[i] = best; dry++; prev = best; } else { prof[i] = Math.max(Rt, minR[i]); prev = -1; }
+  }
+  return { prof, dry: dry / WALL_N };
+}
+function computeRampProfile() {
+  // chaque maison, atelier ou grotte habitée doit rester dedans
+  const pts = [...huts.map(h => [h.x, h.z, HOME[h.kind] ? HOME[h.kind].clear : 3]), ...works.filter(w => !WALL_SKIP.includes(w.kind)).map(w => [w.x, w.z, WORK_INFO[w.kind].clear || 2]), ...caves.map(c => [c.cx, c.cz, 5.5])];
+  const minR = new Float32Array(WALL_N);
+  for (let i = 0; i < WALL_N; i++) { const a = i / WALL_N * Math.PI * 2; for (const [x, z, c] of pts) { const d = Math.hypot(x, z); if (d > 1 && angDiff(a, Math.atan2(z, x)) < Math.asin(Math.min(1, (c + 1) / d)) + 0.05) minR[i] = Math.max(minR[i], d + c + 1.5); } }
+  // le plus grand cercle qui reste surtout sur la terre ferme
+  let best = null;
+  for (let Rt = Math.min(RAMP_RMAX, Math.max(RAMP_RMIN, (colony.palR || 24) * 1.3)); Rt <= RAMP_RMAX; Rt += 2) { const r = rampRing(Rt, minR), score = r.dry + Rt * 0.005; if (!best || score > best.score) best = { ...r, score }; }
+  return best.prof;
+}
+// le mur existe là où le tracé est sur la terre ferme, par tronçons d'au moins quelques pas (pas de bout de mur isolé)
+function rampMask(prof) {
+  const N = prof.length, ok = Uint8Array.from(prof, (R, i) => rampDry(i / N * Math.PI * 2, R) ? 1 : 0);
+  const start = ok.indexOf(0); if (start < 0) return ok;
+  let run = [];
+  for (let k = 1; k <= N; k++) { const i = (start + k) % N; if (ok[i]) run.push(i); else { if (run.length < RAMP_MINRUN) run.forEach(j => ok[j] = 0); run = []; } }
+  return ok;
+}
+// morceaux de mur le long du tracé : « land » pour le rempart, « shore » pour le mur côté mer du castrum (au ras de la côte)
+function rampPieces(prof, gates) {
+  const N = prof.length, ok = rampMask(prof), out = [];
+  // côté mer : la ligne de côte vue du centre, un pas en retrait de l'eau
+  const shore = Array.from(prof, (R, i) => {
+    if (ok[i]) return R; const a = i / N * Math.PI * 2; if (!seaSide(a, R)) return -1;
+    let L = -1; for (let r = 4; r <= R; r += 0.5) { if (rampWet(Math.cos(a) * r, Math.sin(a) * r)) break; L = r; }
+    return L > 6 ? L - RAMP_SHORE + 0.5 : -1;
+  });
+  for (let i = 0; i < N; i++) {
+    const i1 = (i + 1) % N, land = ok[i] && ok[i1], R0 = land ? prof[i] : shore[i], R1 = land ? prof[i1] : shore[i1];
+    if (R0 < 0 || R1 < 0) continue;
+    const a0 = i / N * Math.PI * 2, a1 = (i + 1) / N * Math.PI * 2;
+    const x0 = Math.cos(a0) * R0, z0 = Math.sin(a0) * R0, x1 = Math.cos(a1) * R1, z1 = Math.sin(a1) * R1, len = Math.hypot(x1 - x0, z1 - z0);
+    if (len < 0.01 || len > 8) continue;
+    const m = Math.max(1, Math.round(len / RAMP_SPACING)), dx = (x1 - x0) / len, dz = (z1 - z0) / len, rot = -Math.atan2(dz, dx);
+    for (let j = 0; j < m; j++) {
+      const t = (j + 0.5) / m, x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t, h = heightAt(x, z);
+      if (h < 0.7 || h > 10 || gates.some(gt => Math.hypot(gt.x - x, gt.z - z) < RAMP_GAP)) continue;
+      out.push({ x, z, h, rot, land });
+    }
+  }
+  return out;
+}
 // minR / maxR : bornes du rayon (le rempart de pierre est un cercle bien plus large que la palissade)
 function computeWallProfile(minR = 0, maxR = WALL_RMAX) {
   const pts = [...huts.map(h => [h.x, h.z, (HOME[h.kind] ? HOME[h.kind].clear : 3) + 1.5]), ...works.filter(w => !WALL_SKIP.includes(w.kind)).map(w => [w.x, w.z, (WORK_INFO[w.kind].clear || 2) + 1.5]),
@@ -1909,7 +2015,7 @@ function segDist(px, pz, ax, az, bx, bz) { const vx = bx - ax, vz = bz - az, t =
 function chooseGates(prof) {
   const dests = [...fields.map(f => [f.x, f.z, 1.2]), ...works.filter(w => ['menhir', 'tumulus', 'nemeton', 'jetty'].includes(w.kind)).map(w => [w.x, w.z, w.kind === 'jetty' ? 3 : 0.6])];
   if (colony.cromlech) dests.push([colony.cromlech.x, colony.cromlech.z, 1.5]);
-  let tx = 0, tz = 0, tn = 0; for (const t of trees) if (t.state === 'alive' && Math.hypot(t.x, t.z) < 50) { tx += t.x; tz += t.z; tn++; }
+  let tx = 0, tz = 0, tn = 0; for (const t of trees) if (t.state === 'alive' && Math.hypot(t.x, t.z) < 70) { tx += t.x; tz += t.z; tn++; }
   if (tn) dests.push([tx / tn, tz / tn, 1.5]);
   const shore = SHORE || (nearestShore({ x: 0, z: 0 }), SHORE); const ns = shore.slice().sort((a, b) => Math.hypot(a.x, a.z) - Math.hypot(b.x, b.z))[0]; if (ns) dests.push([ns.x, ns.z, 1.5]);
   const blockers = [...huts.map(h => [h.x, h.z, (HOME[h.kind] ? HOME[h.kind].clear : 3)]), ...works.filter(w => !WALL_SKIP.includes(w.kind)).map(w => [w.x, w.z, WORK_INFO[w.kind].clear || 2]), ...caves.map(c => [c.cx, c.cz, 4.5])];
@@ -1986,6 +2092,8 @@ function addWork(kind, at) {
     g.add(logs); w.logs = logs;
   }
   else if (kind === 'well') { add(WELL.ring, STONE2); add(WELL.water, WATER_MAT); add(WELL.post, PEN_WOOD, -0.95); add(WELL.post, PEN_WOOD, 0.95); add(WELL.bar, PEN_WOOD); add(WELL.bucket, PEN_WOOD); }
+  // à l'époque romaine, le grenier sur pilotis est rebâti en horreum : entrepôt de pierre à contreforts, toit de tuiles
+  else if (kind === 'granary' && p.roman) { w.roman = true; add(HORREUM.walls, RSTONE); add(HORREUM.roof, TILE); for (const x of [-1.25, 0, 1.25]) for (const z of [-1.05, 1.05]) add(HORREUM.buttress, RSTONE, x, 0, z); add(HORREUM.door, HM.door); }
   else if (kind === 'granary') { for (const [x, z] of [[-.85, -.6], [.85, -.6], [-.85, .6], [.85, .6]]) add(GRANARY.post, PEN_WOOD, x, 0, z); add(GRANARY.body, HOUSE_WALL); add(GRANARY.roof, HM.roof); }
   else if (kind === 'tumulus') { add(TUMULUS.mound, CAVE_GRASS, 0, -0.3, 0); add(TUMULUS.stone, STONE_MAT, -0.6, 0, 3.1); add(TUMULUS.stone, STONE_MAT, 0.6, 0, 3.1); add(TUMULUS.lintel, STONE_MAT, 0, 1.45, 3.1); add(TUMULUS.door, HM.door, 0, 0, 2.95); }
   else if (kind === 'forge') { add(FORGE.walls, STONE_MAT); add(FORGE.roof, HM.roof); add(FORGE.chimney, STONE_MAT, 0.6, 1.9, -0.3); add(FORGE.mouth, GLOW, 0, 0, 1.27); add(FORGE.anvil, IRON, 1.5, 0, 1.0); }
@@ -2035,6 +2143,22 @@ function addWork(kind, at) {
     g.position.set(0, 0, 0);
     const wall = works.find(x => x.kind === 'rampart') || works.find(x => x.kind === 'palisade'), prof = wall ? wall.prof : Float32Array.from({ length: 128 }, () => colony.palR || 24);
     const gates = (wall && wall.gates) || [], spots = [];
+    if (wall && wall.kind === 'rampart') {
+      // Bas-Empire (IIIe-IVe s.) : contre les pirates saxons, l'enceinte est fermée côté mer par un mur de pierre et de brique,
+      // et des tours rondes s'élèvent tout le long, une de chaque côté des portes
+      const P = rampPieces(wall.prof, gates), S = P.filter(q => !q.land);
+      const sea = new T.InstancedMesh(WALL_SEG, RSTONE, S.length || 1), seaBand = new T.InstancedMesh(WALL_BEAM, BRICK, S.length || 1);
+      S.forEach((q, k) => { _q.setFromAxisAngle(UP, q.rot); _s.set(1, 1, 1); _p.set(q.x, q.h - 0.15, q.z); sea.setMatrixAt(k, _m.compose(_p, _q, _s)); _p.set(q.x, q.h + 1.05, q.z); seaBand.setMatrixAt(k, _m.compose(_p, _q, _s)); });
+      const T2 = []; let acc = 0, prev = null;
+      for (const gt of gates) for (const sgn of [-1, 1]) { const a = gt.a + sgn * 3.4 / gt.R, R = profR(wall.prof, a), x = Math.cos(a) * R, z = Math.sin(a) * R, h = heightAt(x, z); if (h >= 0.7 && h <= 10) T2.push({ x, z, h }); }
+      for (const q of P) { if (prev) acc += Math.hypot(q.x - prev.x, q.z - prev.z); prev = q; if (acc >= 12 && T2.every(t => Math.hypot(t.x - q.x, t.z - q.z) > 6)) { T2.push(q); acc = 0; } }
+      const body = new T.InstancedMesh(ROMAN.tower, RSTONE, T2.length || 1), band = new T.InstancedMesh(ROMAN.towerBand, BRICK, (T2.length || 1) * 2), roofI = new T.InstancedMesh(ROMAN.towerRoof, TILE, T2.length || 1);
+      T2.forEach((q, i) => { _q.identity(); _s.set(1, 1, 1); _p.set(q.x, q.h - 0.2, q.z); body.setMatrixAt(i, _m.compose(_p, _q, _s)); roofI.setMatrixAt(i, _m.compose(_p, _q, _s));
+        _p.set(q.x, q.h + 0.9, q.z); band.setMatrixAt(i * 2, _m.compose(_p, _q, _s)); _p.set(q.x, q.h + 2.2, q.z); band.setMatrixAt(i * 2 + 1, _m.compose(_p, _q, _s)); });
+      for (const im of [body, band, roofI, sea, seaBand]) { im.castShadow = im.receiveShadow = true; im.frustumCulled = false; g.add(im); }
+      w.inst = [[body, 1], [band, 2], [roofI, 1]]; w.nInst = T2.length; w.shore = [sea, seaBand]; w.nShore = S.length;
+      scene.add(g); works.push(w); syncSite(w); return w;
+    }
     for (const gt of gates) for (const sgn of [-1, 1]) spots.push(gt.a + sgn * 3.4 / gt.R);
     const n = Math.floor(Math.PI * 2 * (colony.palR || 24) / 13); for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; if (spots.every(b => angDiff(a, b) * (colony.palR || 24) > 6)) spots.push(a); }
     // une tour seulement là où le mur existe, de part et d'autre (pas de tour isolée au bord d'un lac)
@@ -2053,10 +2177,25 @@ function addWork(kind, at) {
     // tracé et portes calculés une fois (à la palissade) puis conservés ; le rempart reprend le même tracé, 2 m plus loin
     if (!colony.wallProf) { const pr = computeWallProfile(); colony.wallProf = Array.from(pr, v => Math.round(v * 100) / 100); colony.wallGates = chooseGates(pr); colony.palR = pr.reduce((s, v) => s + v, 0) / pr.length; }
     // le rempart de pierre : un nouveau cercle, une fois et demie plus large que la palissade, avec ses propres portes
-    if (ram && !colony.rampProf) { const pr = computeWallProfile(Math.max(30, (colony.palR || 24) * 1.4), 44); colony.rampProf = Array.from(pr, v => Math.round(v * 100) / 100); colony.rampGates = chooseGates(pr); }
+    if (ram && (!colony.rampProf || colony.rampV !== RAMP_V)) { const pr = computeRampProfile(); colony.rampProf = Array.from(pr, v => Math.round(v * 100) / 100); colony.rampGates = chooseGates(pr); colony.rampV = RAMP_V; }
     const prof = Float32Array.from(ram ? colony.rampProf : colony.wallProf), gates = wallGates(prof, ram ? colony.rampGates : colony.wallGates), Rb = prof.reduce((s, v) => s + v, 0) / prof.length;
     w.prof = prof; w.gates = gates;
     w.open = Uint8Array.from(prof, (R, i) => { const a = i / prof.length * Math.PI * 2; return seaSide(a, R) || !wallLand(a, R) ? 1 : 0; });
+    if (ram) {
+      // l'oppidum en éperon barré : le mur ne barre que la terre ferme ; là où l'eau protège, l'enceinte reste ouverte
+      w.open = rampMask(prof).map(v => 1 - v);
+      const P = rampPieces(prof, gates).filter(q => q.land), segs = new T.InstancedMesh(WALL_SEG, WALL_STONE, P.length || 1), beams = new T.InstancedMesh(WALL_BEAM, DARK_WOOD, (P.length || 1) * 2);
+      P.forEach((q, k) => {
+        for (const t of trees) if (t.state !== 'gone' && Math.abs(t.x - q.x) < 1.2 && Math.abs(t.z - q.z) < 1.2) setTreeState(t, 'gone');
+        _q.setFromAxisAngle(UP, q.rot); _s.set(1, 1, 1);
+        _p.set(q.x, q.h - 0.15, q.z); segs.setMatrixAt(k, _m.compose(_p, _q, _s));
+        _p.set(q.x, q.h + 0.65, q.z); beams.setMatrixAt(k * 2, _m.compose(_p, _q, _s)); _p.set(q.x, q.h + 1.45, q.z); beams.setMatrixAt(k * 2 + 1, _m.compose(_p, _q, _s));
+      });
+      for (const im of [segs, beams]) { im.count = 0; im.castShadow = im.receiveShadow = true; im.frustumCulled = false; g.add(im); }
+      w.stakes = segs; w.beams = beams; w.nStakes = P.length;
+      for (const gt of gates) { gt.group = makeGate(true, gt); g.add(gt.group); gt.group.visible = false; }
+      scene.add(g); works.push(w); syncSite(w); return w;
+    }
     const spacing = ram ? 1.1 : 0.45, halfGap = ram ? 2.3 : 1.35, n = Math.floor(Math.PI * 2 * Rb / spacing);
     const segs = ram ? new T.InstancedMesh(WALL_SEG, WALL_STONE, n) : new T.InstancedMesh(STAKE, PEN_WOOD, n), beams = ram ? new T.InstancedMesh(WALL_BEAM, DARK_WOOD, n * 2) : null; let k = 0;
     for (let i = 0; i < n; i++) {
@@ -2125,8 +2264,11 @@ const handPath = (dx, dy) => { const P = (x, y) => `${(x + dx).toFixed(1)} ${(y 
   + ` C${P(58.5, 76)} ${P(56.5, 82)} ${P(54, 88)} C${P(53, 91)} ${P(52, 93)} ${P(51, 94)} Z`; };
 // main négative réaliste (Gargas, Cosquer, Chauvet) : doigts longs et fins, pouce écarté, départ de l'avant-bras
 // (sur les parois, le pigment soufflé dessine aussi le poignet). Coordonnées dans une case de 160 × 120.
-const stencilPath = (dx, dy) => { const P = (x, y) => `${(x + dx).toFixed(1)} ${(y + dy).toFixed(1)}`; return `M${P(36.5, 116)} C${P(36.5, 108)} ${P(35.5, 101)} ${P(34.5, 95)} C${P(33.5, 89)} ${P(32.5, 84)} ${P(32.8, 79)}`
-  + ` C${P(29.5, 77)} ${P(26, 73)} ${P(23, 68)} C${P(20.5, 64)} ${P(18.5, 60)} ${P(19.5, 57.5)} C${P(20.5, 55.5)} ${P(23, 56)} ${P(24.8, 58.5)} C${P(27.5, 62.5)} ${P(31, 66.5)} ${P(34.2, 68)}`   // pouce
+const stencilPath = (dx, dy) => { const P = (x, y) => `${(x + dx).toFixed(1)} ${(y + dy).toFixed(1)}`; return `M${P(36.5, 116)} C${P(36.5, 108)} ${P(35.5, 101)} ${P(34.6, 95)}`
+  // pouce : il naît bas, près du poignet (renflement de sa base), s'écarte en biais, bout arrondi,
+  // puis un creux net le sépare de l'index
+  + ` C${P(33.2, 91)} ${P(30.5, 88.5)} ${P(28, 85)} C${P(25, 80.5)} ${P(22, 75)} ${P(20, 70)} C${P(18.6, 67)} ${P(19.4, 63.4)} ${P(22.4, 63.6)}`
+  + ` C${P(25, 64)} ${P(26.6, 67)} ${P(28.4, 71)} C${P(30, 74.5)} ${P(32, 76)} ${P(33.6, 74)} C${P(34.4, 72.5)} ${P(34.4, 70)} ${P(34.2, 68)}`
   + ` C${P(33.4, 60)} ${P(31.6, 50)} ${P(30.4, 42.5)} C${P(30, 39.6)} ${P(34.6, 38.6)} ${P(35.2, 41.6)} C${P(36.4, 48)} ${P(37.8, 57)} ${P(39.2, 64.5)}`   // index
   + ` C${P(39.8, 56)} ${P(39.8, 44)} ${P(40.1, 34.6)} C${P(40.3, 31.4)} ${P(45.1, 31.4)} ${P(45.1, 34.6)} C${P(45.3, 44)} ${P(45.6, 55)} ${P(45.8, 64)}`   // majeur
   + ` C${P(47, 55)} ${P(48.4, 45)} ${P(49.6, 37.8)} C${P(50.2, 34.8)} ${P(54.8, 35.8)} ${P(54.2, 38.9)} C${P(53.4, 46)} ${P(52.8, 56)} ${P(52.4, 65)}`   // annulaire
@@ -2346,7 +2488,7 @@ function syncSite(s) {
   if (HOME[s.kind]) { s.mesh.scale.set(1, 0.06 + 0.94 * s.progress, 1); if (s.roof) s.roof.visible = s.progress > 0.5; }
   else if (s.kind === 'field') syncField(s);
   else if (s.kind === 'menhir') { s.stone.rotation.x = (1 - smooth(0, 1, s.progress)) * 1.45; s.stone.rotation.z = s.tilt; s.logs.visible = !s.built; }
-  else if (s.inst) { const k = Math.floor(s.nInst * s.progress); for (const [im, per] of s.inst) im.count = k * per; }
+  else if (s.inst) { const k = Math.floor(s.nInst * s.progress); for (const [im, per] of s.inst) im.count = k * per; if (s.shore) for (const im of s.shore) im.count = Math.floor(s.nShore * s.progress); }
   else if (s.kind === 'palisade' || s.kind === 'rampart') { s.stakes.count = Math.floor(s.nStakes * s.progress); if (s.beams) s.beams.count = s.stakes.count * 2; for (const gt of s.gates || []) if (gt.group) gt.group.visible = s.progress > 0.95; }
   else s.mesh.scale.set(1, 0.08 + 0.92 * s.progress, 1);
 }
@@ -2422,16 +2564,23 @@ function manageSites() {
   // à chaque âge, les maisons d'un style dépassé sont rebâties une à une dans le nouveau style (huttes → torchis →
   // maisons longues → maisons gauloises → pierre et tuiles), sur place si la parcelle suffit : le village change
   // d'aspect sans s'étaler, et personne ne se retrouve sans toit
-  if (tech.huttes && !huts.some(h => !h.built) && Math.random() < 0.1) {
+  // à l'époque romaine, la ville change lentement (environ une maison tous les deux à trois ans) : les plus vieilles d'abord.
+  // Si le village est plein, la nouvelle maison est bâtie à côté et la vieille n'est démolie qu'une fois la neuve habitable.
+  for (const h of huts) if (h.built && h.replaces) { const o = h.replaces; h.replaces = null; if (!o.gone) { destroyHut(o); assignHuts(); log(`Le vieux toit est démoli : ${HOME_LABEL[h.kind]} a pris sa place.`, 'good'); } }
+  if (tech.huttes && !huts.some(h => !h.built) && Math.random() < (tech.rome ? 0.04 : 0.1)) {
     const rank = k => HOME_ORDER.indexOf(k), now = rank(homeKind);
     const old = huts.filter(h => h.built && h.kind !== 'chief' && rank(h.kind) < now).sort((a, b) => rank(a.kind) - rank(b.kind))[0];
-    if (old && housingCap() - old.cap >= villagers.length + 2) {
+    if (old && housingCap() - old.cap < villagers.length + 2) { const n = huts.length; addHutSite(null, homeKind); if (huts.length > n) { huts[n].replaces = old; log(`On bâtit ${HOME_LABEL[homeKind]} pour remplacer ${HOME_LABEL[old.kind]}.`); } }
+    else if (old) {
       const at = { x: old.x, z: old.z }, room = HOME[homeKind].clear;
       const fits = !huts.some(h => h !== old && Math.hypot(h.x - at.x, h.z - at.z) < room + HOME[h.kind].clear * 0.8) && !works.some(w => !WALL_SKIP.includes(w.kind) && Math.hypot(w.x - at.x, w.z - at.z) < room + (WORK_INFO[w.kind].clear || 2) * 0.8);
       const n = huts.length; destroyHut(old); addHutSite(fits ? at : null, homeKind); if (huts.length >= n) huts[huts.length - 1].rebuild = true; assignHuts();
       log(`${cap1(HOME_LABEL[old.kind])} laisse place à ${HOME_LABEL[homeKind]}.`, 'good');
     }
   }
+  // le grenier sur pilotis devient un horreum de pierre, un jour de l'époque romaine
+  const gran = tech.tuiles && Math.random() < 0.03 && works.find(w => w.kind === 'granary' && w.built && !w.roman);
+  if (gran) { const at = { x: gran.x, z: gran.z, roman: true }; removeWork(gran); const o = addWork('granary', at); if (o) { Object.assign(o, { progress: 1, built: true, paid: true }); syncSite(o); log('Le vieux grenier sur pilotis est rebâti en horreum, un entrepôt de pierre à toit de tuiles.', 'good'); } }
   const maxF = maxFields();
   if (tech.agri && fields.length < maxF && !fields.some(f => !f.built) && fields.length < Math.max(2, Math.ceil(villagers.length / (tech.araire ? 2.5 : 3)))) addFieldSite();
   // les ouvrages débloqués par les savoirs sont mis en chantier par la tribu elle-même ; le bois est payé au début du chantier
@@ -2462,7 +2611,8 @@ function homeSpot(H) {
 function growQuarters() {
   const Q = quarters();
   if (Q.length >= quarterMax() || Q.some(q => q.i && quarterHomes(q) < QUARTER_HOMES) || huts.length < Q.length * QUARTER_HOMES) return false;
-  const maxR = colony.wallProf ? Math.min(...colony.wallProf) - 7 : 26;
+  // n'importe où dans l'enceinte (findSpot vérifie qu'on reste dedans), jusqu'au grand cercle de l'oppidum
+  const maxR = colony.wallProf ? Math.max(...colony.wallProf) - 7 : 26;
   for (let k = 0; k < 60; k++) {
     const p = findSpot(13, Math.max(15, maxR), 6, true); if (!p) continue;
     if (Q.some(q => Math.hypot(q.x - p.x, q.z - p.z) < 13)) continue;
@@ -2474,16 +2624,19 @@ function growQuarters() {
 }
 // ---- rues ----
 let STREETS = [], streetsDirty = true, streetStyle = '', streetGroup = null, quarterDeco = [];
-const STREET_MAT = { dirt: lam('#8a7352'), gravel: lam('#a39a86'), paved: lam('#a8a296') };
+const STREET_MAT = { dirt: new T.MeshLambertMaterial({ color: '#7d6040', side: T.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 }), gravel: new T.MeshLambertMaterial({ color: '#9a8c70', side: T.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 }), paved: new T.MeshLambertMaterial({ color: '#a8a296', side: T.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2 }) };
+const STREET_W = { dirt: 0.55, gravel: 0.7, paved: 1.1 };   // largeur des chemins : fins sentiers, puis chemins empierrés, puis rues romaines
 const streetKind = () => tech.pax ? 'paved' : tech.fer ? 'gravel' : 'dirt';
 // tracé un peu sinueux entre deux points (les rues anciennes ne sont pas tirées au cordeau, sauf à l'époque romaine)
+// tracé d'un chemin : il serpente doucement (deux ondulations superposées, nulles aux extrémités), comme une piste
+// tracée par les pas ; à l'époque romaine, la rue est tirée au cordeau. Un point tous les 0,6 pas pour suivre le relief.
 function streetLine(ax, az, bx, bz, w) {
-  const L = Math.hypot(bx - ax, bz - az), n = Math.max(2, Math.ceil(L / 1.3)), nx = -(bz - az) / (L || 1), nz = (bx - ax) / (L || 1);
-  const bend = tech.pax ? 0 : (hash(Math.round(ax * 7 + bx), Math.round(az * 7 + bz)) - 0.5) * L * 0.18, pts = [];
-  for (let i = 0; i <= n; i++) { const t = i / n, s = Math.sin(t * Math.PI) * bend; pts.push([ax + (bx - ax) * t + nx * s, az + (bz - az) * t + nz * s]); }
+  const L = Math.hypot(bx - ax, bz - az), n = Math.max(2, Math.ceil(L / 0.6)), nx = -(bz - az) / (L || 1), nz = (bx - ax) / (L || 1);
+  const r1 = hash(Math.round(ax * 7 + bx), Math.round(az * 7 + bz)), r2 = hash(Math.round(bx * 5 + az), Math.round(bz * 3 + ax));
+  const straight = tech.pax, bend = straight ? 0 : (r1 - 0.5) * L * 0.16, wig = straight ? 0 : 0.35 + r2 * 0.5, k = 2 + Math.round(r2 * 2), pts = [];
+  for (let i = 0; i <= n; i++) { const t = i / n, env = Math.sin(t * Math.PI), s = env * bend + env * wig * Math.sin(t * Math.PI * k + r1 * 6); pts.push([ax + (bx - ax) * t + nx * s, az + (bz - az) * t + nz * s]); }
   return { pts, w };
-}
-function computeStreets() {
+}function computeStreets() {
   if (!tech.village) return [];
   const S = [], Q = quarters(), gates = (WALL && WALL.gates) || [];
   // grandes rues : de la place aux portes
@@ -2506,21 +2659,28 @@ function syncStreets() {
   streetsDirty = false; streetStyle = kind; STREETS = computeStreets();
   if (streetGroup) { scene.remove(streetGroup); streetGroup.traverse(o => o.geometry && o.geometry.dispose()); }
   streetGroup = new T.Group(); scene.add(streetGroup);
-  const cells = [];
-  for (const s of STREETS) for (let i = 1; i < s.pts.length; i++) {
-    const [ax, az] = s.pts[i - 1], [bx, bz] = s.pts[i], x = (ax + bx) / 2, z = (az + bz) / 2, h = heightAt(x, z);
-    if (h < 0.4 || h > 9) continue;
-    // la rue passe entre les maisons : pas de dalle sous un bâtiment
-    if (huts.some(o => Math.hypot(o.x - x, o.z - z) < (HOME[o.kind] ? HOME[o.kind].clear : 3) * 0.75)) continue;
-    cells.push([x, h, z, Math.atan2(bx - ax, bz - az), Math.hypot(bx - ax, bz - az) + 0.25, s.w]);
+  // chaque chemin est un ruban étroit posé sur le relief (fine ligne de terre, comme les routes de Civilization III) ;
+  // il s'interrompt sous les maisons et dans l'eau
+  const pos = [], idx = [];
+  for (const s of STREETS) {
+    const W = STREET_W[kind] * (s.w >= 2 ? 1.25 : 1) / 2; let prev = -1;
+    for (let i = 0; i < s.pts.length; i++) {
+      const [x, z] = s.pts[i], h = heightAt(x, z);
+      const blocked = h < 0.4 || h > 9 || huts.some(o => Math.hypot(o.x - x, o.z - z) < (HOME[o.kind] ? HOME[o.kind].clear : 3) * 0.7);
+      if (blocked) { prev = -1; continue; }
+      const [px, pz] = s.pts[Math.max(0, i - 1)], [qx, qz] = s.pts[Math.min(s.pts.length - 1, i + 1)], dl = Math.hypot(qx - px, qz - pz) || 1;
+      const ox = -(qz - pz) / dl * W, oz = (qx - px) / dl * W, vi = pos.length / 3;
+      pos.push(x + ox, heightAt(x + ox, z + oz) + 0.06, z + oz, x - ox, heightAt(x - ox, z - oz) + 0.06, z - oz);
+      if (prev >= 0) idx.push(prev, prev + 1, vi, prev + 1, vi + 1, vi);
+      prev = vi;
+    }
   }
-  const geo = new T.BoxGeometry(1, 0.08, 1), im = new T.InstancedMesh(geo, STREET_MAT[kind], Math.max(1, cells.length));
-  cells.forEach(([x, h, z, r, len, w], i) => { _q.setFromAxisAngle(UP, r); _p.set(x, h + 0.02, z); _s.set(w, 1, len); im.setMatrixAt(i, _m.compose(_p, _q, _s)); });
-  im.count = cells.length; im.receiveShadow = true; im.frustumCulled = false; streetGroup.add(im);
+  const geo = new T.BufferGeometry(); geo.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); geo.setIndex(idx); geo.computeVertexNormals();
+  const rib = new T.Mesh(geo, STREET_MAT[kind]); rib.receiveShadow = true; rib.renderOrder = 1; streetGroup.add(rib);
   // la petite place de chaque quartier : un puits de pierre
   for (const q of quarters()) if (q.i) {
     const g = new T.Group(), y = heightAt(q.x, q.z); g.position.set(q.x, y, q.z);
-    const sq = new T.Mesh(new T.CylinderGeometry(2.4, 2.4, 0.06, 14), STREET_MAT[kind]); sq.position.y = 0.03; sq.receiveShadow = true; g.add(sq);
+    const sq = new T.Mesh(new T.CircleGeometry(1.9, 14).rotateX(-Math.PI / 2), STREET_MAT[kind]); sq.position.y = 0.07; sq.receiveShadow = true; g.add(sq);
     g.add(Object.assign(new T.Mesh(WELL.ring, STONE2), { castShadow: true })); g.add(new T.Mesh(WELL.water, WATER_MAT));
     streetGroup.add(g);
   }
@@ -2815,7 +2975,9 @@ function updateRains(dt, simOn) {
 const POWERS = {
   feu: { name: 'Feu', cost: 25, cast: castFire, desc: 'brûle tout dans un petit cercle : arbres, gibier, maisons… et pillards. Rallume aussi le foyer éteint. Attention aux villageois !' },
   pluie: { name: 'Pluie', cost: 20, desc: 'arrose une zone : éteint les incendies, fait pousser les champs et les baies plus vite.', cast: (x, z) => { startRain(x, z); log('Des nuages noirs s’amoncellent. La pluie tombe.', 'power'); } },
-  maladie: { name: 'Maladie', cost: 35, cast: castPlague, desc: 'rend malades les villageois et les bêtes de la zone. Le pouvoir cruel du dieu en colère.' },
+  arc: { name: 'Arc-en-ciel', cost: 20, cast: castRainbow, desc: 'un arc-en-ciel se dresse dans le ciel : ceux qui le voient retrouvent le sourire. Après une pluie, il est double !' },
+  crue: { name: 'Inondation', cost: 35, cast: castFlood, desc: 'la rivière déborde : l’eau éteint les incendies, emporte les pillards et noie les champs… puis laisse un limon fertile qui rendra les prochaines récoltes plus belles.' },
+  foudre: { name: 'Foudre', cost: 30, cast: castLightning, desc: 'un éclair tombe exactement là où vous touchez : il foudroie villageois et pillards, tue les bêtes et enflamme les arbres. À manier avec précaution !' },
   benir: { name: 'Bénédiction', cost: 40, cast: castBless, desc: 'soigne les malades et redonne santé, énergie et moral dans le cercle doré. La tribu fait plus d’enfants pendant une journée.' },
   gibier: { name: 'Gibier', cost: 30, cast: castBounty, desc: 'fait venir un troupeau de cerfs (parfois un mammouth) et couvre les buissons de baies. Idéal contre la faim.' },
 };
@@ -2836,19 +2998,59 @@ function castFire(x, z) {
   else log(burned ? `Le feu tombe du ciel : ${burned} arbres s’embrasent.` : 'Le feu tombe du ciel.', 'power');
   if (deerKilled) log(`${deerKilled} cerf${deerKilled > 1 ? 's périssent' : ' périt'} dans les flammes.`, 'power');
 }
-function castPlague(x, z) {
-  const y = Math.max(heightAt(x, z), 0), R = 6;
-  burst(x, y + 0.5, z, '#a9cf3c', 80, { spread: 4, up: 1.6, life: 2.4, size: 1.2 }); ring(x, z, R, '#b4cf4f');
-  let n = 0, dk = 0;
-  for (const v of villagers) if (!v.sick && Math.hypot(v.x - x, v.z - z) < R) { makeSick(v, `${gx(v, 'Frappé', 'Frappée')} par une fièvre venue du ciel.`); n++; }
-  for (const d of deers) if (d.alive && Math.hypot(d.x - x, d.z - z) < R && Math.random() < 0.5) { killDeer(d); dk++; }
-  log(n ? `Une fièvre frappe ${n} villageois.` : dk ? `La maladie emporte ${dk} cerf${dk > 1 ? 's' : ''}.` : 'Un miasme verdâtre se dissipe sans victime.', 'power');
+// Arc-en-ciel : sept bandes colorées en demi-cercle, tournées vers la caméra ; double après une pluie
+function castRainbow(x, z) {
+  const R = 14, double = rains.some(r => r.left > 0 || r.fade > 0) || weather.kind !== 'clair', y = Math.max(heightAt(x, z), 0);
+  const g = new T.Group(); g.position.set(x, y - 0.5, z); g.rotation.y = cam.yaw; scene.add(g);
+  const COLS = ['#e0453a', '#f08a2c', '#f2d24b', '#5fb34a', '#4a90d0', '#4a5bb0', '#8a4fb0'], mats = [];
+  const bands = (r0, w, alpha) => COLS.forEach((col, i) => { const m = new T.MeshBasicMaterial({ color: col, transparent: true, opacity: 0, depthWrite: false, side: T.DoubleSide }); m.userData.a = alpha; mats.push(m); g.add(new T.Mesh(new T.RingGeometry(r0 - (i + 1) * w, r0 - i * w, 48, 1, 0, Math.PI), m)); });
+  bands(11, 0.55, 0.85); if (double) bands(15.2, 0.45, 0.45);
+  let t = 0; effects.push({ update(dt) { t += dt; const k = t < 1.5 ? t / 1.5 : t > 10 ? Math.max(0, (13 - t) / 3) : 1; for (const m of mats) m.opacity = m.userData.a * k; if (t > 13) { scene.remove(g); g.traverse(o => { if (o.geometry) o.geometry.dispose(); }); mats.forEach(m => m.dispose()); return false; } return true; } });
+  let n = 0;
+  for (const v of villagers) if (Math.hypot(v.x - x, v.z - z) < R * 1.6) { v.happy = Math.min(100, v.happy + (double ? 35 : 25)); n++; if (!v.adult) journal(v, 'A couru vers l’arc-en-ciel.'); }
+  colony.mood += double ? 10 : 6;
+  log(double ? `Un double arc-en-ciel après la pluie ! ${n ? n + ' villageois le regardent, émerveillés.' : ''}` : n ? `Un arc-en-ciel s’élève. ${n} villageois s’arrêtent pour l’admirer, les enfants courent vers lui.` : 'Un arc-en-ciel s’élève au-dessus des collines.', 'power');
+}
+// Inondation : l'eau monte dans les creux autour du point touché, puis redescend en laissant un limon fertile
+// (les crues de la Loire ou du Nil enrichissaient les champs des vallées)
+function castFlood(x, z) {
+  const R = 8, y0 = Math.max(heightAt(x, z), 0), top = y0 + 0.9;
+  const m = new T.Mesh(new T.CircleGeometry(R, 40), new T.MeshPhongMaterial({ color: '#3f7fa6', transparent: true, opacity: 0, shininess: 80, depthWrite: false }));
+  m.rotation.x = -Math.PI / 2; m.position.set(x, y0 - 0.4, z); scene.add(m);
+  let t = 0; effects.push({ update(dt) { t += dt; const k = t < 2 ? t / 2 : t > 10 ? Math.max(0, (14 - t) / 4) : 1; m.position.y = y0 - 0.4 + (top - y0 + 0.4) * k; m.material.opacity = 0.88 * Math.min(1, k * 1.5); if (t > 14) { scene.remove(m); m.geometry.dispose(); m.material.dispose(); return false; } return true; } });
+  const wet = (px, pz) => Math.hypot(px - x, pz - z) < R && heightAt(px, pz) < top;
+  let foes = 0, fl = 0, fires = 0, soaked = 0;
+  for (const r of raiders) if (r.alive && wet(r.x, r.z)) { raiderGone(r); raid.fallen++; foes++; }
+  for (const t2 of trees) if (t2.state === 'burning' && Math.hypot(t2.x - x, t2.z - z) < R + 2) { setTreeState(t2, t2.burn >= 3 ? 'ash' : 'alive'); fires++; }
+  for (const f of fields) if (wet(f.x, f.z)) { f.growth = 0; f.silt = 2; syncField(f); fl++; }
+  for (const v of villagers) if (wet(v.x, v.z)) { v.energy = Math.max(0, v.energy - 30); v.happy -= 6; makeFlee(v); soaked++; }
+  for (const d of deers) if (d.alive && wet(d.x, d.z)) spook(d, { x, z });
+  if (fl) colony.drought = 0;
+  if (foes) log(`Les flots emportent ${foes > 1 ? foes + ' pillards' : 'un pillard'} !`, 'power');
+  if (fires) log('L’eau éteint l’incendie.', 'power');
+  if (fl) log(`La crue noie ${fl > 1 ? fl + ' champs' : 'un champ'}, mais elle y dépose un limon fertile : les deux prochaines récoltes seront plus belles.`, 'power');
+  if (soaked) log(`${soaked > 1 ? soaked + ' villageois pataugent' : 'Un villageois patauge'} dans l’eau, trempés et épuisés.`, 'power');
+  if (!foes && !fires && !fl && !soaked) log('L’eau déborde puis se retire lentement.', 'power');
+}
+function castLightning(x, z) {
+  const R = 2.4;
+  lightning(x, z); setTimeout(() => lightning(x + rr(-0.6, 0.6), z + rr(-0.6, 0.6)), 140);
+  burst(x, Math.max(heightAt(x, z), 0) + 0.3, z, '#dfe8ff', 50, { spread: 2.5, up: 5, life: 0.8, size: 0.5, gravity: 8 });
+  let hit = 0, foes = 0;
+  for (const v of villagers) if (Math.hypot(v.x - x, v.z - z) < R) { v.health -= has(v, 'robuste') ? 60 : 85; v.happy -= 25; v.cause = 'sous la foudre'; journal(v, `${gx(v, 'Frappé', 'Frappée')} par la foudre.`); makeFlee(v); hit++; }
+  for (const r of raiders) if (r.alive && Math.hypot(r.x - x, r.z - z) < R) { raiderGone(r); raid.fallen++; foes++; }
+  for (const d of deers) if (d.alive && Math.hypot(d.x - x, d.z - z) < R) killDeer(d);
+  for (const s of [...sheep]) if (Math.hypot(s.x - x, s.z - z) < R) removeSheep(s);
+  for (const t of trees) if (t.state === 'alive' && Math.hypot(t.x - x, t.z - z) < R + 0.8) setTreeState(t, 'burning');
+  if (foes) log(`La foudre s’abat sur les pillards : ${foes} ${foes > 1 ? 'tombent' : 'tombe'} !`, 'power');
+  if (hit) { colony.mood -= 6; log(`La foudre frappe ${hit > 1 ? hit + ' villageois' : 'un villageois'}. La tribu tremble devant ta colère.`, 'power'); }
+  if (!foes && !hit) log('La foudre tombe du ciel dans un fracas terrible.', 'power');
 }
 function castBless(x, z) {
   const y = Math.max(heightAt(x, z), 0), R = 8;
   burst(x, y + 0.5, z, '#f2d06b', 90, { spread: 3, up: 6, life: 2, size: 0.8, gravity: 1 }); ring(x, z, R, '#f2d06b'); flash(x, z, 0xffe08a);
   let n = 0;
-  for (const v of villagers) if (Math.hypot(v.x - x, v.z - z) < R) { v.health = Math.min(100, v.health + 40); v.happy = Math.min(100, v.happy + 30); v.sick = false; v.energy = Math.min(100, v.energy + 25); journal(v, `${gx(v, 'Touché', 'Touchée')} par la lumière dorée.`); n++; }
+  for (const v of villagers) if (Math.hypot(v.x - x, v.z - z) < R) { v.health = Math.min(100, v.health + 40); v.happy = Math.min(100, v.happy + 30); v.sick = false; v.energy = Math.min(100, v.energy + 25); v.blessT = colony.time; journal(v, `${gx(v, 'Touché', 'Touchée')} par la lumière dorée.`); n++; }
   colony.fertile = 24; colony.mood += 5;
   log(n ? `Une lumière dorée enveloppe ${n} villageois. Ils se sentent forts et féconds.` : 'Une lumière dorée tombe sur la terre. Personne n’est là pour la voir.', 'power');
 }
@@ -2887,14 +3089,14 @@ const TECHS = [
   { id: 'fetes', name: 'Fête des moissons', tier: 6, cost: 30, year: -5000, req: ['meule'], desc: 'Coutume : tous les 10 jours, une grande fête. Bien-être, naissances, 10 nourriture partagée.' },
   { id: 'sepultures', name: 'Tumulus et sépultures', tier: 6, cost: 30, year: -4800, req: ['village'], desc: 'Coutume : les morts reposent dans un tumulus. Deuil plus doux, les ancêtres donnent du mana.' },
   { id: 'megalithes', name: 'Mégalithes', tier: 6, cost: 38, year: -4500, req: ['sepultures', 'rites'], desc: 'La tribu dresse un cercle de 7 menhirs : plus de mana et de bien-être.' },
-  { id: 'cuivre', name: 'Travail du cuivre', tier: 7, cost: 55, year: -3500, req: ['megalithes', 'elevage', 'torchis'], need: () => builtMenhirs() >= MENHIR_COUNT ? null : `Cercle de menhirs achevé (${builtMenhirs()}/${MENHIR_COUNT})`, desc: 'Une forge (15 bois) : un forgeron fabrique des outils qui accélèrent le travail.' },
+  { id: 'cuivre', name: 'Travail du cuivre', tier: 7, cost: 55, year: -3500, req: ['megalithes', 'elevage', 'torchis'], need: () => builtMenhirs() >= MENHIR_COUNT ? null : `Cercle de menhirs achevé (${builtMenhirs()}/${MENHIR_COUNT})`, desc: 'On chauffe une pierre verte, la malachite, dans un four d’argile : le cuivre fond. Haches pour couper le bois, poignards, poinçons pour percer le cuir : une forge (15 bois) et un forgeron, tout le travail va plus vite.' },
   { id: 'roue', name: 'La roue', tier: 7, cost: 45, year: -3400, req: ['cuivre'], desc: 'Charrettes : chaque villageois rapporte 40 % de plus au village.' },
   { id: 'araire', name: 'Araire et bœufs', tier: 7, cost: 48, year: -3200, req: ['cuivre', 'elevage'], desc: 'Les champs rapportent 50 % de plus, et la tribu peut en cultiver davantage.' },
-  { id: 'bronze', name: 'Alliage du bronze', tier: 8, cost: 65, year: -2200, req: ['cuivre'], desc: 'Cuivre et étain : outils et armes en bronze, chasse et travail plus efficaces.' },
+  { id: 'bronze', name: 'Alliage du bronze', tier: 8, cost: 65, year: -2200, req: ['cuivre'], desc: 'Un peu d’étain fondu avec le cuivre, puis coulé dans un moule de pierre : un métal doré, bien plus dur. Haches, épées, pointes de lance et bijoux : chasse et travail plus efficaces.' },
   { id: 'commerce', name: 'Routes de l’étain', tier: 8, cost: 60, year: -2000, req: ['bronze', 'roue'], desc: 'Un marché (12 bois) et un ponton au bord de l’eau : marchands et navires apportent étain, sel et nouvelles.' },
   { id: 'chefferie', name: 'Chefferie', tier: 8, cost: 60, year: -1900, req: ['bronze'], desc: 'La grande maison du chef (30 bois, 8 places). Un chef est choisi : la tribu est plus unie.' },
   { id: 'guerriers', name: 'Guerriers', tier: 8, cost: 60, year: -1600, req: ['bronze', 'palissade'], desc: 'Épées et boucliers de bronze : les pillards sont presque toujours repoussés.' },
-  { id: 'fer', name: 'Le fer', tier: 9, cost: 90, year: -800, req: ['commerce', 'chefferie', 'guerriers', 'araire'], desc: 'Un métal plus dur et plus commun que le bronze : outils et armes pour tous. Début de l’âge du fer (Hallstatt).' },
+  { id: 'fer', name: 'Le fer', tier: 9, cost: 90, year: -800, req: ['commerce', 'chefferie', 'guerriers', 'araire'], desc: 'Le minerai de fer se trouve presque partout. Chauffé au charbon de bois puis martelé sur l’enclume, il donne des outils très durs pour tous : socs, faucilles, haches et épées. Début de l’âge du fer.' },
   { id: 'charrue', name: 'Soc de fer et faux', tier: 9, cost: 70, year: -500, req: ['fer'], desc: 'Le soc de fer retourne les sols lourds : les champs rapportent encore 40 % de plus.' },
   { id: 'artisanat', name: 'Orfèvrerie et torques', tier: 9, cost: 70, year: -450, req: ['fer'], desc: 'Bijoux d’or et de bronze, torques des chefs : le prestige du village fait grimper le bien-être.' },
   { id: 'tonneau', name: 'Tonneau et cervoise', tier: 9, cost: 65, year: -350, req: ['fer', 'grenier'], desc: 'Invention gauloise : +60 de réserve de nourriture, et la cervoise rend les fêtes plus joyeuses.' },
@@ -3004,10 +3206,6 @@ const EVENTS = [
         log(`${a.name}, ${b.name} et leur enfant ${c.name} s’installent au village.`, 'good');
       } },
       { label: 'Les renvoyer', hint: 'Le village garde ses réserves.', fx() { colony.mood -= 4; } }] },
-  { title: 'Champignons inconnus', text: 'Une cueilleuse rapporte des champignons aux couleurs vives.',
-    choices: [
-      { label: 'Les goûter', hint: 'Des visions… ou du poison.', fx() { if (Math.random() < 0.5) { colony.know += 12; log('Les champignons donnent des visions : +12 savoir.', 'know'); } else { villagers.slice().sort(() => Math.random() - .5).slice(0, 2).forEach(v => makeSick(v, 'Tombe malade après avoir goûté des champignons inconnus.')); log('Les champignons étaient toxiques. Deux villageois tombent malades.', 'bad'); } } },
-      { label: 'Les jeter', hint: 'Prudence.', fx() { } }] },
   { title: 'Pleine lune', text: 'La lune est ronde et brillante. Les anciens proposent une fête autour du feu.',
     choices: [
       { label: 'Festoyer', hint: '-15 nourriture, bien-être en hausse, naissances favorisées.', cond: () => colony.food >= 15, fx() { colony.food -= 15; colony.mood += 18; colony.fertile = 24; log('Chants et danses jusqu’à l’aube.', 'good'); } },
@@ -3066,10 +3264,14 @@ function raidSize() { return Math.min(9, (tech.fer ? 6 : tech.bronze ? 5 : tech.
 function startRaid(warned) {
   if (raid || villagers.filter(v => v.adult).length < 2) return;
   sfx('alarm');
-  const n = raidSize(), a = rr(0, 6.28), c = landPoint(Math.cos(a) * 56, Math.sin(a) * 56, 6);
+  // les pillards arrivent par la terre ferme, face à une porte (jamais au-dessus de l'eau)
+  const n = raidSize(), gates = (WALL && WALL.gates) || [];
+  let c = null;
+  for (let k = 0; k < 40 && !c; k++) { const a = gates.length ? pick(gates).a + rr(-0.35, 0.35) : rr(0, 6.28); for (let r = 80; r >= 28; r -= 4) { const x = Math.cos(a) * r, z = Math.sin(a) * r, h = heightAt(x, z); if (h > 0.7 && h < 8) { c = { x, z }; break; } } }
+  c = c || landPoint(0, 0, 30);
   raid = { n, fallen: 0, escaped: 0, loot: 0, torched: false, breached: false, warned };
   if (speed > 1) setSpeed(1);   // on suit l'attaque à vitesse normale
-  for (let i = 0; i < n; i++) { const p = landPoint(c.x, c.z, 4); raiders.push({ raider: true, x: p.x, z: p.z, face: 0, hp: 2, state: 'approach', t: 0, moving: false, walkT: rr(0, 9), carry: 0, alive: true, mesh: makeRaiderMesh() }); }
+  for (let i = 0; i < n; i++) { let p = landPoint(c.x, c.z, 4); if (heightAt(p.x, p.z) < 0.5) p = { x: c.x, z: c.z }; raiders.push({ raider: true, x: p.x, z: p.z, face: 0, hp: 2, state: 'approach', t: 0, moving: false, walkT: rr(0, 9), carry: 0, alive: true, mesh: makeRaiderMesh() }); }
   log(warned ? `Les ${n} pillards descendent de la colline. Aux armes !` : tech.crise ? (COAST && Math.random() < 0.5 ? `Alerte ! ${n} pirates saxons ont débarqué sur la côte. Les enfants courent se cacher.` : `Alerte ! Une bande de ${n} Germains ravage la campagne. Les enfants courent se cacher.`) : `Alerte ! ${n} pillards surgissent des collines. Les enfants courent se cacher.`, 'bad');
   cam.tx = lerp(cam.tx, c.x, 0.4); cam.tz = lerp(cam.tz, c.z, 0.4);
 }
@@ -3099,7 +3301,7 @@ function torchHut(r) {
 function updateRaider(r, gh) {
   r.moving = false; r.t -= gh;
   const walls = built('rampart') ? 'rampart' : built('palisade') ? 'palisade' : '';
-  const away = () => { const a = Math.atan2(r.z, r.x); r.tx = Math.cos(a) * 62; r.tz = Math.sin(a) * 62; r.state = 'flee'; };
+  const away = () => { const a = Math.atan2(r.z, r.x); r.tx = Math.cos(a) * 92; r.tz = Math.sin(a) * 92; r.state = 'flee'; };
   if (r.state !== 'flee' && raid.fallen >= Math.ceil(raid.n / 2)) away();   // déroute
   if (r.state === 'approach') {
     // une enceinte : les pillards doivent forcer une porte
@@ -3176,7 +3378,6 @@ function hourly() {
     if (victims.length) log('Une épidémie de dysenterie se déclare au village.', 'bad');
   }
   colony.year += yearsPerHour();
-  updateQuests();
   // à l'époque historique, le calendrier ne dépasse pas la date du prochain savoir non découvert (ni 500 après la chute de Rome)
   if (tech.rome) { const next = TECHS.filter(t => t.tier >= 12 && !tech[t.id]).reduce((m, t) => Math.min(m, t.year), 500); colony.year = Math.min(colony.year, Math.max(next - 1, colony.year - yearsPerHour())); }
   // une mesure par jour pour la courbe de population
@@ -3217,7 +3418,7 @@ function hourly() {
       if (list.length >= 2 && list.length < S.max && Math.random() < (sp === 'aurochs' ? 0.01 : 0.006)) { const m = pick(list), p = landPoint(m.x, m.z, 4); spawnAnimal(sp, p.x, p.z); }
       // tant que la steppe glaciaire existe, de nouvelles bêtes descendent des montagnes
       else if (list.length < 2 && Math.random() < 0.012) {
-        const a = rr(0, 6.28), c = landPoint(Math.cos(a) * 48, Math.sin(a) * 48, 8); let n = 0;
+        const a = rr(0, 6.28), c = landPoint(Math.cos(a) * 66, Math.sin(a) * 66, 8); let n = 0;
         for (let i = 0; i < (sp === 'rhino' ? 1 : 2); i++) { const p = landPoint(c.x, c.z, 5); if (validLand(p.x, p.z)) { spawnAnimal(sp, p.x, p.z); n++; } }
         if (n) log({ mammouth: 'Des mammouths descendent des montagnes.', rhino: 'Un rhinocéros laineux rôde dans la vallée.', aurochs: 'Des aurochs arrivent dans la vallée.' }[sp]);
       }
@@ -3253,7 +3454,7 @@ function hourly() {
   // faune
   const cerfs = deers.filter(d => d.sp === 'cerf'), nd = cerfs.length;
   if (nd >= 2 && nd < 18 && Math.random() < 0.025 * (tech.domest ? 2 : 1)) { const m = pick(cerfs); const p = landPoint(m.x, m.z, 3); spawnDeer(p.x, p.z); }
-  if (nd < 3 && Math.random() < 0.02) { const a = rr(0, 6.28); const p = landPoint(Math.cos(a) * 50, Math.sin(a) * 50, 8); if (validLand(p.x, p.z)) { spawnDeer(p.x, p.z); log('Un cerf descend des montagnes.'); } }
+  if (nd < 3 && Math.random() < 0.02) { const a = rr(0, 6.28); const p = landPoint(Math.cos(a) * 72, Math.sin(a) * 72, 8); if (validLand(p.x, p.z)) { spawnDeer(p.x, p.z); log('Un cerf descend des collines.'); } }
   // champs
   for (const f of fields) if (f.built && f.growth < 1) { f.growth = Math.min(1, f.growth + (inRain(f.x, f.z) ? 0.1 : (colony.drought ? 0.1 : 1) / 30) * clamp((meanTemp() - 2) / 8, 0.25, 1.1)); syncField(f); }
   updateClimate();
@@ -3285,6 +3486,8 @@ function tryBirth() {
     [mom, dad].forEach(p => journal(p, `Naissance de ${gx(c, 'son fils', 'sa fille')} ${c.name}.`));
     colony.births++; colony.mood += 4;
     milestone('birth', mom.x, mom.z); sfx('birth');
+    // un enfant né peu après une bénédiction : la tribu y voit ta main
+    if ([mom, dad].some(p => p && p.blessT !== undefined && colony.time - p.blessT < 48)) { log(`Grâce à ta bénédiction, ${mom.name}${dad ? ' et ' + dad.name : ''} ont un enfant : ${c.name}. La tribu te remercie.`, 'power'); colony.miracles = (colony.miracles || 0) + 1; mom.blessT = undefined; if (dad) dad.blessT = undefined; }
     log(`Naissance de ${c.name}, ${gx(c, 'fils', 'fille')} de ${mom.name} et ${dad.name}.`, 'good');
     burst(c.x, heightAt(c.x, c.z) + 1, c.z, '#f2d06b', 24, { spread: 1, up: 2, life: 1.2, size: 0.5 });
   }
@@ -3439,8 +3642,8 @@ function updateCamera(dt) {
   if (keys.has('e')) cam.yaw -= dt * 1.5; if (keys.has('r')) cam.yaw += dt * 1.5;
   if (keys.has('t')) cam.tilt = (cam.tilt || 0) + dt * 0.9; if (keys.has('g')) cam.tilt = (cam.tilt || 0) - dt * 0.9;
   if (cam.follow && selected) { const a = 1 - Math.exp(-dt * 5); cam.tx = lerp(cam.tx, selected.x, a); cam.tz = lerp(cam.tz, selected.z, a); }
-  const r = Math.hypot(cam.tx, cam.tz); if (r > 62) { cam.tx *= 62 / r; cam.tz *= 62 / r; }
-  cam.dist = clamp(cam.dist, 8, 95);
+  const r = Math.hypot(cam.tx, cam.tz); if (r > 90) { cam.tx *= 90 / r; cam.tz *= 90 / r; }
+  cam.dist = clamp(cam.dist, 8, 130);
   // inclinaison : angle automatique selon le zoom, corrigé par le joueur (cam.tilt), de presque l'horizon à presque vue du dessus
   const auto = lerp(0.5, 1.12, clamp((cam.dist - 8) / 80, 0, 1)), pitch = clamp(auto + (cam.tilt || 0), 0.16, 1.45);
   cam.tilt = pitch - auto;
@@ -3513,8 +3716,8 @@ function handleTap(sx, sy) {
     if (c) { openCave(caves.indexOf(c)); return; }
     const f = fields.find(f => Math.hypot(f.x - p.x, f.z - p.z) < 2.8);
     if (f) { showHint(fieldText(f), 2600); return; }
-    const w = works.find(w => w.kind !== 'palisade' && Math.hypot(w.x - p.x, w.z - p.z) < 3);
-    if (w) { showHint(WORK_INFO[w.kind].name + (w.built ? '' : ` · en construction (${Math.round(w.progress * 100)} %)`), 2200); return; }
+    const b = pickBuilding(p);
+    if (b) { openBuilding(b[0], b[1]); return; }
     const a = deers.find(d => d.alive && d.sp !== 'cerf' && Math.hypot(d.x - p.x, d.z - p.z) < 3);
     if (a) { showHint(`${cap1(SPECIES[a.sp].name)} · il faut ${SPECIES[a.sp].hunters} chasseurs armés de lances`, 2600); return; }
   }
@@ -3540,13 +3743,65 @@ document.querySelectorAll('.pw[data-power]').forEach(b => b.addEventListener('cl
 $('#techbtn').addEventListener('click', () => { disarm(); openTech(); });
 document.querySelectorAll('[data-speed]').forEach(b => b.addEventListener('click', () => setSpeed(+b.dataset.speed)));
 function setSpeed(s) { speed = s; if (s > 0) savedSpeed = s; document.querySelectorAll('[data-speed]').forEach(b => b.classList.toggle('on', +b.dataset.speed === s)); }
-function select(v) { selected = v; $('#card').hidden = !v; selRing.visible = !!v; if (!v) cam.follow = false; syncFollowBtn(); if (v) updateCard(); }
+function select(v) { selected = v; $('#card').hidden = !v; selRing.visible = !!v; if (!v) cam.follow = false; syncFollowBtn(); if (v) updateCard(); if (v) $('#bcard').hidden = true; }
+// ================= Fiches des bâtiments : à quoi ça sert, comment on le construisait, ce que ça change dans le jeu =================
+// [nom, époque, utilité, construction, effet dans le jeu]
+const BINFO = {
+  fire: ['Feu de camp', 'Préhistoire', 'Le cœur de la tribu : on s’y réchauffe, on y cuit la viande, on s’y raconte des histoires le soir, et il éloigne les bêtes sauvages.', 'Un cercle de pierres pour garder les braises. On l’allume en frappant un silex contre une pierre de pyrite pour faire des étincelles, ou en frottant très vite deux bouts de bois.', 'S’il s’éteint, la tribu perd courage : le pouvoir Feu peut le rallumer.'],
+  place: ['Place publique', 'Âge du fer', 'Le centre de l’oppidum : on s’y retrouve pour le marché, les assemblées des chefs et les fêtes.', 'Un sol de gravier bien tassé, un bassin de pierre pour l’eau, et des étals de marchands tout autour.', 'Chaque maison a maintenant son propre foyer : le feu de camp n’est plus nécessaire.'],
+  forum: ['Forum', 'Époque romaine', 'Le centre de la ville romaine. On y fait le marché, on y juge les procès, on y annonce les nouvelles et on y prie les dieux.', 'Une grande place dallée bordée de portiques à colonnes, pour marcher à l’abri de la pluie. Le grand bâtiment au fond est la basilique : un tribunal et une salle de réunion, pas une église. En face, un petit temple.', 'Le cœur de la ville : les rues dallées y mènent toutes.'],
+  hut: ['Hutte', 'Paléolithique', 'Abriter une famille du vent et du froid, autour d’un petit foyer.', 'Une armature de branches (ou, dans les steppes de l’Est, d’os et de défenses de mammouth) couverte de peaux de bêtes cousues, tenues en bas par des pierres.', '3 places pour dormir, un meilleur sommeil.'],
+  house: ['Maison en torchis', 'Néolithique', 'La maison d’une famille de paysans : on y dort, on y cuisine, on y range le grain.', 'Des poteaux de bois plantés dans le sol, des murs de branches tressées (le clayonnage) couverts de torchis, un mélange d’argile, de paille et de bouse, et un toit de chaume.', '5 places.'],
+  longhouse: ['Maison longue', 'Néolithique, vers 5500 av. J.-C.', 'Une très grande maison pour toute une famille, avec une partie pour les réserves.', 'Cinq rangées de gros poteaux de chêne portent un toit de chaume. Certaines mesuraient plus de 30 mètres ! Les archéologues retrouvent les trous de leurs poteaux des bords du Danube jusqu’au Bassin parisien.', '8 places.'],
+  chief: ['Grande maison du chef', 'Âge du bronze', 'Le chef y reçoit les visiteurs, y réunit les anciens et y garde les richesses du village.', 'Comme une maison de torchis, mais plus grande, avec deux poteaux sculptés devant l’entrée.', '8 places, et la tribu est plus unie.'],
+  gaulish: ['Maison gauloise', 'Âge du fer', 'La maison d’une famille gauloise : une grande pièce autour du foyer, où l’on vit, cuisine et travaille.', 'Une charpente de poteaux, des murs de torchis et un grand toit de chaume très pentu pour que la pluie glisse. La fumée du foyer s’échappe à travers le chaume : il n’y a pas de cheminée.', '6 places.'],
+  domus: ['Maison gallo-romaine', 'Époque romaine', 'Une maison à la mode de Rome, plus confortable : plusieurs pièces, parfois un sol en mosaïque et un petit portique devant.', 'Un soubassement de pierres liées au mortier de chaux, des murs enduits de blanc, et un toit de tuiles : des tuiles plates (tegulae) et des tuiles rondes (imbrices) sur les joints. Les tuiles ne brûlent pas, contrairement au chaume.', '7 places.'],
+  granary: ['Grenier sur pilotis', 'Néolithique', 'Garder le grain jusqu’au printemps, et surtout les semences pour l’année suivante.', 'Une petite cabane de bois posée sur quatre poteaux : surélevée, elle reste au sec, et les souris ont du mal à y grimper.', '+80 de réserve de nourriture.'],
+  horreum: ['Horreum (entrepôt à grain)', 'Époque romaine', 'Stocker le blé de la ville, et celui que l’on doit payer en impôt.', 'Des murs de pierre épais renforcés de contreforts, et un plancher surélevé : l’air circule dessous et garde le grain au sec. Un toit de tuiles par-dessus.', '+80 de réserve de nourriture.'],
+  pen: ['Enclos à moutons', 'Néolithique', 'Garder le troupeau la nuit, à l’abri des loups.', 'Une clôture de pieux et de perches de bois. Les moutons ne vivaient pas en Europe : ils sont arrivés du Proche-Orient avec les premiers paysans.', 'Le berger rapporte lait et viande ; le troupeau grandit.'],
+  menhir: ['Menhir', 'Néolithique', 'Personne ne le sait vraiment ! Un repère, un lieu de culte, peut-être un calendrier du soleil. À Carnac, il y en a des milliers alignés.', 'Le bloc est détaché de la roche, tiré sur des rondins avec des cordes, puis basculé dans un trou et redressé avec des leviers.', 'Sept menhirs forment un cercle, un cromlech : plus de mana et de bien-être.'],
+  well: ['Puits', 'Néolithique', 'Avoir de l’eau propre près des maisons, sans aller jusqu’à la rivière.', 'On creuse jusqu’à l’eau qui dort sous la terre, puis on soutient les parois avec du bois ou des pierres. Un seau au bout d’une corde remonte l’eau.', 'Deux fois moins de contagion, plus de bien-être.'],
+  tumulus: ['Tumulus des ancêtres', 'Néolithique', 'Une tombe pour toute la tribu, où l’on dépose les morts au fil des générations.', 'Une chambre de grandes dalles de pierre (un dolmen), puis une colline de terre et de pierres par-dessus. Celui de Gavrinis, dans le golfe du Morbihan, est couvert de gravures.', 'Le deuil est plus doux, les ancêtres donnent du mana.'],
+  forge: ['Forge', 'Âges des métaux', 'Fabriquer et réparer les outils et les armes de métal.', 'Un foyer de pierre où le charbon de bois, attisé par un soufflet en peau, chauffe le métal jusqu’au rouge ; le forgeron le martèle ensuite sur l’enclume.', 'Un forgeron fabrique des outils : tout le travail va plus vite.'],
+  market: ['Marché', 'Âge du bronze', 'Échanger du sel, de l’étain, des poteries et des bijoux, puis, à l’âge du fer, acheter avec des pièces.', 'Quelques étals de bois couverts de toiles, là où se croisent les chemins.', 'Les marchands apportent étain, sel et nouvelles.'],
+  nemeton: ['Sanctuaire (nemeton)', 'Âge du fer', 'Le lieu sacré où les druides honorent les dieux gaulois.', 'Un enclos carré entouré d’un fossé et d’une palissade, avec des poteaux de bois où l’on accrochait des offrandes : armes, bijoux, os d’animaux.', 'Plus de mana, des malades mieux soignés.'],
+  jetty: ['Ponton', 'Âge du bronze', 'Accoster les bateaux pour pêcher et commercer.', 'Des pieux de chêne enfoncés dans le fond, puis un plancher de planches posé dessus.', 'Navires et marchands peuvent accoster.'],
+  fanum: ['Fanum (temple gallo-romain)', 'Époque romaine', 'Un temple pour les dieux gaulois et romains, souvent mélangés : Mercure, Apollon, Épona la déesse des chevaux…', 'Une tour carrée, la cella, où se trouve la statue du dieu, entourée d’une galerie couverte où l’on tourne en procession.', 'Le druide devient prêtre ; plus de mana.'],
+  thermes: ['Thermes', 'Époque romaine', 'Les bains publics : on s’y lave, on y bavarde, on y fait du sport.', 'Trois salles : froide (frigidarium), tiède (tepidarium) et chaude (caldarium). Le sol chaud repose sur de petits piliers de briques, et l’air brûlant d’un foyer circule dessous : c’est l’hypocauste. L’eau arrive par un aqueduc.', 'Bien moins d’épidémies, meilleure santé.'],
+  theatre: ['Théâtre', 'Époque romaine', 'Assister à des spectacles, des chants et des fêtes religieuses.', 'Des gradins en demi-cercle, adossés à une colline ou portés par des murs de pierre, face à une scène. En Gaule, beaucoup de théâtres étaient bâtis près d’un sanctuaire.', 'Le bien-être grimpe.'],
+  church: ['Église', 'Fin de l’Empire romain', 'Le lieu de prière des premiers chrétiens.', 'Une salle rectangulaire en pierre, inspirée des basiliques romaines, avec un toit de tuiles.', 'Un prêtre, plus de bien-être et de mana.'],
+  voie: ['Voie romaine', 'Époque romaine', 'Relier les villes de l’Empire : soldats, marchands et messagers y voyagent vite.', 'Une tranchée remplie de couches de pierres et de gravier bien tassées, bombée au milieu pour que l’eau s’écoule. Une borne milliaire indique les distances.', 'On marche plus vite, les marchands passent plus souvent.'],
+  palisade: ['Palissade', 'Néolithique', 'Protéger le village des loups et des pillards.', 'Des centaines de pieux de bois pointus, plantés serrés dans une tranchée, avec quelques portes.', 'Loups et pillards sont mieux repoussés.'],
+  rampart: ['Rempart de l’oppidum', 'Âge du fer', 'Protéger la ville gauloise et montrer sa puissance.', 'Le « mur gaulois » décrit par Jules César : une grille de poutres fixées par de grands clous de fer, remplie de terre, avec une façade de pierres. La pierre résiste au feu, et les poutres aux coups de bélier.', 'Les pillards sont bien mieux repoussés, et la ville peut s’étendre.'],
+};
+function openBuilding(key, site) {
+  const B = BINFO[key]; if (!B) return;
+  select(null);
+  let extra = '';
+  if (site && !site.built) extra += `<p class="bwip">En construction : ${Math.round(site.progress * 100)} %</p>`;
+  if (site && HOME[site.kind] && site.built) { const who = villagers.filter(v => v.hut === site).map(v => v.name); extra += `<p class="bwho">${who.length ? 'Y habitent : ' + who.join(', ') : 'Personne n’y habite pour l’instant.'}</p>`; }
+  const castrum = key === 'rampart' && works.some(w => w.kind === 'castrum' && w.built) ? ' À la fin de l’Empire, on l’a renforcé de tours rondes en pierre et brique : c’est devenu un castrum.' : '';
+  $('#bname').textContent = B[0]; $('#bera').textContent = B[1];
+  $('#bbody').innerHTML = `${extra}<h4>À quoi ça sert</h4><p>${B[2]}</p><h4>Comment on le construit</h4><p>${B[3]}${castrum}</p><p class="tip">Dans le jeu : ${B[4]}</p>`;
+  $('#bcard').hidden = false; sfx('tech');
+}
+$('#bclose').addEventListener('click', () => { $('#bcard').hidden = true; });
+// le bâtiment le plus proche du point touché (maisons, ouvrages, place centrale, enceinte)
+function pickBuilding(p) {
+  let best = null, bs = 1;
+  const test = (key, site, x, z, r) => { const s = Math.hypot(x - p.x, z - p.z) / r; if (s < bs) { bs = s; best = [key, site]; } };
+  for (const h of huts) test(h.kind, h, h.x, h.z, (HOME[h.kind] ? HOME[h.kind].clear : 3) + 0.4);
+  for (const w of works) if (!['palisade', 'rampart', 'castrum', 'voie'].includes(w.kind)) test(w.kind === 'granary' && w.roman ? 'horreum' : w.kind, w, w.x, w.z, Math.max(2.4, (WORK_INFO[w.kind].clear || 2) + 0.4));
+  test(centerStage(), null, 0, 0, centerStage() === 'fire' ? 1.8 : PLAZA_R() + 1);
+  if (!best && WALL) { const a = Math.atan2(p.z, p.x); if (Math.abs(Math.hypot(p.x, p.z) - profR(WALL.prof, a)) < 1.6) { const w = works.find(w => w.kind === 'rampart' && w.built) || works.find(w => w.kind === 'palisade'); if (w) best = [w.kind, w]; } }
+  if (!best) { const v = works.find(w => w.kind === 'voie' && Math.hypot(w.x - p.x, w.z - p.z) < 3); if (v) best = ['voie', v]; }
+  return best;
+}
 function syncFollowBtn() { $('#cfollow').classList.toggle('on', cam.follow); $('#cfollow').textContent = cam.follow ? 'Suivi' : 'Suivre'; }
 $('#cfollow').addEventListener('click', () => { cam.follow = !cam.follow; syncFollowBtn(); });
 $('#cclose').addEventListener('click', () => select(null));
 $('#cstory').addEventListener('click', () => { if (selected) openStory(selected); });
 $('#popbtn').addEventListener('click', () => { disarm(); openRoster(); });
-$('#quest').addEventListener('click', () => { disarm(); openQuest(); });
 $('#erabtn').addEventListener('click', () => { disarm(); openTimeline(); });
 // Frise de référence (dates pour la France, arrondies ; elles varient selon les régions)
 const AGES = [
@@ -3607,10 +3862,23 @@ function portraitSVG(v) {
   const cape = L.acc === 'peau' ? '<path d="M28 80 C34 70 66 70 72 80 L67 86 L61 80 L56 87 L50 80 L44 87 L39 80 L33 86 Z" fill="#7d6a55"/>' : '';
   return `<svg class="pt${v.alive ? '' : ' dead'}" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="50" fill="#3a2e22"/>${back}<path d="M18 100 C18 76 32 68 50 68 C68 68 82 76 82 100 Z" fill="${L.tunic}"/><rect x="44" y="58" width="12" height="13" fill="${skin}"/>${cape}<ellipse cx="50" cy="45" rx="18" ry="21" fill="${skin}"/>${front}${eyes}<path d="${mouth}" stroke="#4a2a1c" stroke-width="2" fill="none" stroke-linecap="round"/>${deco}</svg>`;
 }
+// petite icône au-dessus des personnages qui ont un rôle ou un métier d'artisan (pas les chasseurs ni les paysans)
+const JOB_ICON = { tailleur: '🪨', potier: '🏺', tisserand: '🧵', forgeron: '⚒️', marchand: '⚖️', charron: '☸️', saunier: '🧂', orfevre: '💍', tonnelier: '🛢️', barde: '🎵', guerrier: '⚔️', tuilier: '🧱', scribe: '📜', veteran: '🛡️', vigneron: '🍇' };
+const roleIcon = v => v.chief ? '👑' : v.druid ? (tech.christ ? '✝️' : tech.fanum ? '🏛️' : '🌿') : (v.job && JOB_ICON[v.job]) || '';
 function updateLabels() {
   camera.updateMatrixWorld();
   const show = cam.dist < 72;
   for (const v of villagers) {
+    // icône de rôle, visible pour tous (sauf celui qui a déjà son nom affiché)
+    const ic = roleIcon(v), ie = v.icon;
+    if (ie) {
+      if (!ic || !show || !v.mesh.visible || v === selected) ie.hidden = true;
+      else {
+        const k0 = v.adult ? 1 : 0.5 + 0.5 * v.age / ADULT_AGE; _p.set(v.x, v.mesh.position.y + (v.sleeping ? 0.75 : 1.75 * v.look.h * k0), v.z).project(camera);
+        if (_p.z > 1 || Math.abs(_p.x) > 1.05 || Math.abs(_p.y) > 1.05) ie.hidden = true;
+        else { ie.hidden = false; if (ie.textContent !== ic) { ie.textContent = ic; ie.title = cap1(roleName(v) || jobName(v)); } ie.style.transform = `translate(${((_p.x + 1) / 2 * innerWidth).toFixed(1)}px,${((1 - _p.y) / 2 * innerHeight).toFixed(1)}px) translate(-50%,-100%)`; }
+      }
+    }
     const el = v.label;
     // le nom ne s'affiche qu'au-dessus du villageois sélectionné (ou suivi) : l'écran reste lisible
     if (!show || !v.mesh.visible || v !== selected) { el.hidden = true; continue; }
@@ -3681,7 +3949,7 @@ function openStats() {
   const bar = (label, n, max, col) => `<div class="sbar"><span>${label}</span><i style="width:${Math.max(4, n / max * 100)}%;background:${col}"></i><b>${n}</b></div>`;
   openModal(`<p class="eyebrow">${yearText(colony.year)} · jour ${dayNum()}</p><h2 id="mtitle">Statistiques</h2>
   <div class="stats"><div><b>${villagers.length}</b><span>habitants</span></div><div><b>${adults}</b><span>adultes</span></div><div><b>${kids}</b><span>enfants</span></div><div><b>${births}</b><span>naissances</span></div><div><b>${dAll}</b><span>décès</span></div>${oldest ? `<div><b>${Math.floor(oldest.age)}</b><span>ans, ${oldest.name} (doyen)</span></div>` : ''}</div>
-  <p class="sub">Quêtes accomplies : <b style="color:var(--ochre)">${colony.questsDone || 0}</b></p>
+  <p class="sub">Miracles remarqués par la tribu : <b style="color:var(--ochre)">${colony.miracles || 0}</b></p>
   <h3 class="sec">Pyramide des âges</h3>${pyramidSVG()}
   <h3 class="sec">Population au fil des jours</h3>${popCurveSVG()}
   <h3 class="sec">Démographie</h3>
@@ -3707,7 +3975,6 @@ function hud() {
   $('#clock').title = `Jour ${dayNum()} · ${eraName()}`;
   $('#hour').textContent = String(Math.floor(hourOfDay())).padStart(2, '0') + 'h';
   $('#sunic').style.color = isNight() ? 'var(--spirit)' : 'var(--gold)';
-  renderQuest();
   $('#pop').textContent = villagers.length; $('#popcap').textContent = '/' + housingCap();
   $('#food').textContent = Math.floor(colony.food); $('#foodcap').textContent = '/' + foodCap();
   $('#wood').textContent = Math.floor(colony.wood); $('#woodcap').textContent = '/' + woodCap();
@@ -3866,6 +4133,12 @@ function beast(key, x, s, flip) {
     ${A.lines.filter((l, i) => key !== 'chasse' || i < 2 || i > 3).map(([p, w], i) => `<path d="${p}" fill="none" stroke="${special[i] || '#2a1a10'}" stroke-width="${(w * (special[i] ? 1.1 : 0.7)).toFixed(2)}" stroke-linecap="round"/>`).join('')}
     ${A.eye ? `<circle cx="${A.eye[0]}" cy="${A.eye[1]}" r="1.4" fill="#120a05"/>` : ''}</g>`;
 }
+// éléments de paysage pour les écrans de climat
+const climSnow = k => `<path ${W} d="M-10 146 C60 140 140 150 200 144 C250 140 290 148 330 144 L330 206 L-10 206 Z" fill="#f2f5f4" opacity="${k}"/>`;
+const climFlakes = n => { let s = ''; for (let i = 0; i < n; i++) s += `<circle cx="${(i * 73) % 320}" cy="${(i * 41) % 150}" r="${1 + (i % 3) * 0.6}" fill="#fff" opacity=".85"/>`; return s; };
+const climPines = n => Array.from({ length: n }, (_, i) => { const x = 24 + i * 34, h = 30 + (i % 3) * 8; return `<g ${W}><rect x="${x - 1.5}" y="${151 - 8}" width="3" height="8" fill="#5a3d22"/><path d="M${x - 9} ${151 - 6} L${x} ${151 - h} L${x + 9} ${151 - 6} Z" fill="#3f6b45"/></g>`; }).join('');
+const climBirches = n => Array.from({ length: n }, (_, i) => { const x = 180 + i * 24, h = 34 + (i % 2) * 10; return `<g ${W}><rect x="${x - 1.5}" y="${151 - h}" width="3" height="${h}" fill="#e8e4da"/><ellipse cx="${x}" cy="${151 - h}" rx="9" ry="12" fill="#9cbf5a"/></g>`; }).join('');
+const climOaks = n => Array.from({ length: n }, (_, i) => { const x = 18 + i * 30, h = 26 + (i % 3) * 6; return `<g ${W}><rect x="${x - 2.5}" y="${151 - h}" width="5" height="${h}" fill="#5a3d22"/><circle cx="${x}" cy="${151 - h - 6}" r="${13 + (i % 2) * 3}" fill="#4f803a"/></g>`; }).join('');
 // colline rocheuse percée d'une grotte (porche sombre au centre)
 const caveSceneSVG = () => `<path ${W} d="M70 151 C80 96 120 70 170 68 C222 66 262 96 274 151 Z" fill="#8b8678"/><path ${W} d="M90 110 C120 80 200 74 250 104" stroke="#6f6a5e" stroke-width="5" fill="none" opacity=".5"/><path ${W} d="M122 151 C122 120 140 102 166 102 C192 102 208 120 208 151 Z" fill="#1d140e"/><path ${W} d="M76 104 C96 78 140 64 176 64 C214 64 250 82 268 104 C246 90 214 78 176 78 C140 78 102 88 76 104 Z" fill="#7f8a5c" opacity=".8"/>`;
 const sheepSVG = (x, y) => `<g ${W}><ellipse cx="${x}" cy="${y - 11}" rx="13" ry="9" fill="#efe9dc"/><ellipse cx="${x}" cy="${y - 8}" rx="12" ry="5" fill="url(#il-hatch)" opacity=".5"/><ellipse cx="${x + 12}" cy="${y - 13}" rx="4.5" ry="4" fill="#3a302a"/><path d="M${x - 7} ${y - 4} v6 M${x - 2} ${y - 3} v6 M${x + 4} ${y - 3} v6 M${x + 8} ${y - 4} v6" stroke="#3a302a" stroke-width="1.8"/></g>`;
@@ -3879,7 +4152,7 @@ const TOOL_ITEMS = {
   // hache plate emmanchée (comme celle d'Ötzi), poignard triangulaire, alêne
   cuivre: [['hache', x => `<rect x="${x - 2}" y="64" width="4" height="74" fill="#7a5532"/><path d="M${x + 1} 66 L${x + 18} 62 C${x + 22} 68 ${x + 22} 76 ${x + 18} 82 L${x + 1} 78 Z" fill="url(#il-metal)"/>`],
     ['poignard', x => `<path d="M${x} 76 L${x + 6} 112 L${x - 6} 112 Z" fill="url(#il-metal)"/><rect x="${x - 3}" y="112" width="6" height="18" rx="2" fill="#5a3d22"/>`],
-    ['alêne', x => `<path d="M${x} 82 L${x + 1.5} 116 L${x - 1.5} 116 Z" fill="url(#il-metal)"/><rect x="${x - 3}" y="116" width="6" height="16" rx="3" fill="#8a6a4a"/>`]],
+    ['poinçon', x => `<path d="M${x} 82 L${x + 1.5} 116 L${x - 1.5} 116 Z" fill="url(#il-metal)"/><rect x="${x - 3}" y="116" width="6" height="16" rx="3" fill="#8a6a4a"/>`]],
   // hache à douille, épée à lame en feuille, pointe de lance, bracelet
   bronze: [['hache', x => `<rect x="${x - 2}" y="64" width="4" height="74" fill="#7a5532"/><path d="M${x - 3} 62 L${x + 8} 62 L${x + 20} 58 C${x + 25} 66 ${x + 25} 78 ${x + 20} 86 L${x + 8} 80 L${x - 3} 80 Z" fill="url(#il-metal)"/><circle cx="${x + 4}" cy="84" r="2.5" fill="none" stroke="url(#il-metal)" stroke-width="1.5"/>`],
     ['épée', x => `<path d="M${x} 52 C${x + 7} 68 ${x + 7} 96 ${x + 4} 114 L${x - 4} 114 C${x - 7} 96 ${x - 7} 68 ${x} 52 Z" fill="url(#il-metal)"/><path d="M${x} 56 L${x} 112" stroke="#f3dc8a" stroke-width="0.8"/><rect x="${x - 8}" y="114" width="16" height="4" rx="2" fill="url(#il-metal)"/><rect x="${x - 2.5}" y="118" width="5" height="14" fill="url(#il-metal)"/><circle cx="${x}" cy="134" r="4" fill="url(#il-metal)"/>`],
@@ -3887,7 +4160,7 @@ const TOOL_ITEMS = {
     ['bracelet', x => `<ellipse cx="${x}" cy="112" rx="11" ry="9" fill="none" stroke="url(#il-metal)" stroke-width="4"/><path d="M${x - 9} 106 l3 2 M${x + 9} 106 l-3 2" stroke="#7a5a22" stroke-width="1"/>`]],
   // longue épée gauloise, soc de charrue, faucille
   fer: [['épée', x => `<path d="M${x} 50 L${x + 4} 58 L${x + 4} 118 L${x - 4} 118 L${x - 4} 58 Z" fill="url(#il-metal)"/><path d="M${x} 56 L${x} 116" stroke="#d8dade" stroke-width="0.8"/><rect x="${x - 9}" y="118" width="18" height="3.5" fill="#4e5056"/><rect x="${x - 2.5}" y="121" width="5" height="14" fill="#5a3d22"/>`],
-    ['soc', x => `<path d="M${x} 92 L${x + 12} 130 L${x - 12} 130 Z" fill="url(#il-metal)"/><rect x="${x - 3}" y="130" width="6" height="10" fill="#7a5532"/>`],
+    ['soc d’araire', x => `<path d="M${x} 92 L${x + 12} 130 L${x - 12} 130 Z" fill="url(#il-metal)"/><rect x="${x - 3}" y="130" width="6" height="10" fill="#7a5532"/>`],
     ['faucille', x => `<path d="M${x - 2} 72 C${x + 18} 74 ${x + 20} 100 ${x + 4} 110" stroke="url(#il-metal)" stroke-width="4" fill="none"/><rect x="${x + 1}" y="110" width="5" height="22" rx="2" fill="#7a5532"/>`]],
 };
 const TOOL_SCENE = {
@@ -3988,6 +4261,14 @@ const SCENES = {
   'build:castrum': () => `<rect ${W} x="20" y="98" width="280" height="53" fill="#c2b8a5"/>${[112, 126].map(y => `<rect x="20" y="${y}" width="280" height="4" fill="#a4523a"/>`).join('')}<path ${W} d="M138 151 V122 A22 22 0 0 1 182 122 V151 Z" fill="#3b2e22"/>` + [[86, 70], [234, 70]].map(([x, y]) => `<g ${W}><rect x="${x - 22}" y="${y}" width="44" height="81" rx="6" fill="#cbc1ae"/><rect x="${x - 22}" y="${y + 30}" width="44" height="4" fill="#a4523a"/><rect x="${x - 22}" y="${y + 50}" width="44" height="4" fill="#a4523a"/><path d="M${x - 26} ${y + 2} L${x} ${y - 22} L${x + 26} ${y + 2} Z" fill="url(#il-tile)"/><rect x="${x - 4}" y="${y + 12}" width="8" height="12" fill="#3b2e22"/></g>`).join('') + human(160, 156, 1, 'spear', '#7a4f2d'),
   'build:church': () => SH(160, 96) + `<rect ${W} x="90" y="100" width="130" height="51" fill="#e3d6bc"/><path ${W} d="M80 104 L112 76 L198 76 L230 104 Z" fill="url(#il-tile)"/><path ${W} d="M220 151 V114 A26 26 0 0 1 246 140 V151 Z" fill="#d9cdb4"/><path ${W} d="M146 151 V124 A9 9 0 0 1 164 124 V151 Z" fill="#4a3424"/>${[106, 126, 186, 204].map(x => `<path d="M${x} 118 V108 A4 4 0 0 1 ${x + 8} 108 V118 Z" fill="#3b2e22"/>`).join('')}` + human(66, 156, 1.05, 'hold', '#ece8dc', `<path d="M73 128 L76 100 C76 94 84 94 82 100" stroke="#d9a83a" stroke-width="1.6" fill="none"/>`) + human(268, 156, 0.95, 'stand', '#8b4f7a') + human(288, 158, 0.6, 'stand', '#d3a640'),
   'tech:chute': () => `<circle cx="250" cy="96" r="22" fill="#e89a4a" opacity=".85" filter="url(#il-blur)"/><rect ${W} x="70" y="146" width="160" height="7" fill="#b3a994"/>${[[90, 70], [126, 48], [196, 84]].map(([x, h]) => `<g ${W}><rect x="${x}" y="${146 - h}" width="12" height="${h}" fill="#cfc6b2"/><path d="M${x} ${146 - h} l3 -4 l3 3 l3 -5 l3 4" stroke="#cfc6b2" stroke-width="2" fill="none"/></g>`).join('')}<g ${W}><rect x="150" y="140" width="34" height="9" rx="2" fill="#cfc6b2" transform="rotate(8 167 144)"/><rect x="214" y="138" width="22" height="10" fill="#c2b8a5"/></g>` + human(268, 156, 1, 'stand', '#7a4f2d'),
+  // ---- changements de climat (les couleurs du paysage suivent déjà le climat du moment) ----
+  'climate:Période glaciaire': () => climSnow(0.7) + SH(170, 70) + beast('mammouth', 150, 0.9, false) + beast('rhino', 262, 0.5, true) + climPines(3),
+  'climate:Maximum glaciaire': () => climSnow(1) + `<path ${W} d="M0 96 L60 80 L120 92 L190 74 L250 88 L320 78 L320 120 L0 120 Z" fill="#eef3f5" opacity=".85"/>` + climFlakes(40) + human(150, 154, 1, 'stand', '#7a5230') + fireSVG(186, 152, 0.8),
+  'climate:Fin de la glaciation': () => climSnow(0.25) + climBirches(6) + climPines(4) + `<circle cx="262" cy="52" r="16" fill="#f6dc8a" opacity=".85" filter="url(#il-blur)"/>` + beast('cerf', 200, 0.55, false),
+  'climate:Dryas récent': () => climSnow(0.85) + climPines(3) + climFlakes(55) + `<path d="M0 60 C80 50 160 70 320 56" stroke="#e8eef0" stroke-width="14" fill="none" opacity=".5" filter="url(#il-blur)"/>` + human(160, 154, 1, 'stand', '#7a5230'),
+  'climate:Holocène tempéré': () => climBirches(5) + climOaks(5) + `<circle cx="262" cy="50" r="17" fill="#f8d878" opacity=".9" filter="url(#il-blur)"/>` + beast('cerf', 150, 0.6, false) + `<path ${W} d="M0 160 C80 150 160 166 320 156" stroke="#4f86a6" stroke-width="6" fill="none"/>`,
+  'climate:Optimum climatique': () => climOaks(6) + `<circle cx="250" cy="48" r="20" fill="#ffd060" opacity=".95" filter="url(#il-blur)"/>` + Array.from({ length: 18 }, (_, i) => { const x = 20 + i * 8; return `<path d="M${x} 151 V136" stroke="#c9a640" stroke-width="1.5"/><ellipse cx="${x}" cy="134" rx="1.8" ry="4" fill="#e0b84a"/>`; }).join('') + human(200, 154, 1, 'sickle', '#a8483a'),
+  'climate:Optimum romain': () => climOaks(3) + `<circle cx="250" cy="48" r="18" fill="#ffd060" opacity=".9" filter="url(#il-blur)"/>` + [0, 1, 2].map(r => Array.from({ length: 8 }, (_, i) => { const x = 30 + i * 30 + r * 10, y = 134 + r * 6; return `<path d="M${x} ${y + 12} V${y}" stroke="#5e4a2e" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="4.5" fill="#6e9a3e"/><circle cx="${x + 2}" cy="${y + 5}" r="1.6" fill="#4e2550"/>`; }).join('')).join('') + human(270, 156, 1, 'hold', '#8b4f7a'),
   'center:place': () => `<path ${W} d="M20 151 C80 140 240 140 300 151 L300 160 L20 160 Z" fill="#b8ad94"/><ellipse ${W} cx="160" cy="146" rx="46" ry="9" fill="#8e877a"/><ellipse ${W} cx="160" cy="143" rx="38" ry="6" fill="#4f86a6"/>` + [[56, '#b5452f'], [264, '#3f6e8c']].map(([x, c]) => `<g ${W}><rect x="${x - 24}" y="104" width="3" height="40" fill="#6b4a2b"/><rect x="${x + 21}" y="104" width="3" height="40" fill="#6b4a2b"/><path d="M${x - 30} 106 L${x + 30} 106 L${x + 25} 96 L${x - 25} 96 Z" fill="${c}"/><rect x="${x - 22}" y="126" width="44" height="12" fill="#7a5532"/></g>`).join('') + human(120, 150, 0.9, 'hold', '#8b4f7a') + human(200, 152, 0.95, 'stand', '#3f6e8c') + human(228, 150, 0.85, 'stand', '#d3a640'),
   'center:forum': () => `<rect ${W} x="20" y="140" width="280" height="14" fill="#c7bfae"/><rect ${W} x="36" y="78" width="248" height="10" fill="url(#il-tile)"/>${Array.from({ length: 11 }, (_, i) => `<rect x="${42 + i * 23.5}" y="88" width="6" height="52" fill="#e3d6bc"/>`).join('')}<path ${W} d="M126 78 L160 52 L194 78 Z" fill="url(#il-tile)"/>` + human(110, 156, 0.95, 'stand', '#ece8dc') + human(140, 158, 0.9, 'hold', '#b5652f') + human(214, 156, 0.95, 'stand', '#3f6e8c'),
   'cave:bergerie': () => caveSceneSVG() + `<g ${W}>${[0, 1, 2, 3, 4, 5, 6].map(k => `<rect x="${126 + k * 11}" y="118" width="3.5" height="34" fill="#6b4a2b"/>`).join('')}<path d="M122 126 C150 122 176 130 200 125 M122 136 C150 132 176 140 200 135 M122 146 C150 142 176 150 200 145" stroke="#9a7a4c" stroke-width="4" fill="none"/></g>` + sheepSVG(226, 150, 1) + sheepSVG(262, 154, 0.9) + human(92, 156, 1, 'stand', '#7a4f2d'),
@@ -4023,97 +4304,43 @@ function illustrate(key) {
   ${(SCENES[key] || TECH_SCENES[key] || TECH_SCENES[{ 'build:jetty': 'ship' }[key]] || (() => ''))()}
   <rect width="320" height="200" filter="url(#il-paper)" opacity=".45" style="mix-blend-mode:multiply"/></svg>`;
 }
+// pour certaines premières, une petite liste pédagogique sous l'image (à quoi ça sert, comment c'est fait)
+const MILESTONE_LIST = {
+  'tools:cuivre': ['À quoi servent ces outils', ['Hache : abattre les arbres et tailler les poutres des maisons', 'Poignard : chasser, découper la viande et les peaux', 'Poinçon : une pointe pour percer le cuir et coudre vêtements et sacs', 'Comment on les fait : la malachite, une pierre verte, est chauffée dans un four d’argile attisé au soufflet ; le cuivre fondu coule au fond, puis on le martèle']],
+  'tools:bronze': ['À quoi servent ces outils', ['Hache à douille : le manche s’enfonce dans le métal, elle ne se démanche plus', 'Épée et lance : pour la chasse et pour défendre le village', 'Bracelet : un bijou qui montre la richesse de son propriétaire', 'Comment on les fait : neuf parts de cuivre pour une part d’étain, fondues dans un creuset puis versées dans un moule de pierre']],
+  'tools:fer': ['À quoi servent ces outils', ['Soc d’araire : la pointe qui fend la terre pour labourer les champs', 'Faucille : couper les épis de blé à la moisson', 'Épée : la longue épée des guerriers gaulois', 'Comment on les fait : le minerai est chauffé au charbon de bois dans un bas fourneau, puis la loupe de fer est martelée et forgée sur l’enclume']],
+};
 function milestone(key, x, z) {
   if (!started || !MILESTONES[key]) return;
   colony.firsts = colony.firsts || {}; if (colony.firsts[key]) return;
   colony.firsts[key] = true;
   const [title, text] = MILESTONES[key];
   let art = ''; try { art = illustrate(key); } catch (e) { }
-  splashQueue.push({ title, text, art, year: colony.year });
+  const L = MILESTONE_LIST[key];
+  splashQueue.push({ title, text, art, year: colony.year, listTitle: L && L[0], list: L && L[1] });
 }
-// ================= Quêtes : un villageois demande de l'aide =================
-// Une quête à la fois. Les urgentes (faim, maladie, feu éteint, sécheresse, raid) passent devant et apprennent à se servir des pouvoirs.
-// Seules restent les quêtes où le geste du joueur compte : chacune demande un pouvoir précis (ou un savoir)
-// et ne réussit que si on l'accomplit. Le bouton du pouvoir demandé brille pendant la quête.
-const QUESTS = {
-  faim: { urgent: true, power: 'gibier', when: () => colony.food < Math.max(12, villagers.length * 1.5), hours: 36,
-    title: 'La faim menace', ask: () => 'Les réserves sont presque vides ! Fais venir du gibier près du village.',
-    act: 'Lance le pouvoir Gibier près du village', hit: i => Math.hypot(i.x, i.z) < 40, reward: { food: 15, mood: 6 } },
-  malades: { urgent: true, power: 'benir', when: () => villagers.some(v => v.sick), hours: 30,
-    title: 'La fièvre', ask: () => `${villagers.filter(v => v.sick).map(v => v.name).slice(0, 3).join(', ')} ${villagers.filter(v => v.sick).length > 1 ? 'sont malades' : 'est malade'}. Bénis-les pour les guérir !`,
-    act: 'Lance Bénir sur un malade (cercle doré)', hit: i => i.cured > 0, reward: { know: 10, mood: 6 } },
-  secheresse: { urgent: true, power: 'pluie', when: () => colony.drought > 0 && fields.some(f => f.built), hours: 30,
-    title: 'La sécheresse', ask: () => 'Les champs se dessèchent. Fais tomber la pluie sur eux !',
-    act: 'Lance Pluie au-dessus des champs', hit: i => fields.some(f => f.built && Math.hypot(f.x - i.x, f.z - i.z) < 16), reward: { food: 20, mood: 4 } },
-  raid: { urgent: true, power: 'feu', when: () => !!raid, hours: 24,
-    title: 'Les pillards !', ask: () => 'Des pillards attaquent ! Frappe-les avec le feu du ciel, sans toucher les nôtres.',
-    act: 'Lance Feu sur les pillards', hit: i => i.raiders > 0, reward: { mana: 15, mood: 8 } },
-  feu: { urgent: true, power: 'feu', when: () => !colony.fireLit && centerStage() === 'fire' && colony.wood < 3, hours: 24,
-    title: 'Le feu s’est éteint', ask: () => 'Plus de bois pour rallumer le foyer… Envoie-nous le feu du ciel !',
-    act: 'Lance Feu sur le foyer, sans brûler personne', hit: i => i.relit, reward: { mana: 10, mood: 5 } },
-  bebe: { power: 'benir', when: () => villagers.some(v => v.adult && v.sex === 'F' && v.partner && v.partner.alive && !v.sick), hours: 48,
-    title: 'Un enfant', ask: () => 'Nous voudrions un enfant. Bénis un couple de la tribu !',
-    act: 'Lance Bénir sur deux adultes (cercle doré)', hit: i => i.adults >= 2, reward: { mana: 10, mood: 8 } },
-  savoir: { power: 'savoir', when: () => TECHS.some(canResearch), hours: 48,
-    title: 'Apprendre', ask: () => 'Les anciens ont assez réfléchi : choisis notre prochain savoir !',
-    act: 'Ouvre le Savoir et choisis une carte', hit: () => true, reward: { mana: 15 } },
-};
-// appelé après chaque pouvoir lancé (ou savoir appris) : la quête en cours est-elle accomplie ?
+// ================= Les miracles remarqués =================
+// Pas de quêtes imposées : c'est un bac à sable, le joueur est un dieu libre. Mais quand un pouvoir tombe à point
+// (la tribu a faim, des malades, la sécheresse, des pillards), le village le remarque et le dit.
 function onPower(kind, info) {
-  const q = colony.quest; if (!q) return;
-  const Q = QUESTS[q.id]; if (Q.power === kind && Q.hit(info)) { q.ok = true; updateQuests(); }
-}function questGiver() { const a = villagers.filter(v => v.adult); return (a.find(v => v.chief) || a.find(v => v.druid) || pick(a.length ? a : villagers) || {}).name || 'La tribu'; }
-function updateQuests() {
-  if (!started || colony.over) return;
-  if (colony.quest && !QUESTS[colony.quest.id]) colony.quest = null;
-  const q = colony.quest;
-  if (q) {
-    const Q = QUESTS[q.id];
-    if (q.ok) {
-      const R = Q.reward; colony.questsDone = (colony.questsDone || 0) + 1;
-      if (R.mana) colony.mana = Math.min(100, colony.mana + R.mana); if (R.know) colony.know += R.know; if (R.food) colony.food = Math.min(foodCap(), colony.food + R.food); if (R.mood) colony.mood += R.mood;
-      log(`Quête accomplie : ${Q.title.toLowerCase()} ! ${rewardText(R)}`, 'good'); sfx('chime'); burst(0, Math.max(heightAt(0, 0), 0) + 1, 0, '#f2d06b', 60, { spread: 2, up: 7, life: 1.6, size: 0.7, gravity: 3 });
-      colony.quest = null; colony.questWait = 8; return renderQuest();
-    }
-    if (colony.time >= q.until) { log(`Quête manquée : ${Q.title.toLowerCase()}.`, 'bad'); colony.mood -= 3; colony.quest = null; colony.questWait = 10; return renderQuest(); }
-    if (!Q.urgent) { const u = Object.keys(QUESTS).find(k => QUESTS[k].urgent && QUESTS[k].when()); if (u) startQuest(u); }
-    else if (!Q.when() && !q.ok) { colony.quest = null; colony.questWait = 4; log(`Plus besoin d’aide : ${Q.title.toLowerCase()}.`, ''); return renderQuest(); }
-    return renderQuest();
-  }
-  const u = Object.keys(QUESTS).find(k => QUESTS[k].urgent && QUESTS[k].when());
-  if (u) return startQuest(u);
-  if ((colony.questWait = (colony.questWait ?? 2) - 1) > 0) return renderQuest();
-  const ok = Object.keys(QUESTS).filter(k => !QUESTS[k].urgent && QUESTS[k].when() && k !== colony.lastQuest);
-  if (ok.length) startQuest(pick(ok));
-}
-function startQuest(id) {
-  const Q = QUESTS[id], q = { id, giver: questGiver(), until: Math.floor(colony.time) + Q.hours };
-  colony.quest = q; colony.lastQuest = id;
-  log(`${q.giver} demande : ${Q.ask(q)}`, Q.urgent ? 'bad' : 'know'); sfx('event'); renderQuest();
-}
-const rewardText = R => [R.mana && `+${R.mana} mana`, R.know && `+${R.know} savoir`, R.food && `+${R.food} nourriture`, R.mood && 'bien-être en hausse'].filter(Boolean).join(', ');
-function renderQuest() {
-  if (colony.quest && !QUESTS[colony.quest.id]) colony.quest = null;   // quête d'une ancienne version
-  const el = $('#quest'), q = colony.quest; if (!el) return;
-  // le bouton du pouvoir demandé brille tant que la quête est en cours
-  document.querySelectorAll('.qglow').forEach(b => b.classList.remove('qglow'));
-  if (!q || !started) { el.hidden = true; return; }
-  const Q = QUESTS[q.id], left = Math.max(0, q.until - colony.time);
-  const btn = Q.power === 'savoir' ? $('#techbtn') : document.querySelector(`.pw[data-power="${Q.power}"]`); if (btn) btn.classList.add('qglow');
-  el.hidden = false; el.classList.toggle('urgent', !!Q.urgent);
-  el.innerHTML = `<b>${Q.title}</b><span class="qp">👉 ${Q.act}</span><small>${left >= 24 ? Math.ceil(left / 24) + ' j' : Math.ceil(left) + ' h'} · touchez pour en savoir plus</small>`;
-}
-function openQuest() {
-  const q = colony.quest; if (!q) return; const Q = QUESTS[q.id];
-  openModal(`<p class="eyebrow">Quête${Q.urgent ? ' urgente' : ''} · demandée par ${q.giver}</p><h2 id="mtitle">${Q.title}</h2><p>« ${Q.ask(q)} »</p><p class="tip">👉 <b>${Q.act}.</b></p><p class="sub">Récompense : ${rewardText(Q.reward)}. Quêtes accomplies : ${colony.questsDone || 0}.</p><div class="mfoot"><button class="btn" data-close>Compris</button></div>`);
+  if (!started) return;
+  const near = (x, z, r) => villagers.filter(v => v.alive && Math.hypot(v.x - x, v.z - z) < r);
+  let msg = '';
+  if (kind === 'gibier' && colony.food < Math.max(15, villagers.length * 2)) { msg = 'Grâce à toi, le gibier revient alors que la tribu avait faim. Ce soir, on mangera à sa faim.'; colony.mood += 6; }
+  else if (kind === 'benir' && info.cured > 0) { const n = near(info.x, info.z, 8).map(v => v.name).slice(0, 3).join(', '); msg = `Grâce à ta lumière, ${n} ${info.cured > 1 ? 'guérissent' : 'guérit'}. La tribu chante pour toi.`; colony.mood += 5; }
+  else if (kind === 'pluie' && colony.drought > 0 && fields.some(f => f.built && Math.hypot(f.x - info.x, f.z - info.z) < 16)) { msg = 'Grâce à la pluie, les champs desséchés reverdissent. Les paysans lèvent les yeux au ciel.'; colony.drought = 0; colony.mood += 6; }
+  else if ((kind === 'feu' || kind === 'foudre') && info.raiders > 0) { msg = 'Le feu du ciel frappe les pillards ! La tribu crie au miracle.'; colony.mood += 6; }
+  else if (kind === 'crue' && info.raiders > 0) { msg = 'Grâce à toi, la rivière se soulève et emporte les pillards ! La tribu crie au miracle.'; colony.mood += 6; }
+  if (msg) { log(msg, 'power'); colony.miracles = (colony.miracles || 0) + 1; sfx('chime'); }
 }
 function flushSplash() {
   if (modalOpen || ceremonyOn) return;
   if (!splashQueue.length) return;
   sfx('chime');
   const s = splashQueue.shift();
-  openModal(`<p class="eyebrow">${yearText(s.year)} · Une première</p><h2 id="mtitle">${s.title}</h2>
+  openModal(`<p class="eyebrow">${yearText(s.year)} · ${s.eyebrow || 'Une première'}</p><h2 id="mtitle">${s.title}</h2>
   ${s.art ? `<figure class="illus">${s.art}</figure>` : ''}<p>${s.text}</p>
+  ${s.list ? `<h3 class="sec">${s.listTitle || 'Ce qui va changer'}</h3><ul class="clist">${s.list.map(x => `<li>${x}</li>`).join('')}</ul>` : ''}
   <div class="mfoot"><button class="btn" data-close>Continuer</button></div>`);
 }
 function showEra(id) {
@@ -4144,7 +4371,6 @@ function showStart() {
     <li><b>Regarder</b><span>Glisser pour se déplacer, pincer ou molette pour zoomer, deux doigts ou clic droit pour tourner. Pour incliner la vue : deux doigts glissés ensemble vers le haut ou le bas, ou le bouton du milieu de la souris (touches T et G au clavier).</span></li>
     <li><b>Observer</b><span>Touchez un villageois pour voir ses besoins, son caractère et son histoire. Touchez la population pour voir toute la tribu.</span></li>
     <li><b>Sauvegarde</b><span>La partie est sauvegardée automatiquement sur cet appareil.</span></li>
-    <li><b>Aider</b><span>Les villageois vous demandent de l’aide : suivez la quête en haut à droite, touchez-la pour un conseil.</span></li>
     <li><b>Intervenir</b><span>Choisissez un pouvoir en bas (feu, pluie, bénir, gibier…) : son effet s’affiche. Puis touchez le terrain.</span></li>
     <li><b>Décider</b><span>Choisissez les savoirs dans l’arbre pour faire évoluer la tribu : elle bâtit seule ce que ses savoirs permettent.</span></li>
   </ul>
@@ -4317,7 +4543,7 @@ function saveGame() {
     bushes: bushes.map(b => [b.x, b.z, b.y, b.rot, b.berries, b.burnt, b.burntT, b.gone, b.dots]),
     caves: caves.map(c => [c.cx, c.cz]),
     huts: huts.map(h => [h.x, h.z, h.progress, h.built, h.paid, h.kind]),
-    works: works.map(w => [w.kind, w.x, w.z, w.progress, w.built, w.paid, w.dx, w.dz]),
+    works: works.map(w => [w.kind, w.x, w.z, w.progress, w.built, w.paid, w.dx, w.dz, w.roman ? 1 : 0]),
     sheep: sheep.length, coast: COAST, wear: Array.from(wear, x => Math.round(x * 10) / 10),
     fields: fields.map(f => [f.x, f.z, f.progress, f.built, f.paid, f.growth, f.crop]),
     deers: deers.filter(d => d.alive).map(d => [d.x, d.z, d.male, d.sp]),
@@ -4332,6 +4558,10 @@ function restoreGame(S) {
   S.trees.forEach((a, i) => trees.push({ i, x: a[0], z: a[1], y: a[2], s: a[3], rot: a[4], type: a[5], col: new T.Color(a[6]), state: 'alive', grow: a[8], wood: a[9], burn: a[10], regrow: a[11], res: null, flame: null }));
   trunkIM.count = pineIM.count = leafIM.count = trees.length;
   S.trees.forEach((a, i) => { const t = trees[i]; if (a[7] === 'burning') { setTreeState(t, 'burning'); t.burn = a[10]; } else t.state = a[7]; writeTree(t); });
+  // carte agrandie : sur une ancienne partie, les arbres des anciennes pentes se posent sur le nouveau relief, puis de nouvelles forêts
+  // poussent dans les collines libérées par les montagnes
+  for (const t of trees) if (Math.hypot(t.x, t.z) > 40) { const h = heightAt(t.x, t.z); t.y = h - 0.1; if (h < 0.7 || h > 12) t.state = 'gone'; writeTree(t); }
+  if (trees.length < MAX_TREES - 60) placeTrees(46);
   S.bushes.forEach((a, i) => bushes.push({ i, x: a[0], z: a[1], y: a[2], rot: a[3], berries: a[4], burnt: a[5], burntT: a[6], gone: a[7], res: null, dots: a[8] }));
   bushIM.count = bushes.length; berryIM.count = bushes.length * DOTS_PER_BUSH; bushes.forEach(writeBush);
   S.caves.forEach(c => buildCave(c[0], c[1]));
@@ -4340,7 +4570,7 @@ function restoreGame(S) {
   // maisons puis ateliers d'abord, enceintes en dernier : sur une ancienne sauvegarde, le tracé rond est recalculé autour de tout
   S.huts.forEach(h => { addHutSite({ x: h[0], z: h[1] }, h[5] || 'hut'); Object.assign(huts[huts.length - 1], { progress: h[2], built: h[3], paid: h[4] }); syncSite(huts[huts.length - 1]); });
   const isWall = w => w[0] === 'palisade' || w[0] === 'rampart';
-  [...(S.works || []).filter(w => !isWall(w) && w[0] !== 'castrum'), ...(S.works || []).filter(isWall), ...(S.works || []).filter(w => w[0] === 'castrum')].forEach(w => { const o = addWork(w[0], { x: w[1], z: w[2], dx: w[6], dz: w[7] }); if (o) { Object.assign(o, { progress: w[3], built: w[4], paid: w[5] }); syncSite(o); } });
+  [...(S.works || []).filter(w => !isWall(w) && w[0] !== 'castrum'), ...(S.works || []).filter(isWall), ...(S.works || []).filter(w => w[0] === 'castrum')].forEach(w => { const o = addWork(w[0], { x: w[1], z: w[2], dx: w[6], dz: w[7], roman: !!w[8] }); if (o) { Object.assign(o, { progress: w[3], built: w[4], paid: w[5] }); syncSite(o); } });
   const pen = penBuilt(); if (pen) for (let i = 0; i < (S.sheep || 0); i++) spawnSheep(pen.x + rr(-2, 2), pen.z + rr(-2, 2));
   if (builtMenhirs() >= MENHIR_COUNT) { colony.cromlechDeco = false; addCromlechDeco(); }
   refreshWall();
@@ -4399,5 +4629,4 @@ function frame(now) {
   hudT += dt; if (hudT > 0.25) { hudT = 0; hud(); }
 }
 hud(); requestAnimationFrame(frame);
-</script>
-</body></html>
+</script></body></html>
