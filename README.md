@@ -2,7 +2,7 @@
 
 Un petit jeu de civilisation préhistorique dans le navigateur, entre Populous et Tamagotchi.
 
-En 40 000 av. J.-C., quatre chasseurs-cueilleurs allument leur feu devant leurs grottes. Ils vivent seuls : ils chassent, cueillent, peignent les parois, ont des enfants, vieillissent et meurent. Vous les guidez avec vos pouvoirs (feu, pluie, foudre, arc-en-ciel, fleurs, inondation, bénédiction, gibier) et en choisissant leurs savoirs, jusqu'à l'oppidum gaulois puis la Gaule romaine, et la fin de l'Empire en 476.
+En 40 000 av. J.-C., quatre chasseurs-cueilleurs allument leur feu devant leurs grottes. Ils vivent seuls : ils chassent, cueillent, peignent les parois, ont des enfants, vieillissent et meurent. Vous les guidez avec vos pouvoirs (feu, pluie, foudre, arc-en-ciel, fleurs, tornade, inondation, bénédiction, gibier) et en choisissant leurs savoirs, jusqu'à l'oppidum gaulois puis la Gaule romaine, et la fin de l'Empire en 476.
 
 **Jouer :** https://bdubuisson.github.io/premier-feu/ (ordinateur, tablette ou téléphone, sans installation)
 

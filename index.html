@@ -180,7 +180,7 @@ svg.pt.dead{filter:grayscale(1) brightness(.8)}
 .pw svg.i{width:26px;height:26px}
 .pw .nm{font-family:var(--display);font-size:12.5px;letter-spacing:.02em;white-space:nowrap}
 .pw .cost{font-size:11px;color:var(--spirit);font-variant-numeric:tabular-nums}
-.pw[data-power="feu"] svg{color:var(--ember)}.pw[data-power="pluie"] svg{color:var(--spirit)}.pw[data-power="foudre"] svg{color:#e8e4a0}.pw[data-power="crue"] svg{color:#5fa8d3}.pw[data-power="fleurs"] svg{color:#e87aa0}.pw[data-power="benir"] svg{color:var(--gold)}.pw[data-power="gibier"] svg{color:var(--moss)}
+.pw[data-power="feu"] svg{color:var(--ember)}.pw[data-power="pluie"] svg{color:var(--spirit)}.pw[data-power="foudre"] svg{color:#e8e4a0}.pw[data-power="crue"] svg{color:#5fa8d3}.pw[data-power="fleurs"] svg{color:#e87aa0}.pw[data-power="tornade"] svg{color:#b8b4ac}.pw[data-power="benir"] svg{color:var(--gold)}.pw[data-power="gibier"] svg{color:var(--moss)}
 .pw.armed{background:rgba(227,160,63,.2);box-shadow:inset 0 0 0 1.5px var(--ochre)}
 .pw.poor{opacity:.42}
 .pw.tech{margin-left:4px;border-left:1px solid var(--edge);border-radius:0 10px 10px 0;color:var(--ochre)}
@@ -297,6 +297,7 @@ svg.pt.dead{filter:grayscale(1) brightness(.8)}
   <button class="pw" data-power="foudre"><svg class="i" viewBox="0 0 24 24"><path d="M13.5 2.5L5.5 13.5h5l-1.5 8 8.5-11.5h-5.2l1.2-7.5z"/></svg><span class="nm">Foudre</span><span class="cost">30</span></button>
   <button class="pw" data-power="arc"><svg class="i" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"><path d="M3 18a9 9 0 0 1 18 0" stroke="#e05a4a"/><path d="M6 18a6 6 0 0 1 12 0" stroke="#f2d06b"/><path d="M9 18a3 3 0 0 1 6 0" stroke="#6fb0d8"/></svg><span class="nm">Arc-en-ciel</span><span class="cost">20</span></button>
   <button class="pw" data-power="fleurs"><svg class="i" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="6.5" r="2.6"/><circle cx="16.8" cy="10" r="2.6"/><circle cx="15" cy="15.2" r="2.6"/><circle cx="9" cy="15.2" r="2.6"/><circle cx="7.2" cy="10" r="2.6"/><circle cx="12" cy="11" r="2.2" fill="#f2d24b"/></svg><span class="nm">Fleurs</span><span class="cost">10</span></button>
+  <button class="pw" data-power="tornade"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 4h18M5 8h14M7 12h10M9 16h6M11 20h3"/></svg><span class="nm">Tornade</span><span class="cost">40</span></button>
   <button class="pw" data-power="crue"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M3 14c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M3 19c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg><span class="nm">Inondation</span><span class="cost">35</span></button>
   <button class="pw" data-power="benir"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg><span class="nm">Bénir</span><span class="cost">40</span></button>
   <button class="pw" data-power="gibier"><svg class="i" viewBox="0 0 24 24"><path d="M8 20c-2-2-1-6 4-6s6 4 4 6-6 2-8 0z"/><circle cx="6" cy="11" r="1.8"/><circle cx="9.5" cy="7" r="1.8"/><circle cx="14.5" cy="7" r="1.8"/><circle cx="18" cy="11" r="1.8"/></svg><span class="nm">Gibier</span><span class="cost">30</span></button>
@@ -3033,6 +3034,7 @@ const POWERS = {
   pluie: { name: 'Pluie', cost: 20, desc: 'arrose une zone : éteint les incendies, fait pousser les champs et les baies plus vite.', cast: (x, z) => { startRain(x, z); log('Des nuages noirs s’amoncellent. La pluie tombe.', 'power'); } },
   arc: { name: 'Arc-en-ciel', cost: 20, cast: castRainbow, can: () => isNight() ? 'Pas d’arc-en-ciel la nuit : il faut le soleil pour éclairer les gouttes de pluie.' : null, desc: 'un arc-en-ciel se dresse dans le ciel : ceux qui le voient retrouvent le sourire. Après une pluie, il est double !' },
   fleurs: { name: 'Fleurs', cost: 10, cast: castFlowers, can: () => seasonName() === 'hiver' ? 'En hiver, les fleurs ne poussent pas : attends le printemps.' : null, desc: 'fait pousser un bouquet de fleurs sauvages de l’époque, différentes selon le climat et les savoirs. Touche-les ensuite pour savoir lesquelles.' },
+  tornade: { name: 'Tornade', cost: 40, cast: castTornado, desc: 'une tornade descend du ciel et erre quelques secondes : elle arrache les arbres, emporte les huttes de branchages et les chantiers, renverse les villageois et balaie les pillards. À manier avec précaution !' },
   crue: { name: 'Inondation', cost: 35, cast: castFlood, desc: 'la rivière déborde : l’eau éteint les incendies, emporte les pillards et noie les champs… puis laisse un limon fertile qui rendra les prochaines récoltes plus belles.' },
   foudre: { name: 'Foudre', cost: 30, cast: castLightning, desc: 'un éclair tombe exactement là où vous touchez : il foudroie villageois et pillards, tue les bêtes et enflamme les arbres. À manier avec précaution !' },
   benir: { name: 'Bénédiction', cost: 40, cast: castBless, desc: 'soigne les malades et redonne santé, énergie et moral dans le cercle doré. La tribu fait plus d’enfants pendant une journée.' },
@@ -3122,6 +3124,42 @@ function castFlowers(x, z) {
   // les fleurs attirent abeilles et papillons : les champs voisins poussent un peu mieux
   for (const f of fields) if (f.built && Math.hypot(f.x - x, f.z - z) < 8) { f.growth = Math.min(1, f.growth + 0.1); syncField(f); }
   log(`Des fleurs sortent de terre : ${sp.map(s => FLOWERS[s][0].toLowerCase()).join(', ')}.${n ? ' Les villageois s’arrêtent pour les sentir.' : ''}`, 'power');
+}
+// Tornade : un entonnoir de vent qui erre une dizaine de secondes ; il arrache les arbres, emporte les huttes de branchages
+// et les chantiers, renverse les villageois et balaie les pillards. (La France connaît quelques tornades chaque année.)
+const TORNADO_R = 2.4, TORNADO_LIFE = 10, TORNADO_SPEED = 3.2;
+function castTornado(x, z) {
+  const g = new T.Group(), mats = [];
+  for (let i = 0; i < 6; i++) { const m = new T.MeshLambertMaterial({ color: i % 2 ? '#8d8a86' : '#a9a6a0', transparent: true, opacity: 0.55, depthWrite: false, side: T.DoubleSide }); mats.push(m);
+    const c = new T.Mesh(new T.CylinderGeometry(0.6 + i * 0.55, 0.35 + i * 0.5, 1.6, 10, 1, true).translate(0, 0.8 + i * 1.5, 0), m); g.add(c); }
+  scene.add(g); sfx('alarm');
+  const tw = { x, z, dir: rr(0, 6.28), t: 0, hit: new Set() };
+  let trees0 = 0, huts0 = 0, foes = 0, hurt = 0, dust = 0;
+  effects.push({ update(dt) {
+    const sdt = dt * Math.max(speed, 0.5); tw.t += sdt;
+    tw.dir += rr(-1, 1) * sdt; let nx = tw.x + Math.cos(tw.dir) * TORNADO_SPEED * sdt, nz = tw.z + Math.sin(tw.dir) * TORNADO_SPEED * sdt;
+    if (heightAt(nx, nz) < 0 || Math.hypot(nx, nz) > LAND_R) { tw.dir += Math.PI * 0.7; nx = tw.x; nz = tw.z; }
+    tw.x = nx; tw.z = nz;
+    const k = Math.min(1, tw.t / 1, (TORNADO_LIFE - tw.t) / 1.5);
+    g.position.set(tw.x, Math.max(heightAt(tw.x, tw.z), 0), tw.z); g.scale.set(k, k, k);
+    g.children.forEach((c, i) => c.rotation.y += sdt * (6 - i * 0.6));
+    if ((dust -= dt) <= 0) { dust = 0.12; burst(tw.x, g.position.y + 0.3, tw.z, '#9a8a70', 6, { spread: 3, up: 5, life: 1, size: 0.6, gravity: 3 }); }
+    const near = (px, pz, r = TORNADO_R) => Math.hypot(px - tw.x, pz - tw.z) < r * k;
+    for (const t of trees) if (t.state === 'alive' && near(t.x, t.z)) { setTreeState(t, 'stump'); trees0++; }
+    for (const h of [...huts]) if ((h.kind === 'hut' || !h.built) && near(h.x, h.z, TORNADO_R + 1)) { destroyHut(h); huts0++; }
+    for (const v of villagers) if (!tw.hit.has(v) && near(v.x, v.z)) { tw.hit.add(v); v.health -= has(v, 'robuste') ? 12 : 22; v.happy -= 15; v.cause = 'emporté par une tornade'; journal(v, `${gx(v, 'Renversé', 'Renversée')} par une tornade.`); makeFlee(v); hurt++; }
+    for (const r of raiders) if (r.alive && near(r.x, r.z)) { raiderGone(r); raid.fallen++; foes++; }
+    for (const d of deers) if (d.alive && near(d.x, d.z, 6)) spook(d, tw);
+    if (tw.t >= TORNADO_LIFE) {
+      scene.remove(g); g.traverse(o => o.geometry && o.geometry.dispose()); mats.forEach(m => m.dispose());
+      if (hurt) colony.mood -= 6;
+      log(`La tornade s’apaise : ${trees0} arbre${trees0 > 1 ? 's' : ''} arraché${trees0 > 1 ? 's' : ''}${huts0 ? `, ${huts0} hutte${huts0 > 1 ? 's' : ''} emportée${huts0 > 1 ? 's' : ''}` : ''}${hurt ? `, ${hurt} villageois renversé${hurt > 1 ? 's' : ''}` : ''}${foes ? `, ${foes} pillard${foes > 1 ? 's' : ''} balayé${foes > 1 ? 's' : ''}` : ''}.`, 'power');
+      if (foes) onPower('tornade', { raiders: foes });
+      return false;
+    }
+    return true;
+  } });
+  log('Le ciel tourne au vert, une tornade descend des nuages !', 'power');
 }
 // Inondation : l'eau monte dans les creux autour du point touché, puis redescend en laissant un limon fertile
 // (les crues de la Loire ou du Nil enrichissaient les champs des vallées)
@@ -4635,6 +4673,7 @@ function onPower(kind, info) {
   else if (kind === 'benir' && info.cured > 0) { const n = near(info.x, info.z, 8).map(v => v.name).slice(0, 3).join(', '); msg = `Grâce à ta lumière, ${n} ${info.cured > 1 ? 'guérissent' : 'guérit'}. La tribu chante pour toi.`; colony.mood += 5; }
   else if (kind === 'pluie' && colony.drought > 0 && fields.some(f => f.built && Math.hypot(f.x - info.x, f.z - info.z) < 16)) { msg = 'Grâce à la pluie, les champs desséchés reverdissent. Les paysans lèvent les yeux au ciel.'; colony.drought = 0; colony.mood += 6; }
   else if ((kind === 'feu' || kind === 'foudre') && info.raiders > 0) { msg = 'Le feu du ciel frappe les pillards ! La tribu crie au miracle.'; colony.mood += 6; }
+  else if (kind === 'tornade' && info.raiders > 0) { msg = 'Grâce à toi, la tornade balaie les pillards ! La tribu crie au miracle.'; colony.mood += 6; }
   else if (kind === 'crue' && info.raiders > 0) { msg = 'Grâce à toi, la rivière se soulève et emporte les pillards ! La tribu crie au miracle.'; colony.mood += 6; }
   if (msg) { log(msg, 'power'); colony.miracles = (colony.miracles || 0) + 1; sfx('chime'); }
 }
