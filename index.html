@@ -2975,7 +2975,7 @@ function updateRains(dt, simOn) {
 const POWERS = {
   feu: { name: 'Feu', cost: 25, cast: castFire, desc: 'brûle tout dans un petit cercle : arbres, gibier, maisons… et pillards. Rallume aussi le foyer éteint. Attention aux villageois !' },
   pluie: { name: 'Pluie', cost: 20, desc: 'arrose une zone : éteint les incendies, fait pousser les champs et les baies plus vite.', cast: (x, z) => { startRain(x, z); log('Des nuages noirs s’amoncellent. La pluie tombe.', 'power'); } },
-  arc: { name: 'Arc-en-ciel', cost: 20, cast: castRainbow, desc: 'un arc-en-ciel se dresse dans le ciel : ceux qui le voient retrouvent le sourire. Après une pluie, il est double !' },
+  arc: { name: 'Arc-en-ciel', cost: 20, cast: castRainbow, can: () => isNight() ? 'Pas d’arc-en-ciel la nuit : il faut le soleil pour éclairer les gouttes de pluie.' : null, desc: 'un arc-en-ciel se dresse dans le ciel : ceux qui le voient retrouvent le sourire. Après une pluie, il est double !' },
   crue: { name: 'Inondation', cost: 35, cast: castFlood, desc: 'la rivière déborde : l’eau éteint les incendies, emporte les pillards et noie les champs… puis laisse un limon fertile qui rendra les prochaines récoltes plus belles.' },
   foudre: { name: 'Foudre', cost: 30, cast: castLightning, desc: 'un éclair tombe exactement là où vous touchez : il foudroie villageois et pillards, tue les bêtes et enflamme les arbres. À manier avec précaution !' },
   benir: { name: 'Bénédiction', cost: 40, cast: castBless, desc: 'soigne les malades et redonne santé, énergie et moral dans le cercle doré. La tribu fait plus d’enfants pendant une journée.' },
@@ -3700,6 +3700,7 @@ function handleTap(sx, sy) {
     const p = groundPoint(sx, sy); if (!p) return;
     const pw = POWERS[armed];
     if (colony.mana < pw.cost) { showHint(`Pas assez de mana pour ${pw.name} (${pw.cost}).`, 1800); return; }
+    const why = pw.can && pw.can(); if (why) { showHint(why, 2400); return; }
     // on mesure l'effet du pouvoir pour la quête en cours (malades guéris, pillards frappés, foyer rallumé…)
     const sick0 = villagers.filter(v => v.sick).length, fallen0 = raid ? raid.fallen : 0, lit0 = colony.fireLit, kind = armed;
     const adults = villagers.filter(v => v.adult && Math.hypot(v.x - p.x, v.z - p.z) < 8).length;
@@ -3709,6 +3710,8 @@ function handleTap(sx, sy) {
   }
   const pv = pickVillager(sx, sy);
   if (pv) { select(pv); return; }
+  const an = pickAnimal(sx, sy);
+  if (an) { openBuilding(an, null, true); return; }
   const p = groundPoint(sx, sy);
   if (p) {
     if (raiders.some(r => r.alive && Math.hypot(r.x - p.x, r.z - p.z) < 3)) { showHint('Un pillard ! Le pouvoir Feu peut aider les défenseurs.', 2400); return; }
@@ -3718,8 +3721,6 @@ function handleTap(sx, sy) {
     if (f) { showHint(fieldText(f), 2600); return; }
     const b = pickBuilding(p);
     if (b) { openBuilding(b[0], b[1]); return; }
-    const a = deers.find(d => d.alive && d.sp !== 'cerf' && Math.hypot(d.x - p.x, d.z - p.z) < 3);
-    if (a) { showHint(`${cap1(SPECIES[a.sp].name)} · il faut ${SPECIES[a.sp].hunters} chasseurs armés de lances`, 2600); return; }
   }
   select(null);
 }
@@ -3738,6 +3739,7 @@ function armHint() { const pw = POWERS[armed]; showHint(`${pw.name} (${pw.cost} 
 function disarm() { armed = null; document.querySelectorAll('.pw.armed').forEach(b => b.classList.remove('armed')); $('#hint').hidden = true; }
 document.querySelectorAll('.pw[data-power]').forEach(b => b.addEventListener('click', () => {
   const k = b.dataset.power; if (armed === k) { disarm(); return; }
+  const why = POWERS[k].can && POWERS[k].can(); if (why) { disarm(); showHint(why, 2400); return; }
   disarm(); armed = k; b.classList.add('armed'); armHint();
 }));
 $('#techbtn').addEventListener('click', () => { disarm(); openTech(); });
@@ -3774,15 +3776,44 @@ const BINFO = {
   palisade: ['Palissade', 'Néolithique', 'Protéger le village des loups et des pillards.', 'Des centaines de pieux de bois pointus, plantés serrés dans une tranchée, avec quelques portes.', 'Loups et pillards sont mieux repoussés.'],
   rampart: ['Rempart de l’oppidum', 'Âge du fer', 'Protéger la ville gauloise et montrer sa puissance.', 'Le « mur gaulois » décrit par Jules César : une grille de poutres fixées par de grands clous de fer, remplie de terre, avec une façade de pierres. La pierre résiste au feu, et les poutres aux coups de bélier.', 'Les pillards sont bien mieux repoussés, et la ville peut s’étendre.'],
 };
-function openBuilding(key, site) {
-  const B = BINFO[key]; if (!B) return;
+// ================= Fiches des animaux : qui est-ce, ce que les hommes en faisaient, rôle dans le jeu =================
+const AINFO = {
+  cerf: ['Cerf élaphe', 'Toute la préhistoire', 'Un grand cervidé des forêts et des clairières. Chaque hiver, le mâle perd ses bois et les refait au printemps, plus grands chaque année.', 'Le gibier préféré des chasseurs après la glaciation : sa viande nourrit la tribu, sa peau fait des vêtements, et ses bois servent à fabriquer des harpons et des outils.', 'Un seul chasseur suffit. Il rapporte 11 de nourriture.'],
+  mammouth: ['Mammouth laineux', 'Période glaciaire', 'Un cousin de l’éléphant, couvert d’une épaisse laine rousse, avec des défenses recourbées longues de plus de 3 mètres. Il broutait l’herbe de la steppe froide.', 'Une proie rare et dangereuse, mais précieuse : viande, peaux, et de l’ivoire pour sculpter. En Ukraine, on a retrouvé des huttes bâties avec des os de mammouth. La grotte de Rouffignac en compte plus de cent peints sur ses parois.', 'Il faut 3 chasseurs armés de lances ; il rapporte 70 de nourriture, mais peut blesser. Il disparaît de nos régions avec le réchauffement, vers 12 000 av. J.-C.'],
+  rhino: ['Rhinocéros laineux', 'Période glaciaire', 'Un rhinocéros à l’épaisse fourrure, avec deux cornes dont une très longue, qui lui servait sans doute à dégager la neige pour trouver l’herbe.', 'Les artistes de la grotte Chauvet l’ont peint il y a plus de 30 000 ans. Il était chassé, mais rarement : il charge quand on l’approche.', 'Il faut 2 chasseurs armés de lances ; il rapporte 40 de nourriture. Il disparaît avec le réchauffement.'],
+  aurochs: ['Aurochs', 'Jusqu’en 1627', 'Le grand bœuf sauvage, ancêtre de nos vaches : le taureau mesurait 1,80 mètre au garrot, avec de grandes cornes en forme de lyre.', 'Les taureaux géants de la grotte de Lascaux sont des aurochs. Au Proche-Orient, les premiers paysans en ont domestiqué : ils sont devenus les vaches. Le dernier aurochs sauvage est mort en Pologne en 1627.', 'Il faut 2 chasseurs ; il rapporte 45 de nourriture, mais ses cornes sont dangereuses.'],
+  mouton: ['Mouton', 'Depuis le Néolithique', 'Un descendant du mouflon sauvage. Les premiers moutons avaient plus de poils que de laine : la laine épaisse est venue plus tard, à force de sélection.', 'Il n’existait pas en Europe : les premiers paysans l’ont amené du Proche-Orient. Il donne du lait, de la viande, puis de la laine pour tisser des vêtements chauds.', 'Le berger rapporte lait et viande, et le troupeau grandit dans l’enclos.'],
+  baleine: ['Baleine grise', 'Disparue de l’Atlantique', 'Un géant de 15 mètres qui se nourrit en filtrant la vase des fonds peu profonds. On la repère à son souffle, un jet de vapeur au-dessus des vagues.', 'Une baleine échouée sur la plage était un festin pour toute une tribu : viande, graisse pour les lampes, os pour les outils. Elle a disparu de l’Atlantique il y a quelques siècles ; elle vit encore dans le Pacifique.', 'Elle passe au large : regarde bien, elle souffle puis plonge en montrant sa queue.'],
+  phoque: ['Phoque', 'Côte atlantique', 'Un mammifère marin qui pêche en mer et se repose en groupe sur les plages et les rochers.', 'Les hommes de la préhistoire le chassaient pour sa viande, sa graisse et sa peau. On en voit peints dans la grotte Cosquer, près de Marseille, dont l’entrée est aujourd’hui sous la mer.', 'Ils se prélassent sur la plage.'],
+  pingouin: ['Grand pingouin', 'Disparu en 1844', 'Un grand oiseau marin noir et blanc, haut de 80 centimètres, qui ne savait pas voler mais nageait très bien, comme un manchot.', 'Il est peint dans la grotte Cosquer. Facile à attraper sur la terre ferme, il a été chassé jusqu’au dernier : les deux derniers ont été tués en Islande en 1844.', 'Une petite colonie vit sur la plage.'],
+  dauphin: ['Grand dauphin', 'Côte atlantique', 'Un mammifère marin très intelligent qui nage et saute en bande.', 'Les marins l’ont toujours vu comme un signe de chance.', 'Une bande passe parfois au large.'],
+  esturgeon: ['Esturgeon', 'Presque disparu', 'Un poisson géant, long de 3 mètres, couvert de plaques osseuses. Il remontait la Loire et la Gironde pour pondre.', 'Ses œufs sont le caviar. Trop pêché, il a presque disparu ; il n’en reste qu’en Gironde, protégés.', 'Il saute parfois hors de l’eau.'],
+};
+// l'animal le plus proche du doigt, à l'écran (comme pour les villageois)
+function pickAnimal(sx, sy) {
+  const C = [];
+  for (const d of deers) if (d.alive && d.mesh.visible) C.push([d.sp, d.x, d.mesh.position.y + (d.sp === 'mammouth' ? 2 : 0.8), d.z, d.sp === 'mammouth' ? 50 : 36]);
+  for (const s of sheep) C.push(['mouton', s.mesh.position.x, s.mesh.position.y + 0.5, s.mesh.position.z, 30]);
+  for (const w of fauna.whales) if (w.m.visible) C.push(['baleine', w.m.position.x, w.m.position.y, w.m.position.z, 50]);
+  for (const s of fauna.seals) if (s.m.visible) C.push(['phoque', s.m.position.x, s.m.position.y + 0.3, s.m.position.z, 30]);
+  for (const a of fauna.auks) if (a.m.visible) C.push(['pingouin', a.m.position.x, a.m.position.y + 0.4, a.m.position.z, 26]);
+  if (fauna.dolphins && fauna.dolphins.g.visible) for (const m of fauna.dolphins.g.children) { m.getWorldPosition(_v); C.push(['dauphin', _v.x, _v.y, _v.z, 34]); }
+  if (fauna.fish && fauna.fish.m.visible) C.push(['esturgeon', fauna.fish.m.position.x, fauna.fish.m.position.y, fauna.fish.m.position.z, 34]);
+  let best = null, bd = Infinity;
+  for (const [k, x, y, z, r] of C) { _v.set(x, y, z).project(camera); if (_v.z > 1) continue; const d = Math.hypot((_v.x + 1) / 2 * innerWidth - sx, (1 - _v.y) / 2 * innerHeight - sy); if (d < r && d < bd) { bd = d; best = k; } }
+  return best;
+}
+const INFO_HEADS = { b: ['À quoi ça sert', 'Comment on le construit'], a: ['Qui est-ce ?', 'Les hommes et lui'] };
+function openBuilding(key, site, animal) {
+  const B = (animal ? AINFO : BINFO)[key]; if (!B) return;
+  const H = INFO_HEADS[animal ? 'a' : 'b'];
   select(null);
   let extra = '';
   if (site && !site.built) extra += `<p class="bwip">En construction : ${Math.round(site.progress * 100)} %</p>`;
   if (site && HOME[site.kind] && site.built) { const who = villagers.filter(v => v.hut === site).map(v => v.name); extra += `<p class="bwho">${who.length ? 'Y habitent : ' + who.join(', ') : 'Personne n’y habite pour l’instant.'}</p>`; }
   const castrum = key === 'rampart' && works.some(w => w.kind === 'castrum' && w.built) ? ' À la fin de l’Empire, on l’a renforcé de tours rondes en pierre et brique : c’est devenu un castrum.' : '';
   $('#bname').textContent = B[0]; $('#bera').textContent = B[1];
-  $('#bbody').innerHTML = `${extra}<h4>À quoi ça sert</h4><p>${B[2]}</p><h4>Comment on le construit</h4><p>${B[3]}${castrum}</p><p class="tip">Dans le jeu : ${B[4]}</p>`;
+  $('#bbody').innerHTML = `${extra}<h4>${H[0]}</h4><p>${B[2]}</p><h4>${H[1]}</h4><p>${B[3]}${castrum}</p><p class="tip">Dans le jeu : ${B[4]}</p>`;
   $('#bcard').hidden = false; sfx('tech');
 }
 $('#bclose').addEventListener('click', () => { $('#bcard').hidden = true; });
@@ -3986,7 +4017,7 @@ function hud() {
   $('#tempchip').title = `Température · ${climatePhase()} (moyenne ${Math.round(meanTemp())} °C)`;
   $('#know').textContent = Math.floor(colony.know); $('#techcost').textContent = Math.floor(colony.know);
   $('#mana').textContent = Math.floor(colony.mana); $('#manabar').style.width = colony.mana + '%';
-  document.querySelectorAll('.pw[data-power]').forEach(b => b.classList.toggle('poor', colony.mana < POWERS[b.dataset.power].cost));
+  document.querySelectorAll('.pw[data-power]').forEach(b => { const P = POWERS[b.dataset.power]; b.classList.toggle('poor', colony.mana < P.cost || !!(P.can && P.can())); });
   $('#techbadge').hidden = !TECHS.some(canResearch);
   updateCard();
 }
