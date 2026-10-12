@@ -164,6 +164,8 @@ svg.pt.dead{filter:grayscale(1) brightness(.8)}
 #quest{right:12px;width:min(250px,calc(100% - 24px));display:grid;gap:3px;text-align:left;padding:9px 12px;background:var(--bark);border:1px solid var(--edge);border-left:4px solid var(--ochre);border-radius:12px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);font:inherit;color:var(--bone);cursor:pointer}
 #quest b{font-family:var(--display);font-size:14px;letter-spacing:.03em;color:var(--ochre)}#quest .qp{font-size:13px}#quest small{font-size:11px;color:var(--bone-dim)}
 #quest.urgent{border-left-color:#e0605a}#quest.urgent b{color:#f08a7a}
+@keyframes qglow{0%,100%{box-shadow:0 0 0 0 rgba(242,208,107,0)}50%{box-shadow:0 0 0 3px rgba(242,208,107,.85),0 0 16px rgba(242,208,107,.6)}}
+.pw.qglow{animation:qglow 1.4s ease-in-out infinite;border-radius:10px}
 .tip{background:rgba(227,160,63,.1);border-left:3px solid var(--ochre);padding:8px 10px;border-radius:6px}
 @media (max-width:640px){ #top{display:flex;flex-wrap:wrap;gap:6px} .hudchips{display:contents} .speed{position:static;margin-left:auto} }
 @media (max-width:440px){
@@ -1461,7 +1463,7 @@ function runTask(v, gh) {
     case 'build': {
       const s = t.site;
       if (s.built || s.gone) { endTask(v); break; }
-      if (!t.arrived) { const a = v.id * 1.7 + (t.spot = t.spot ?? rr(0, 6.28)) * (s.kind === 'palisade' || s.kind === 'rampart' || s.kind === 'castrum' ? 1 : 0), rad = (s.kind === 'palisade' || s.kind === 'rampart' || s.kind === 'castrum') && colony.wallProf ? profR(colony.wallProf, a) + (s.kind === 'palisade' ? -1.2 : 0.5) : s.kind === 'voie' ? 0 : s.kind === 'longhouse' ? 3.4 : s.kind === 'chief' ? 3 : 1.9; if (s.kind === 'voie') { t.rd = t.rd ?? rr(6, 40); const ra = colony.roadA || 0; if (moveTo(v, Math.cos(ra) * t.rd + 1.6, Math.sin(ra) * t.rd, gh, spd(v))) t.arrived = true; break; } if (moveTo(v, s.x + Math.cos(a) * rad, s.z + Math.sin(a) * rad, gh, spd(v))) t.arrived = true; break; }
+      if (!t.arrived) { const a = v.id * 1.7 + (t.spot = t.spot ?? rr(0, 6.28)) * (s.kind === 'palisade' || s.kind === 'rampart' || s.kind === 'castrum' ? 1 : 0), rad = (s.kind === 'palisade' || s.kind === 'rampart' || s.kind === 'castrum') && (s.prof || colony.wallProf) ? profR(s.prof || (s.kind === 'castrum' && colony.wallProf), a) + (s.kind === 'palisade' ? -1.2 : s.kind === 'rampart' ? 0.8 : 0.5) : s.kind === 'voie' ? 0 : s.kind === 'longhouse' ? 3.4 : s.kind === 'chief' ? 3 : 1.9; if (s.kind === 'voie') { t.rd = t.rd ?? rr(6, 40); const ra = colony.roadA || 0; if (moveTo(v, Math.cos(ra) * t.rd + 1.6, Math.sin(ra) * t.rd, gh, spd(v))) t.arrived = true; break; } if (moveTo(v, s.x + Math.cos(a) * rad, s.z + Math.sin(a) * rad, gh, spd(v))) t.arrived = true; break; }
       if (!s.paid) { if (colony.wood >= s.cost) { colony.wood -= s.cost; s.paid = true; } else { endTask(v); break; } }
       v.working = true; v.face = Math.atan2(s.x - v.x, s.z - v.z);
       s.progress = Math.min(1, s.progress + gh / BUILD_HOURS[s.kind] * (has(v, 'batisseur') ? 1.6 : 1) * workMul()); syncSite(s);
@@ -1518,7 +1520,8 @@ function runTask(v, gh) {
       break;
     }
     case 'idle': case 'play': case 'pray': {
-      if (t.tx === undefined) { const a = rr(0, 6.28), r = rr(2.6, t.type === 'play' ? 7 : 5.5); t.tx = Math.cos(a) * r; t.tz = Math.sin(a) * r; t.dur = rr(0.5, 1.6); }
+      // on flâne et on joue sur la place de son quartier (ou au centre)
+      if (t.tx === undefined) { const q = v.hut ? nearestQuarter(v.hut.x, v.hut.z) : { x: 0, z: 0, i: 0 }, a = rr(0, 6.28), r = q.i ? rr(0.8, 3.2) : rr(2.6, t.type === 'play' ? 7 : 5.5); t.tx = q.x + Math.cos(a) * r; t.tz = q.z + Math.sin(a) * r; t.dur = rr(0.5, 1.6); }
       if (!t.arrived) { if (moveTo(v, t.tx, t.tz, gh, spd(v) * (t.type === 'play' ? 1.15 : 0.55))) t.arrived = true; break; }
       t.t = (t.t || 0) + gh; if (t.t >= t.dur) endTask(v);
       break;
@@ -1654,14 +1657,20 @@ function fieldText(f) {
   return `${CROPS[f.crop].name} · ${f.growth >= 1 ? 'mûr, prêt à récolter' : Math.round(f.growth * 100) + ' % de croissance'}`;
 }
 // inside : bâtiment qui doit rester dans l'enceinte ; on garde aussi libres les couloirs qui mènent aux portes
-function findSpot(rMin, rMax, clear, inside) {
+// (cx, cz) : centre de la recherche (le centre du village, ou la place d'un quartier)
+function findSpot(rMin, rMax, clear, inside, cx = 0, cz = 0) {
   for (let k = 0; k < 160; k++) {
-    const a = rr(0, 6.28), r = rr(rMin, rMax), x = Math.cos(a) * r, z = Math.sin(a) * r, h = heightAt(x, z);
+    const a0 = rr(0, 6.28), r0 = rr(rMin, rMax), x = cx + Math.cos(a0) * r0, z = cz + Math.sin(a0) * r0, h = heightAt(x, z);
+    const a = Math.atan2(z, x), r = Math.hypot(x, z);
     if (h < 0.6) continue;
     if (colony.wallProf) {
       if (inside && r > profR(colony.wallProf, a) - clear * 0.7 - 1.5) continue;
       if (colony.wallGates.some(g => angDiff(a, g) * r < clear + 1.8 && r > 5)) continue;
     }
+    // la place centrale et les places des quartiers restent libres, comme les rues qui y mènent
+    if (r < PLAZA_R() + clear * 0.4) continue;
+    if ((colony.quarters || []).some(q => q.i && Math.hypot(q.x - x, q.z - z) < 2.4 + clear * 0.35)) continue;
+    if (onStreet(x, z, clear * 0.3)) continue;
     if (Math.abs(heightAt(x + 2, z) - h) + Math.abs(heightAt(x, z + 2) - h) + Math.abs(heightAt(x - 2, z) - h) > 1.1) continue;
     if ([...huts, ...fields, ...works].some(s => !s.gone && Math.hypot(s.x - x, s.z - z) < clear)) continue;
     if (colony.cromlech && Math.hypot(colony.cromlech.x - x, colony.cromlech.z - z) < clear + 5) continue;
@@ -1711,16 +1720,17 @@ const DOMUS_PORCH = lam('#d9cdb4');
 const HOME = {
   hut: { cap: 3, cost: 12, clear: 2.6, spot: 4.2, parts: [[HG.walls, HM.walls], [HG.roof, HM.roof, 1], [HG.door, HM.door]] },
   house: { cap: 5, cost: 20, clear: 3, spot: 4.8, parts: [[HOUSE.walls, HOUSE_WALL], [HOUSE.roof, HM.roof, 1], [HOUSE.door, HM.door]] },
-  longhouse: { cap: 10, cost: 35, clear: 4.4, spot: 7.5, parts: [[LONG.walls, HOUSE_WALL], [LONG.roof, HM.roof, 1], [LONG.door, HM.door]] },
+  longhouse: { cap: 8, cost: 35, clear: 4.4, spot: 7.5, parts: [[LONG.walls, HOUSE_WALL], [LONG.roof, HM.roof, 1], [LONG.door, HM.door]] },
   chief: { cap: 8, cost: 30, clear: 4, spot: 7, parts: [[CHIEF.walls, HOUSE_WALL], [CHIEF.roof, HM.roof, 1], [CHIEF.door, HM.door]] },
-  gaulish: { cap: 8, cost: 30, clear: 3.6, spot: 6, parts: [[GAUL.walls, GAUL_WALL], [GAUL.roof, HM.roof, 1], [GAUL.door, HM.door]] },
-  domus: { cap: 10, cost: 35, clear: 3.9, spot: 6.4, parts: [[DOMUS.walls, PLASTER], [DOMUS.roof, TILE, 1], [DOMUS.door, DOMUS_PORCH]] },
+  gaulish: { cap: 6, cost: 26, clear: 3.6, spot: 6, parts: [[GAUL.walls, GAUL_WALL], [GAUL.roof, HM.roof, 1], [GAUL.door, HM.door]] },
+  domus: { cap: 7, cost: 30, clear: 3.9, spot: 6.4, parts: [[DOMUS.walls, PLASTER], [DOMUS.roof, TILE, 1], [DOMUS.door, DOMUS_PORCH]] },
 };
 function addHutSite(at, kind = 'hut') {
   const H = HOME[kind];
-  const p = at || findSpot(6.5, 11 + huts.length * 0.9, H.spot, true) || findSpot(6, 34, H.spot * 0.75, true); if (!p) return;
+  const p = at || homeSpot(H) || findSpot(6, 34, H.spot * 0.75, true); if (!p) return;
+  const q = nearestQuarter(p.x, p.z), face = q.i && Math.hypot(q.x - p.x, q.z - p.z) > 1 ? Math.atan2(q.x - p.x, q.z - p.z) : Math.atan2(-p.x, -p.z); streetsDirty = true;
   clearArea(p.x, p.z, H.clear);
-  const g = new T.Group(); g.position.set(p.x, heightAt(p.x, p.z) - 0.1, p.z); g.rotation.y = Math.atan2(-p.x, -p.z);
+  const g = new T.Group(); g.position.set(p.x, heightAt(p.x, p.z) - 0.1, p.z); g.rotation.y = face;
   let roof = null;
   for (const [geo, mat, isRoof] of H.parts) { const m = new T.Mesh(geo, mat); m.castShadow = m.receiveShadow = true; g.add(m); if (isRoof) roof = m; }
   if (kind === 'chief') for (const sx of [-1, 1]) { const t = new T.Mesh(CHIEF.totem, TOTEM_MAT); t.position.set(sx * 1.1, 0, 3.0); t.castShadow = true; g.add(t); }
@@ -1756,6 +1766,30 @@ const ROMAN = {
 function theatreTier(r, w, h) { const s = new T.Shape(); s.absarc(0, 0, r + w, 0, Math.PI, false); s.lineTo(-r, 0); s.absarc(0, 0, r, Math.PI, 0, true); s.lineTo(r + w, 0); return new T.ExtrudeGeometry(s, { depth: h, bevelEnabled: false, curveSegments: 20 }).rotateX(-Math.PI / 2); }
 const THEATRE_MAT = lam('#b3a994');
 const ROAD_MAT = lam('#9b958a');
+// un point du grand rempart : sur la terre ferme, hors du côté mer, pas en montagne ni au ras de l'eau
+function rampOK(a, R) { const x = Math.cos(a) * R, z = Math.sin(a) * R, h = heightAt(x, z); return h >= 0.7 && h <= 10 && !seaSide(a, R) && [1.6, -1.6].every(d => heightAt(Math.cos(a) * (R + d), Math.sin(a) * (R + d)) >= 0.45); }
+// Tracé d'une voie : tout droit de la place jusqu'à la porte, puis, hors les murs, elle cherche pas à pas le terrain
+// le plus facile (pente douce, fond de vallée, vers la côte s'il y en a une) au lieu d'escalader les montagnes.
+// Elle s'arrête au rivage (le port) ou au bord de la carte. Chaque point : [x, hauteur, z, direction].
+function roadPath(a0) {
+  const STEP = 1.45, pts = [], R0 = colony.wallProf ? profR(colony.wallProf, a0) + 1.5 : 18;
+  for (let r = 5; r <= R0; r += STEP) { const x = Math.cos(a0) * r, z = Math.sin(a0) * r, h = heightAt(x, z); if (h > 0.35 && h < 9) pts.push([x, h, z, a0]); }
+  let x = Math.cos(a0) * R0, z = Math.sin(a0) * R0, dir = a0;
+  for (let n = 0; n < 60; n++) {
+    const h0 = heightAt(x, z); let best = null;
+    for (const d of [-0.6, -0.3, 0, 0.3, 0.6]) {
+      const a = dir + d, nx = x + Math.cos(a) * STEP, nz = z + Math.sin(a) * STEP, h = heightAt(nx, nz);
+      const away = Math.hypot(nx, nz) - Math.hypot(x, z);   // la route doit s'éloigner du village
+      let cost = Math.abs(h - h0) * 4 + Math.max(0, h - 3) * 0.6 + Math.abs(d) * 0.8 - away * 1.2;
+      if (COAST) cost -= ((nx - x) * COAST_X + (nz - z) * COAST_Z) * 0.35;   // attirée vers la mer et son port
+      if (h > 4.5) cost += 50;
+      if (!best || cost < best.cost) best = { a, nx, nz, h, cost };
+    }
+    if (best.h < 0.45 || best.h > 5 || Math.hypot(best.nx, best.nz) > 76) break;   // rivage (le port), pied des collines ou bord de carte
+    dir = best.a; x = best.nx; z = best.nz; pts.push([x, best.h, z, dir]);
+  }
+  return pts;
+}
 const BUILD_HOURS = { domus: 14, fanum: 12, thermes: 14, theatre: 16, church: 12, voie: 10, castrum: 20, hut: 8, house: 12, longhouse: 18, chief: 16, gaulish: 14, field: 3, pen: 4, menhir: 5, well: 4, granary: 6, palisade: 16, tumulus: 10, forge: 6, market: 5, rampart: 24, nemeton: 8, jetty: 5 };
 const BUILD_LABEL = { domus: 'Bâtit une maison de pierre', fanum: 'Élève le temple', thermes: 'Bâtit les thermes', theatre: 'Taille les gradins du théâtre', church: 'Bâtit l’église', voie: 'Pose les dalles de la voie', castrum: 'Élève une tour du castrum', jetty: 'Enfonce les pieux du ponton', gaulish: 'Bâtit une maison gauloise', rampart: 'Monte le rempart de l’oppidum', nemeton: 'Aménage le sanctuaire', hut: 'Construit une hutte', house: 'Bâtit une maison en torchis', longhouse: 'Bâtit une maison longue', chief: 'Bâtit la grande maison du chef', field: 'Prépare un champ', pen: 'Construit un enclos', menhir: 'Dresse un menhir', well: 'Creuse le puits', granary: 'Construit le grenier', palisade: 'Plante les pieux de la palissade', tumulus: 'Élève le tumulus', forge: 'Construit la forge', market: 'Monte les étals du marché' };
 const BUILD_DONE = { domus: 'Achève une maison de pierre à toit de tuiles.', fanum: 'Achève le fanum.', thermes: 'Allume le premier feu de l’hypocauste.', theatre: 'Pose le dernier gradin du théâtre.', church: 'Achève l’église.', voie: 'Pose la dernière dalle de la voie.', castrum: 'Achève la dernière tour du castrum.', jetty: 'Achève le ponton.', gaulish: 'Achève une maison gauloise.', rampart: 'Pose la dernière poutre du rempart.', nemeton: 'Plante le dernier poteau du sanctuaire.', hut: 'Achève une hutte.', house: 'Achève une maison en torchis.', longhouse: 'Achève une maison longue.', chief: 'Achève la grande maison du chef.', field: 'Prépare un nouveau champ.', pen: 'Achève l’enclos à moutons.', menhir: 'Dresse un menhir avec les autres.', well: 'Trouve l’eau au fond du puits.', granary: 'Achève le grenier sur pilotis.', palisade: 'Plante le dernier pieu de la palissade.', tumulus: 'Achève le tumulus des ancêtres.', forge: 'Allume le premier feu de la forge.', market: 'Ouvre le marché.' };
@@ -1853,13 +1887,14 @@ function circleProfile(cx, cz, R) {
   for (let i = 0; i < WALL_N; i++) { const a = i / WALL_N * Math.PI * 2, cu = cx * Math.cos(a) + cz * Math.sin(a); prof[i] = cu + Math.sqrt(Math.max(0, R * R - c2 + cu * cu)); }
   return prof;
 }
-function computeWallProfile() {
+// minR / maxR : bornes du rayon (le rempart de pierre est un cercle bien plus large que la palissade)
+function computeWallProfile(minR = 0, maxR = WALL_RMAX) {
   const pts = [...huts.map(h => [h.x, h.z, (HOME[h.kind] ? HOME[h.kind].clear : 3) + 1.5]), ...works.filter(w => !WALL_SKIP.includes(w.kind)).map(w => [w.x, w.z, (WORK_INFO[w.kind].clear || 2) + 1.5]),
     ...caves.map(c => [c.cx, c.cz, 5.5]), [FOODPILE.x, FOODPILE.z, 3], [WOODPILE.x, WOODPILE.z, 3], [0, 0, 8]];
   let best = null;
   for (let cx = -WALL_SHIFT; cx <= WALL_SHIFT; cx += 2) for (let cz = -WALL_SHIFT; cz <= WALL_SHIFT; cz += 2) {
     if (Math.hypot(cx, cz) > WALL_SHIFT) continue;
-    const R = clamp(pts.reduce((m, [x, z, r]) => Math.max(m, Math.hypot(x - cx, z - cz) + r + 2), 0), WALL_RMIN, WALL_RMAX);
+    const R = clamp(Math.max(minR, pts.reduce((m, [x, z, r]) => Math.max(m, Math.hypot(x - cx, z - cz) + r + 2), 0)), WALL_RMIN, maxR);
     let land = 0;
     for (let i = 0; i < 64; i++) { const a = i / 64 * Math.PI * 2, x = cx + Math.cos(a) * R, z = cz + Math.sin(a) * R, ar = Math.atan2(z, x), rr2 = Math.hypot(x, z); if (wallLand(ar, rr2) && !seaSide(ar, rr2)) land++; }
     const score = land / 64 - R * 0.004 - Math.hypot(cx, cz) * 0.002;
@@ -1906,9 +1941,11 @@ function makeGate(ram, gt) {
 }
 // enceinte active : le rempart de l'oppidum remplace la palissade
 function refreshWall() {
-  const ram = works.find(w => w.kind === 'rampart' && w.built), pal = works.find(w => w.kind === 'palisade' && w.built);
-  if (pal) pal.mesh.visible = !ram;
-  const w = ram || pal; WALL = w ? { prof: w.prof, gates: w.gates, open: w.open } : null;
+  const ram = works.find(w => w.kind === 'rampart' && w.built), pal = works.find(w => w.kind === 'palisade');
+  // le rempart achevé, la vieille palissade est démontée : la ville peut s'étendre jusqu'au grand cercle
+  if (ram && pal) { removeWork(pal); if (started) log('La vieille palissade est démontée : la ville peut s’étendre jusqu’au rempart.', 'good'); }
+  if (ram && colony.rampProf) { colony.wallProf = colony.rampProf.slice(); colony.wallGates = colony.rampGates.slice(); colony.palR = colony.wallProf.reduce((s, v) => s + v, 0) / colony.wallProf.length; }
+  const w = ram || (pal && pal.built ? pal : null); WALL = w ? { prof: w.prof, gates: w.gates, open: w.open } : null; streetsDirty = true;
 }
 function gateWaypoint(e, tx, tz) {
   if (!WALL.gates.length) return null;
@@ -1986,7 +2023,7 @@ function addWork(kind, at) {
     // la voie sort par la porte principale (et, s'il y en a une, ressort par la deuxième), dalle après dalle
     g.position.set(0, 0, 0);
     const angs = (colony.wallGates && colony.wallGates.length ? colony.wallGates.slice(0, 2) : [colony.roadA ?? 0.6]); colony.roadA = angs[0];
-    const pts = []; for (const a of angs) for (let r = 5; r <= 64; r += 1.45) { const x = Math.cos(a) * r, z = Math.sin(a) * r, h = heightAt(x, z); if (h > 0.35 && h < 9) pts.push([x, h, z, a]); }
+    const pts = []; for (const a of angs) pts.push(...roadPath(a));
     const slabs = new T.InstancedMesh(ROMAN.slab, ROAD_MAT, Math.max(1, pts.length));
     pts.forEach(([x, h, z, a], i) => { _q.setFromAxisAngle(UP, Math.atan2(Math.cos(a), Math.sin(a))); _p.set(x, h + 0.03, z); _s.set(1, 1, 1); slabs.setMatrixAt(i, _m.compose(_p, _q, _s)); for (const t of trees) if (t.state !== 'gone' && Math.hypot(t.x - x, t.z - z) < 2) setTreeState(t, 'gone'); });
     slabs.receiveShadow = true; slabs.frustumCulled = false; g.add(slabs);
@@ -2000,7 +2037,8 @@ function addWork(kind, at) {
     const gates = (wall && wall.gates) || [], spots = [];
     for (const gt of gates) for (const sgn of [-1, 1]) spots.push(gt.a + sgn * 3.4 / gt.R);
     const n = Math.floor(Math.PI * 2 * (colony.palR || 24) / 13); for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2; if (spots.every(b => angDiff(a, b) * (colony.palR || 24) > 6)) spots.push(a); }
-    const ok = spots.map(a => [a, profR(prof, a)]).filter(([a, R]) => wallLand(a, R) && !seaSide(a, R));
+    // une tour seulement là où le mur existe, de part et d'autre (pas de tour isolée au bord d'un lac)
+    const ok = spots.map(a => [a, profR(prof, a)]).filter(([a, R]) => [-0.06, 0, 0.06].every(d => rampOK(a + d, profR(prof, a + d))));
     const body = new T.InstancedMesh(ROMAN.tower, RSTONE, ok.length || 1), band = new T.InstancedMesh(ROMAN.towerBand, BRICK, (ok.length || 1) * 2), roofI = new T.InstancedMesh(ROMAN.towerRoof, TILE, ok.length || 1);
     ok.forEach(([a, R], i) => { const x = Math.cos(a) * R, z = Math.sin(a) * R, h = heightAt(x, z); _q.identity(); _s.set(1, 1, 1);
       _p.set(x, h - 0.2, z); body.setMatrixAt(i, _m.compose(_p, _q, _s)); roofI.setMatrixAt(i, _m.compose(_p, _q, _s));
@@ -2014,7 +2052,9 @@ function addWork(kind, at) {
     const ram = kind === 'rampart';
     // tracé et portes calculés une fois (à la palissade) puis conservés ; le rempart reprend le même tracé, 2 m plus loin
     if (!colony.wallProf) { const pr = computeWallProfile(); colony.wallProf = Array.from(pr, v => Math.round(v * 100) / 100); colony.wallGates = chooseGates(pr); colony.palR = pr.reduce((s, v) => s + v, 0) / pr.length; }
-    const Rb = colony.palR + (ram ? 2 : 0), prof = Float32Array.from(colony.wallProf, v => v + (ram ? 2 : 0)), gates = wallGates(prof, colony.wallGates);
+    // le rempart de pierre : un nouveau cercle, une fois et demie plus large que la palissade, avec ses propres portes
+    if (ram && !colony.rampProf) { const pr = computeWallProfile(Math.max(30, (colony.palR || 24) * 1.4), 44); colony.rampProf = Array.from(pr, v => Math.round(v * 100) / 100); colony.rampGates = chooseGates(pr); }
+    const prof = Float32Array.from(ram ? colony.rampProf : colony.wallProf), gates = wallGates(prof, ram ? colony.rampGates : colony.wallGates), Rb = prof.reduce((s, v) => s + v, 0) / prof.length;
     w.prof = prof; w.gates = gates;
     w.open = Uint8Array.from(prof, (R, i) => { const a = i / prof.length * Math.PI * 2; return seaSide(a, R) || !wallLand(a, R) ? 1 : 0; });
     const spacing = ram ? 1.1 : 0.45, halfGap = ram ? 2.3 : 1.35, n = Math.floor(Math.PI * 2 * Rb / spacing);
@@ -2023,6 +2063,8 @@ function addWork(kind, at) {
       const a = i / n * Math.PI * 2, R = profR(prof, a);
       if (gates.some(gt => angDiff(a, gt.a) * R < halfGap)) continue;
       const x = Math.cos(a) * R, z = Math.sin(a) * R, h = heightAt(x, z); if (h < 0.45 || h > 10 || seaSide(a, R)) continue;
+      // le rempart s'arrête avant la rive : jamais les pieds dans l'eau
+      if (ram && !rampOK(a, R)) continue;
       for (const t of trees) if (t.state !== 'gone' && Math.abs(t.x - x) < 1.2 && Math.abs(t.z - z) < 1.2) setTreeState(t, 'gone');
       // orientation : le long du tracé (tangente estimée sur le profil)
       const R2 = profR(prof, a + 0.01), tx = Math.cos(a + 0.01) * R2 - x, tz = Math.sin(a + 0.01) * R2 - z;
@@ -2332,8 +2374,8 @@ function completeSite(s) {
   s.built = true; syncSite(s);
   if (s.kind === 'palisade' || s.kind === 'rampart') { refreshWall(); milestone('build:' + s.kind, 0, 0); }
   else if (s.kind !== 'field') milestone('build:' + s.kind, s.x, s.z);
-  if (s.kind === 'gaulish') log('Une maison gauloise est terminée : +8 places.', 'good');
-  else if (s.kind === 'domus') log('Une maison de pierre à toit de tuiles est terminée : +10 places.', 'good');
+  if (s.kind === 'gaulish') log('Une maison gauloise est terminée : +6 places.', 'good');
+  else if (s.kind === 'domus') log('Une maison de pierre à toit de tuiles est terminée : +7 places.', 'good');
   else if (s.kind === 'fanum') log('Le fanum est consacré aux dieux de la cité.', 'good');
   else if (s.kind === 'thermes') log('Les thermes ouvrent : bains chauds, tièdes et froids pour tous.', 'good');
   else if (s.kind === 'theatre') log('Le théâtre est achevé : on y donnera des jeux et des chants.', 'good');
@@ -2345,7 +2387,7 @@ function completeSite(s) {
   else if (s.kind === 'nemeton') log('Le sanctuaire des druides est consacré.', 'good');
   else if (s.kind === 'hut') log('Une nouvelle hutte est terminée : +3 places au camp.', 'good');
   else if (s.kind === 'house') log('Une maison en torchis est terminée : +5 places au village.', 'good');
-  else if (s.kind === 'longhouse') log('Une maison longue est terminée : +10 places au village.', 'good');
+  else if (s.kind === 'longhouse') log('Une maison longue est terminée : +8 places au village.', 'good');
   else if (s.kind === 'chief') { log('La grande maison du chef est terminée.', 'good'); electChief(); }
   else if (s.kind === 'well') log('Le puits donne une eau claire : moins de maladies au village.', 'good');
   else if (s.kind === 'granary') log('Le grenier sur pilotis protège les récoltes des rongeurs et de l’humidité.', 'good');
@@ -2357,29 +2399,166 @@ function completeSite(s) {
   else if (s.kind === 'pen') { for (let i = 0; i < 3; i++) spawnSheep(s.x + rr(-1.5, 1.5), s.z + rr(-1.5, 1.5)); log('L’enclos est prêt : trois moutons sauvages y sont rassemblés.', 'good'); }
   else if (s.kind === 'menhir') {
     const n = builtMenhirs();
-    if (n >= MENHIR_COUNT) { colony.mood += 15; colony.mana = 100; colony.cromlechDeco = false; addCromlechDeco(); log('Le cercle de pierres est achevé. La tribu danse au milieu des menhirs.', 'power'); if (colony.cromlech) milestone('cromlech', colony.cromlech.x, colony.cromlech.z); }
+    if (n >= MENHIR_COUNT) { colony.mood += 15; colony.mana = 100; colony.cromlechDeco = false; addCromlechDeco(); log('Le cercle de pierres est achevé. La tribu danse au milieu des menhirs.', 'power'); if (colony.cromlech) cromlechCeremony(colony.cromlech); }
     else log(`Un menhir est dressé (${n} sur ${MENHIR_COUNT}).`, 'good');
   }
 }
+const HOME_ORDER = ['hut', 'house', 'longhouse', 'gaulish', 'domus'];
+const HOME_LABEL = { hut: 'une hutte', house: 'une maison en torchis', longhouse: 'une maison longue', gaulish: 'une maison gauloise', domus: 'une maison de pierre à toit de tuiles' };
+// retire un ouvrage (remplacé par un autre ou démonté)
+function removeWork(w) {
+  w.gone = true; scene.remove(w.mesh); const i = works.indexOf(w); if (i >= 0) works.splice(i, 1);
+  for (const v of villagers) if (v.task && v.task.site === w) endTask(v);
+}
 function destroyHut(h) {
-  h.gone = true; scene.remove(h.mesh); huts.splice(huts.indexOf(h), 1);
+  streetsDirty = true; h.gone = true; scene.remove(h.mesh); huts.splice(huts.indexOf(h), 1);
   for (const v of villagers) if (v.hut === h) v.hut = null;
   for (const v of villagers) if (v.task && v.task.site === h) endTask(v);
 }
 function manageSites() {
-  updateCaveRoles(); syncCaveDeco();
+  updateCaveRoles(); syncCaveDeco(); syncTown();
   const homeKind = tech.tuiles ? 'domus' : tech.oppidum ? 'gaulish' : tech.maisonlongue ? 'longhouse' : tech.torchis ? 'house' : 'hut';
-  if (tech.huttes && huts.length < (tech.tuiles ? 30 : 24) && !huts.some(h => !h.built) && (tech.torchis ? homesCap() : housingCap()) < villagers.length + 4 && villagers.length < popMax()) addHutSite(null, homeKind);
-  // les vieilles maisons sont peu à peu rebâties en pierre et tuiles, sans jamais laisser personne sans toit
-  if (tech.tuiles && !huts.some(h => !h.built) && Math.random() < 0.08) {
-    const old = huts.filter(h => h.built && h.kind !== 'domus' && h.kind !== 'chief').sort((a, b) => (HOME[a.kind].cap - HOME[b.kind].cap))[0];
-    if (old && homesCap() - old.cap >= villagers.length) { const at = { x: old.x, z: old.z }; destroyHut(old); addHutSite(at, 'domus'); assignHuts(); log('Une vieille maison est rebâtie en pierre, avec un toit de tuiles.', 'good'); }
+  if (tech.huttes && huts.length < (tech.tuiles ? 30 : 24) && !huts.some(h => !h.built && !h.rebuild) && (tech.torchis ? homesCap() : housingCap()) < villagers.length + 4 && villagers.length < popMax()) addHutSite(null, homeKind);
+  // à chaque âge, les maisons d'un style dépassé sont rebâties une à une dans le nouveau style (huttes → torchis →
+  // maisons longues → maisons gauloises → pierre et tuiles), sur place si la parcelle suffit : le village change
+  // d'aspect sans s'étaler, et personne ne se retrouve sans toit
+  if (tech.huttes && !huts.some(h => !h.built) && Math.random() < 0.1) {
+    const rank = k => HOME_ORDER.indexOf(k), now = rank(homeKind);
+    const old = huts.filter(h => h.built && h.kind !== 'chief' && rank(h.kind) < now).sort((a, b) => rank(a.kind) - rank(b.kind))[0];
+    if (old && housingCap() - old.cap >= villagers.length + 2) {
+      const at = { x: old.x, z: old.z }, room = HOME[homeKind].clear;
+      const fits = !huts.some(h => h !== old && Math.hypot(h.x - at.x, h.z - at.z) < room + HOME[h.kind].clear * 0.8) && !works.some(w => !WALL_SKIP.includes(w.kind) && Math.hypot(w.x - at.x, w.z - at.z) < room + (WORK_INFO[w.kind].clear || 2) * 0.8);
+      const n = huts.length; destroyHut(old); addHutSite(fits ? at : null, homeKind); if (huts.length >= n) huts[huts.length - 1].rebuild = true; assignHuts();
+      log(`${cap1(HOME_LABEL[old.kind])} laisse place à ${HOME_LABEL[homeKind]}.`, 'good');
+    }
   }
   const maxF = maxFields();
   if (tech.agri && fields.length < maxF && !fields.some(f => !f.built) && fields.length < Math.max(2, Math.ceil(villagers.length / (tech.araire ? 2.5 : 3)))) addFieldSite();
   // les ouvrages débloqués par les savoirs sont mis en chantier par la tribu elle-même ; le bois est payé au début du chantier
   for (const B of AUTO_WORKS) if (B.need() && !(B.done ? B.done() : has1(B.kind)) && !(B.can && !B.can())) placeBuild(B.kind);
 }
+// ================= La ville : quartiers, rues et place centrale =================
+// Le village grandit par quartiers : chacun a sa petite place (un puits) et ses maisons tournées vers elle.
+// Un quartier de plus à chaque âge, jusqu'à cinq dans la ville gallo-romaine. Des rues relient la place centrale
+// aux quartiers et aux portes : terre battue, puis empierrées à l'âge du fer, puis dallées à l'époque romaine.
+// Au centre, le feu de camp devient la place publique de l'oppidum (étals, bassin), puis le forum romain.
+const QUARTER_HOMES = 3;
+const quarterMax = () => tech.pax ? 5 : tech.oppidum ? 4 : tech.bronze ? 3 : tech.village ? 2 : 1;
+const centerStage = () => tech.pax ? 'forum' : tech.oppidum ? 'place' : 'fire';
+function PLAZA_R() { return { forum: 4.6, place: 4.2, fire: 3 }[centerStage()]; }
+const QUARTER_NAMES = ['le cœur du village', 'le quartier du puits', 'le quartier des artisans', 'le quartier du marché', 'le quartier neuf'];
+function quarters() { if (!colony.quarters) colony.quarters = [{ x: 0, z: 0, i: 0 }]; return colony.quarters; }
+const nearestQuarter = (x, z) => quarters().reduce((b, q) => Math.hypot(q.x - x, q.z - z) < Math.hypot(b.x - x, b.z - z) ? q : b);
+const quarterHomes = q => huts.filter(h => nearestQuarter(h.x, h.z) === q).length;
+// emplacement d'une maison : dans le quartier le moins peuplé, tournée vers sa place
+function homeSpot(H) {
+  for (const q of quarters().slice().sort((a, b) => quarterHomes(a) - quarterHomes(b))) {
+    const p = q.i ? findSpot(3.6, 9, H.spot, true, q.x, q.z) : findSpot(6.5, 11 + quarterHomes(q) * 0.9, H.spot, true);
+    if (p) return p;
+  }
+  return null;
+}
+// un nouveau quartier quand les autres sont pleins
+function growQuarters() {
+  const Q = quarters();
+  if (Q.length >= quarterMax() || Q.some(q => q.i && quarterHomes(q) < QUARTER_HOMES) || huts.length < Q.length * QUARTER_HOMES) return false;
+  const maxR = colony.wallProf ? Math.min(...colony.wallProf) - 7 : 26;
+  for (let k = 0; k < 60; k++) {
+    const p = findSpot(13, Math.max(15, maxR), 6, true); if (!p) continue;
+    if (Q.some(q => Math.hypot(q.x - p.x, q.z - p.z) < 13)) continue;
+    Q.push({ x: p.x, z: p.z, i: Q.length }); clearArea(p.x, p.z, 3);
+    log(`La ville s’agrandit : ${QUARTER_NAMES[Q.length - 1] || 'un nouveau quartier'} commence à se bâtir.`, 'good');
+    streetsDirty = true; return true;
+  }
+  return false;
+}
+// ---- rues ----
+let STREETS = [], streetsDirty = true, streetStyle = '', streetGroup = null, quarterDeco = [];
+const STREET_MAT = { dirt: lam('#8a7352'), gravel: lam('#a39a86'), paved: lam('#a8a296') };
+const streetKind = () => tech.pax ? 'paved' : tech.fer ? 'gravel' : 'dirt';
+// tracé un peu sinueux entre deux points (les rues anciennes ne sont pas tirées au cordeau, sauf à l'époque romaine)
+function streetLine(ax, az, bx, bz, w) {
+  const L = Math.hypot(bx - ax, bz - az), n = Math.max(2, Math.ceil(L / 1.3)), nx = -(bz - az) / (L || 1), nz = (bx - ax) / (L || 1);
+  const bend = tech.pax ? 0 : (hash(Math.round(ax * 7 + bx), Math.round(az * 7 + bz)) - 0.5) * L * 0.18, pts = [];
+  for (let i = 0; i <= n; i++) { const t = i / n, s = Math.sin(t * Math.PI) * bend; pts.push([ax + (bx - ax) * t + nx * s, az + (bz - az) * t + nz * s]); }
+  return { pts, w };
+}
+function computeStreets() {
+  if (!tech.village) return [];
+  const S = [], Q = quarters(), gates = (WALL && WALL.gates) || [];
+  // grandes rues : de la place aux portes
+  for (const g of gates) S.push(streetLine(Math.cos(g.a) * PLAZA_R(), Math.sin(g.a) * PLAZA_R(), g.x * 0.97, g.z * 0.97, 2));
+  // rues de quartier : de la place centrale à chaque petite place, puis vers la porte la plus proche
+  for (const q of Q) if (q.i) {
+    const a = Math.atan2(q.z, q.x); S.push(streetLine(Math.cos(a) * PLAZA_R(), Math.sin(a) * PLAZA_R(), q.x, q.z, 1.5));
+    const g = gates.slice().sort((p, r) => Math.hypot(p.x - q.x, p.z - q.z) - Math.hypot(r.x - q.x, r.z - q.z))[0];
+    if (g && Math.hypot(g.x - q.x, g.z - q.z) < 26) S.push(streetLine(q.x, q.z, g.x * 0.97, g.z * 0.97, 1.3));
+  }
+  return S;
+}
+function onStreet(x, z, margin) {
+  for (const s of STREETS) for (let i = 1; i < s.pts.length; i++) { const [ax, az] = s.pts[i - 1], [bx, bz] = s.pts[i]; if (segDist(x, z, ax, az, bx, bz) < s.w / 2 + margin) return true; }
+  return false;
+}
+function syncStreets() {
+  const kind = streetKind();
+  if (!streetsDirty && kind === streetStyle) return;
+  streetsDirty = false; streetStyle = kind; STREETS = computeStreets();
+  if (streetGroup) { scene.remove(streetGroup); streetGroup.traverse(o => o.geometry && o.geometry.dispose()); }
+  streetGroup = new T.Group(); scene.add(streetGroup);
+  const cells = [];
+  for (const s of STREETS) for (let i = 1; i < s.pts.length; i++) {
+    const [ax, az] = s.pts[i - 1], [bx, bz] = s.pts[i], x = (ax + bx) / 2, z = (az + bz) / 2, h = heightAt(x, z);
+    if (h < 0.4 || h > 9) continue;
+    // la rue passe entre les maisons : pas de dalle sous un bâtiment
+    if (huts.some(o => Math.hypot(o.x - x, o.z - z) < (HOME[o.kind] ? HOME[o.kind].clear : 3) * 0.75)) continue;
+    cells.push([x, h, z, Math.atan2(bx - ax, bz - az), Math.hypot(bx - ax, bz - az) + 0.25, s.w]);
+  }
+  const geo = new T.BoxGeometry(1, 0.08, 1), im = new T.InstancedMesh(geo, STREET_MAT[kind], Math.max(1, cells.length));
+  cells.forEach(([x, h, z, r, len, w], i) => { _q.setFromAxisAngle(UP, r); _p.set(x, h + 0.02, z); _s.set(w, 1, len); im.setMatrixAt(i, _m.compose(_p, _q, _s)); });
+  im.count = cells.length; im.receiveShadow = true; im.frustumCulled = false; streetGroup.add(im);
+  // la petite place de chaque quartier : un puits de pierre
+  for (const q of quarters()) if (q.i) {
+    const g = new T.Group(), y = heightAt(q.x, q.z); g.position.set(q.x, y, q.z);
+    const sq = new T.Mesh(new T.CylinderGeometry(2.4, 2.4, 0.06, 14), STREET_MAT[kind]); sq.position.y = 0.03; sq.receiveShadow = true; g.add(sq);
+    g.add(Object.assign(new T.Mesh(WELL.ring, STONE2), { castShadow: true })); g.add(new T.Mesh(WELL.water, WATER_MAT));
+    streetGroup.add(g);
+  }
+}
+// ---- la place centrale ----
+let centerShown = '', centerGroup = null;
+function syncCenter() {
+  const st = centerStage(); if (st !== 'fire') colony.fireLit = true; if (st === centerShown) return;
+  centerShown = st;
+  if (centerGroup) { scene.remove(centerGroup); centerGroup = null; }
+  const fireOn = st === 'fire';
+  fireGroup.visible = fireOn; foodPile.visible = woodPile.visible = fireOn;
+  if (!fireOn) colony.fireLit = true;   // chaque maison a désormais son propre foyer
+  if (fireOn) return;
+  const g = new T.Group(); g.position.set(0, campY, 0); centerGroup = g; scene.add(g);
+  const add = (geo, mat, x, y, z, ry = 0) => { const m = new T.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = m.receiveShadow = true; g.add(m); return m; };
+  if (st === 'place') {
+    // place publique de l'oppidum : sol de gravier, bassin de pierre au milieu, étals autour
+    add(new T.CylinderGeometry(4.4, 4.4, 0.08, 20), STREET_MAT.gravel, 0, 0.02, 0);
+    add(new T.CylinderGeometry(1.3, 1.4, 0.45, 12), STONE2, 0, 0.22, 0); add(new T.CylinderGeometry(1.1, 1.1, 0.06, 12), WATER_MAT, 0, 0.42, 0);
+    [[2.9, 0.6], [-2.6, -1.4], [0.4, -3.1]].forEach(([x, z], i) => {
+      const s = new T.Group(); s.position.set(x, 0, z); s.rotation.y = Math.atan2(-x, -z);
+      for (const [px, pz] of [[-.65, -.5], [.65, -.5], [-.65, .5], [.65, .5]]) { const m = new T.Mesh(STALL.post, PEN_WOOD); m.position.set(px, 0, pz); s.add(m); }
+      const aw = new T.Mesh(STALL.awning, AWNINGS[i]); aw.position.y = 1.42; s.add(aw); s.add(new T.Mesh(STALL.counter, PEN_WOOD)); g.add(s);
+    });
+    milestone('center:place', 0, 0);
+  } else {
+    // forum : place dallée bordée de portiques, basilique au fond, petit temple en face
+    add(new T.BoxGeometry(8.4, 0.1, 6.4), STREET_MAT.paved, 0, 0.03, 0);
+    for (let i = 0; i < 8; i++) for (const z of [-3, 3]) add(ROMAN.column, PLASTER, -3.6 + i * 1.03, -0.3, z);
+    add(new T.BoxGeometry(8.6, 0.16, 1.2), TILE, 0, 1.55, -3.1); add(new T.BoxGeometry(8.6, 0.16, 1.2), TILE, 0, 1.55, 3.1);
+    add(new T.BoxGeometry(1.8, 2.2, 5).translate(0, 1.1, 0), PLASTER, -4.9, 0, 0); add(new T.BoxGeometry(2.1, 0.5, 5.4).translate(0, 2.45, 0), TILE, -4.9, 0, 0);
+    add(new T.BoxGeometry(1.6, 1.8, 1.8).translate(0, 0.9, 0), PLASTER, 4.6, 0, 0); add(new T.ConeGeometry(1.4, 0.8, 4).rotateY(Math.PI / 4).translate(0, 2.2, 0), TILE, 4.6, 0, 0);
+    milestone('center:forum', 0, 0);
+  }
+}
+function syncTown() { syncCenter(); if (started) growQuarters(); syncStreets(); }
+
 // ---- grands ouvrages : la tribu les met en chantier d'elle-même dès que le savoir le permet ----
 const maxFields = () => tech.araire ? 12 : 8;
 const PLACE = { pen: [14, 22, 7], well: [4.5, 9, 3], granary: [6, 12, 4], tumulus: [18, 28, 7], forge: [7, 13, 4], market: [6, 12, 5], nemeton: [16, 28, 7], fanum: [8, 16, 5], thermes: [6, 14, 4.5], theatre: [18, 34, 8], church: [6, 14, 4.2] };
@@ -2388,10 +2567,10 @@ const AUTO_WORKS = [
   { kind: 'chief', need: () => tech.chefferie, done: () => huts.some(h => h.kind === 'chief') },
   { kind: 'pen', need: () => tech.elevage }, { kind: 'well', need: () => tech.puits }, { kind: 'granary', need: () => tech.grenier },
   { kind: 'menhirs', need: () => tech.megalithes, done: () => works.filter(w => w.kind === 'menhir').length >= MENHIR_COUNT },
-  { kind: 'tumulus', need: () => tech.sepultures }, { kind: 'palisade', need: () => tech.palissade }, { kind: 'forge', need: () => tech.cuivre },
+  { kind: 'tumulus', need: () => tech.sepultures }, { kind: 'palisade', need: () => tech.palissade && !has1('rampart') }, { kind: 'forge', need: () => tech.cuivre },
   { kind: 'market', need: () => tech.commerce }, { kind: 'jetty', need: () => tech.commerce, can: () => !!jettySpot() },
   { kind: 'nemeton', need: () => tech.druides && !tech.fanum }, { kind: 'rampart', need: () => tech.oppidum }, { kind: 'voie', need: () => tech.voie },
-  { kind: 'fanum', need: () => tech.fanum }, { kind: 'thermes', need: () => tech.thermes }, { kind: 'theatre', need: () => tech.theatre },
+  { kind: 'fanum', need: () => tech.fanum && !tech.christ }, { kind: 'thermes', need: () => tech.thermes }, { kind: 'theatre', need: () => tech.theatre },
   { kind: 'castrum', need: () => tech.castrum, can: () => works.some(w => (w.kind === 'rampart' || w.kind === 'palisade') && w.built) },
   { kind: 'church', need: () => tech.christ },
 ];
@@ -2400,6 +2579,9 @@ function placeBuild(kind) {
   if (kind === 'chief') { const n = huts.length; addHutSite(null, 'chief'); return huts.length > n; }
   if (kind === 'palisade' || kind === 'rampart' || kind === 'voie' || kind === 'castrum') return !!addWork(kind, { x: 0, z: 0 });
   if (kind === 'jetty') { const s = jettySpot(); return !!(s && addWork('jetty', s)); }
+  // les lieux sacrés évoluent sur place : le bois sacré des druides devient fanum, puis le fanum devient église
+  const old = kind === 'fanum' ? works.find(w => w.kind === 'nemeton') : kind === 'church' ? works.find(w => w.kind === 'fanum') || works.find(w => w.kind === 'nemeton') : null;
+  if (old) { const at = { x: old.x, z: old.z }; removeWork(old); log(kind === 'fanum' ? 'Le bois sacré des druides cède la place au fanum.' : 'Le vieux sanctuaire est fermé : une église s’élève à sa place.', 'power'); return !!addWork(kind, at); }
   if (kind === 'menhirs') {
     // un terrain dégagé pour le cercle : d'abord près du village, sinon plus loin (jusqu'au pied des collines)
     if (!colony.cromlech) { const c = findSpot(16, 26, 9) || findSpot(12, 36, 8) || findSpot(10, 46, 7); if (c) { colony.cromlech = c; clearArea(c.x, c.z, 6.5); } }
@@ -2547,6 +2729,35 @@ function setTreeState(tr, st) {
 function ignite(tr) { if (tr.state === 'alive' && !inRain(tr.x, tr.z)) setTreeState(tr, 'burning'); }
 
 // ================= Effets visuels =================
+// Cérémonie du cercle de pierres achevé : la tribu se rassemble et danse en rond, la lumière monte des sept pierres,
+// un anneau doré s'élargit, des étincelles s'élèvent en spirale, sur un chant grave et des cloches. L'écran
+// « une première » ne s'ouvre qu'à la fin, pour laisser voir la scène.
+const BEAM_MAT = new T.MeshBasicMaterial({ color: '#ffe3a0', transparent: true, opacity: 0, depthWrite: false, blending: T.AdditiveBlending });
+let ceremonyOn = false;
+function cromlechCeremony(c) {
+  if (!started) { milestone('cromlech', c.x, c.z); return; }
+  ceremonyOn = true;
+  const y0 = Math.max(heightAt(c.x, c.z), 0), stones = works.filter(w => w.kind === 'menhir');
+  cam.follow = false; cam.tx = c.x; cam.tz = c.z; cam.dist = 24;
+  // la tribu vient danser autour du cercle
+  villagers.filter(v => v.alive && !v.inBoat).forEach((v, i, all) => { endTask(v); const a = i / all.length * Math.PI * 2; v.task = { type: 'pray', tx: c.x + Math.cos(a) * 6.4, tz: c.z + Math.sin(a) * 6.4, dur: 9 }; });
+  const g = new T.Group(); scene.add(g);
+  const beams = stones.map(s => { const m = new T.Mesh(new T.CylinderGeometry(0.35, 0.75, 22, 10, 1, true).translate(0, 11, 0), BEAM_MAT.clone()); m.position.set(s.x, heightAt(s.x, s.z), s.z); g.add(m); return m; });
+  const ringM = new T.Mesh(new T.RingGeometry(0.9, 1.3, 48).rotateX(-Math.PI / 2), BEAM_MAT.clone()); ringM.position.set(c.x, y0 + 0.15, c.z); g.add(ringM);
+  const glow = new T.PointLight(0xffd27a, 0, 30, 1.4); glow.position.set(c.x, y0 + 3, c.z); g.add(glow);
+  sfx('mystic');
+  let sparkT = 0;
+  effects.push({ age: 0, update(dt) {
+    this.age += dt; const t = this.age, up = smooth(0.5, 2.5, t) * (1 - smooth(7, 9, t));
+    beams.forEach((b, i) => { b.material.opacity = 0.42 * up * (0.75 + 0.25 * Math.sin(t * 3 + i)); b.scale.set(1, 0.3 + 0.7 * smooth(0.3, 2.8, t), 1); });
+    const rr2 = 1 + (t % 3) * 4.5; ringM.scale.setScalar(rr2); ringM.material.opacity = 0.55 * up * (1 - (t % 3) / 3);
+    glow.intensity = 3.2 * up;
+    sparkT -= dt;
+    if (sparkT <= 0 && t < 7.5) { sparkT = 0.25; const a = t * 2.2, r = 2.6; burst(c.x + Math.cos(a) * r, y0 + 0.6, c.z + Math.sin(a) * r, '#f6d88a', 14, { spread: 0.6, up: 6, life: 1.8, size: 0.45, gravity: -0.6 }); }
+    if (t >= 9.5) { scene.remove(g); g.traverse(o => o.geometry && o.geometry.dispose()); ceremonyOn = false; milestone('cromlech', c.x, c.z); flushSplash(); return false; }
+    return true;
+  } });
+}
 function burst(x, y, z, color, n, o = {}) {
   const spread = o.spread ?? 3, up = o.up ?? 4, life = o.life ?? 1.6;
   const geo = new T.BufferGeometry(), pos = new Float32Array(n * 3), vel = new Float32Array(n * 3);
@@ -2584,7 +2795,7 @@ function startRain(x, z, opt = {}) {
   if (snow) return;
   // effets immédiats
   for (const t of trees) if (t.state === 'burning' && Math.hypot(t.x - x, t.z - z) < R) setTreeState(t, t.burn >= 3 ? 'ash' : 'alive');
-  if (!opt.natural && colony.fireLit && Math.hypot(x, z) < R) { colony.fireLit = false; log('La pluie a noyé le feu de camp. Il faudra 3 bois pour le rallumer.', 'bad'); }
+  if (!opt.natural && colony.fireLit && centerStage() === 'fire' && Math.hypot(x, z) < R) { colony.fireLit = false; log('La pluie a noyé le feu de camp. Il faudra 3 bois pour le rallumer.', 'bad'); }
 }
 function updateRains(dt, simOn) {
   const wx = Math.cos(weather.windDir) * weather.wind * 7, wz = Math.sin(weather.windDir) * weather.wind * 7;
@@ -2671,7 +2882,7 @@ const TECHS = [
   { id: 'puits', name: 'Puits', tier: 5, cost: 24, year: -6500, req: ['torchis'], desc: 'Un puits au cœur du village (8 bois) : deux fois moins de contagion, plus de bien-être.' },
   { id: 'tissage', name: 'Tissage', tier: 5, cost: 28, year: -6000, req: ['elevage'], desc: 'Laine et lin : un champ de lin bleu, des vêtements chauds, le froid fait moins de mal.' },
   { id: 'grenier', name: 'Greniers sur pilotis', tier: 6, cost: 32, year: -5800, req: ['meule'], desc: 'Un grenier (15 bois) : +80 de réserve de nourriture, deux fois moins de pertes.' },
-  { id: 'maisonlongue', name: 'Maisons longues', tier: 6, cost: 36, year: -5500, req: ['torchis'], desc: 'Grandes maisons danubiennes de 10 places (35 bois) : la population peut croître.' },
+  { id: 'maisonlongue', name: 'Maisons longues', tier: 6, cost: 36, year: -5500, req: ['torchis'], desc: 'Grandes maisons danubiennes de 8 places (35 bois) : la population peut croître.' },
   { id: 'palissade', name: 'Palissade', tier: 6, cost: 34, year: -5000, req: ['torchis'], desc: 'Une enceinte de pieux (30 bois) autour du village : loups et pillards sont mieux repoussés.' },
   { id: 'fetes', name: 'Fête des moissons', tier: 6, cost: 30, year: -5000, req: ['meule'], desc: 'Coutume : tous les 10 jours, une grande fête. Bien-être, naissances, 10 nourriture partagée.' },
   { id: 'sepultures', name: 'Tumulus et sépultures', tier: 6, cost: 30, year: -4800, req: ['village'], desc: 'Coutume : les morts reposent dans un tumulus. Deuil plus doux, les ancêtres donnent du mana.' },
@@ -2695,7 +2906,7 @@ const TECHS = [
   { id: 'pax', name: 'Paix romaine', tier: 12, cost: 100, year: -27, req: ['rome'], desc: 'Auguste organise la Gaule : les raids se font rares, mais le collecteur de la cité prélève l’impôt sur les réserves. Le chef devient magistrat.' },
   { id: 'voie', name: 'Voie romaine', tier: 12, cost: 100, year: -20, req: ['pax'], desc: 'Une route empierrée traverse le village, avec sa borne milliaire : on marche plus vite, les marchands passent plus souvent.' },
   { id: 'latin', name: 'Latin et écriture', tier: 12, cost: 90, year: 10, req: ['pax'], desc: 'Tablettes de cire, inscriptions sur pierre : le savoir s’accumule 30 % plus vite. Un scribe tient les comptes.' },
-  { id: 'tuiles', name: 'Tuiles et mortier', tier: 12, cost: 110, year: 30, req: ['voie'], desc: 'Maisons de pierre à toit de tuiles rouges (35 bois, 10 places) : elles remplacent le chaume, et la population peut encore grandir.' },
+  { id: 'tuiles', name: 'Tuiles et mortier', tier: 12, cost: 110, year: 30, req: ['voie'], desc: 'Maisons de pierre à toit de tuiles rouges (30 bois, 7 places) : elles remplacent le chaume, et la population peut encore grandir.' },
   { id: 'fanum', name: 'Fanum gallo-romain', tier: 12, cost: 110, year: 50, req: ['latin', 'tuiles'], desc: 'Un temple carré à galerie (25 bois) pour les dieux gaulois et romains. Le druidisme est interdit par l’empereur Claude : le druide devient prêtre.' },
   { id: 'vallus', name: 'Moissonneuse gauloise', tier: 12, cost: 90, year: 60, req: ['voie'], desc: 'Le vallus, décrit par Pline : une caisse à dents poussée par un bœuf. Les champs rapportent 30 % de plus.' },
   { id: 'thermes', name: 'Thermes et aqueduc', tier: 12, cost: 120, year: 80, req: ['tuiles'], desc: 'Bains chauds, tièdes et froids (30 bois), eau courante amenée par un aqueduc : bien moins d’épidémies, meilleure santé.' },
@@ -2715,7 +2926,7 @@ const canResearch = t => !tech[t.id] && t.req.every(r => tech[r]) && !(t.need &&
 function research(id) {
   const t = TECH[id]; if (!t || !canResearch(t)) return;
   sfx(ERA_TEXT[id] || id === 'village' ? 'era' : 'tech');
-  colony.know -= t.cost; tech[id] = true; colony.lastTech = id;
+  colony.know -= t.cost; tech[id] = true; colony.lastTech = id; onPower('savoir', {});
   const eraBefore = eraName();
   colony.year = Math.max(colony.year + (tech.pax ? 10 : 150), t.year);   // l'Antiquité est datée finement
   log(`La tribu découvre : ${t.name}. Nous voici en ${yearText(colony.year)}.`, 'know');
@@ -2838,11 +3049,16 @@ function triggerEvent() {
 // mais ne rase jamais le village.
 let raid = null;
 const raiders = [];
-const RAIDER_MAT = lam('#2a2420'), PAINT_MAT = lam('#a33a1f');
+// pillards : bien reconnaissables (cape rouge sombre, casque conique de fer, bouclier rond, torche, cercle rouge au sol)
+const RAIDER_MAT = lam('#4a1512'), PAINT_MAT = lam('#a33a1f'), RAIDER_IRON = lam('#55585c'), RAIDER_SHIELD = lam('#9e2b20');
+const RAIDER_G = { helmet: new T.ConeGeometry(0.22, 0.34, 8).translate(0, 1.5, 0), shield: new T.CylinderGeometry(0.34, 0.34, 0.06, 14).rotateZ(Math.PI / 2).translate(-0.3, 0.95, 0.05), boss: new T.SphereGeometry(0.08, 6, 4).translate(-0.34, 0.95, 0.05), torch: new T.CylinderGeometry(0.03, 0.035, 0.75, 5).rotateX(-0.35).translate(0.3, 1.15, 0.12), flame: new T.ConeGeometry(0.11, 0.32, 6).translate(0.3, 1.62, 0.26), mark: new T.RingGeometry(0.5, 0.68, 24).rotateX(-Math.PI / 2).translate(0, 0.06, 0) };
+const RAIDER_FLAME = new T.MeshBasicMaterial({ color: '#ff8a2a' }), RAIDER_MARK = new T.MeshBasicMaterial({ color: '#e0302a', transparent: true, opacity: 0.85, depthWrite: false });
 function makeRaiderMesh() {
   const g = new T.Group(); g.rotation.order = 'YXZ';
   const add = (geo, mat) => { const m = new T.Mesh(geo, mat); m.castShadow = true; g.add(m); return m; };
-  add(VG.legs, VM.legs); add(VG.body, RAIDER_MAT); add(VG.head, lam(pick(SKINS))); add(VG.hair, lam(pick(HAIR_COLORS))); add(VG.band, PAINT_MAT); add(VG.spear, VM.spear);
+  add(VG.legs, VM.legs); add(VG.body, RAIDER_MAT); add(VG.head, lam(pick(SKINS))); add(VG.hair, lam(pick(HAIR_COLORS))); add(VG.band, PAINT_MAT);
+  add(RAIDER_G.helmet, RAIDER_IRON); add(RAIDER_G.shield, RAIDER_SHIELD); add(RAIDER_G.boss, RAIDER_IRON); add(RAIDER_G.torch, VM.wood); add(RAIDER_G.flame, RAIDER_FLAME);
+  const mark = new T.Mesh(RAIDER_G.mark, RAIDER_MARK); g.add(mark); g.scale.setScalar(1.08);
   const pack = add(VG.pack, VM.food); pack.visible = false; g.userData.pack = pack;
   scene.add(g); return g;
 }
@@ -2852,6 +3068,7 @@ function startRaid(warned) {
   sfx('alarm');
   const n = raidSize(), a = rr(0, 6.28), c = landPoint(Math.cos(a) * 56, Math.sin(a) * 56, 6);
   raid = { n, fallen: 0, escaped: 0, loot: 0, torched: false, breached: false, warned };
+  if (speed > 1) setSpeed(1);   // on suit l'attaque à vitesse normale
   for (let i = 0; i < n; i++) { const p = landPoint(c.x, c.z, 4); raiders.push({ raider: true, x: p.x, z: p.z, face: 0, hp: 2, state: 'approach', t: 0, moving: false, walkT: rr(0, 9), carry: 0, alive: true, mesh: makeRaiderMesh() }); }
   log(warned ? `Les ${n} pillards descendent de la colline. Aux armes !` : tech.crise ? (COAST && Math.random() < 0.5 ? `Alerte ! ${n} pirates saxons ont débarqué sur la côte. Les enfants courent se cacher.` : `Alerte ! Une bande de ${n} Germains ravage la campagne. Les enfants courent se cacher.`) : `Alerte ! ${n} pillards surgissent des collines. Les enfants courent se cacher.`, 'bad');
   cam.tx = lerp(cam.tx, c.x, 0.4); cam.tz = lerp(cam.tz, c.z, 0.4);
@@ -3269,7 +3486,12 @@ function handleTap(sx, sy) {
     const p = groundPoint(sx, sy); if (!p) return;
     const pw = POWERS[armed];
     if (colony.mana < pw.cost) { showHint(`Pas assez de mana pour ${pw.name} (${pw.cost}).`, 1800); return; }
-    colony.mana -= pw.cost; pw.cast(p.x, p.z); disarm(); hud(); return;
+    // on mesure l'effet du pouvoir pour la quête en cours (malades guéris, pillards frappés, foyer rallumé…)
+    const sick0 = villagers.filter(v => v.sick).length, fallen0 = raid ? raid.fallen : 0, lit0 = colony.fireLit, kind = armed;
+    const adults = villagers.filter(v => v.adult && Math.hypot(v.x - p.x, v.z - p.z) < 8).length;
+    colony.mana -= pw.cost; pw.cast(p.x, p.z); disarm(); hud();
+    onPower(kind, { x: p.x, z: p.z, cured: sick0 - villagers.filter(v => v.sick).length, raiders: (raid ? raid.fallen : fallen0) - fallen0, relit: !lit0 && colony.fireLit, adults });
+    return;
   }
   const pv = pickVillager(sx, sy);
   if (pv) { select(pv); return; }
@@ -3379,7 +3601,8 @@ function updateLabels() {
   const show = cam.dist < 72;
   for (const v of villagers) {
     const el = v.label;
-    if (!show || !v.mesh.visible) { el.hidden = true; continue; }
+    // le nom ne s'affiche qu'au-dessus du villageois sélectionné (ou suivi) : l'écran reste lisible
+    if (!show || !v.mesh.visible || v !== selected) { el.hidden = true; continue; }
     const k = v.adult ? 1 : 0.5 + 0.5 * v.age / ADULT_AGE;
     _p.set(v.x, v.mesh.position.y + (v.sleeping ? 0.75 : 1.7 * v.look.h * k), v.z).project(camera);
     if (_p.z > 1 || Math.abs(_p.x) > 1.05 || Math.abs(_p.y) > 1.05) { el.hidden = true; continue; }
@@ -3591,6 +3814,8 @@ const MILESTONES = {
   'build:church': ['La première église', 'Évêque de Tours à partir de 371, saint Martin parcourt les campagnes, détruit les temples païens et fonde des églises. Le christianisme devient la religion de l’Empire en 380.', 11],
   'build:voie': ['La voie romaine', 'Un lit de pierres et de graviers bombé, bordé de fossés : les voies relient les villes de la Gaule. Tous les mille pas, une borne milliaire indique la distance et le nom de l’empereur.', 10],
   'build:castrum': ['Le castrum', 'Après les invasions de 275-276, les villes de Gaule se replient derrière des murailles neuves, bâties à la hâte avec des pierres de monuments démolis, flanquées de tours rondes et chaînées de brique.', 11],
+  'center:place': ['La place publique', 'Le feu de camp a cédé la place à une grande place : chaque maison a désormais son foyer. Au cœur des oppida, on se retrouve pour commercer, juger et fêter. À Bibracte, un grand bassin de pierre trônait au milieu de la voie principale.', 11],
+  'center:forum': ['Le forum', 'Le cœur de la ville romaine : une place dallée bordée de portiques, avec la basilique où l’on rend la justice et traite les affaires, et un temple. Même les petites villes de Gaule ont le leur.', 11],
   'cave:bergerie': ['La grotte devient bergerie', 'Les maisons suffisent désormais à loger tout le monde : on ne dort plus dans les grottes. Au Néolithique, les bergers du Midi y abritent leurs chèvres et leurs moutons ; à Fontbrégoua, en Provence, des couches de fumier fossile en témoignent encore.', 10],
   'cave:reserve': ['La grotte devient réserve', 'Plus personne n’y dort : la grotte, fraîche et sèche, sert désormais à entreposer jarres de grain, viande fumée et outils.', 8],
   'cave:sepulture': ['La grotte des ancêtres', 'Dès le Néolithique moyen, on dépose les morts ensemble dans des grottes, génération après génération. La grotte ornée devient le lieu des ancêtres.', 10],
@@ -3752,6 +3977,8 @@ const SCENES = {
   'build:castrum': () => `<rect ${W} x="20" y="98" width="280" height="53" fill="#c2b8a5"/>${[112, 126].map(y => `<rect x="20" y="${y}" width="280" height="4" fill="#a4523a"/>`).join('')}<path ${W} d="M138 151 V122 A22 22 0 0 1 182 122 V151 Z" fill="#3b2e22"/>` + [[86, 70], [234, 70]].map(([x, y]) => `<g ${W}><rect x="${x - 22}" y="${y}" width="44" height="81" rx="6" fill="#cbc1ae"/><rect x="${x - 22}" y="${y + 30}" width="44" height="4" fill="#a4523a"/><rect x="${x - 22}" y="${y + 50}" width="44" height="4" fill="#a4523a"/><path d="M${x - 26} ${y + 2} L${x} ${y - 22} L${x + 26} ${y + 2} Z" fill="url(#il-tile)"/><rect x="${x - 4}" y="${y + 12}" width="8" height="12" fill="#3b2e22"/></g>`).join('') + human(160, 156, 1, 'spear', '#7a4f2d'),
   'build:church': () => SH(160, 96) + `<rect ${W} x="90" y="100" width="130" height="51" fill="#e3d6bc"/><path ${W} d="M80 104 L112 76 L198 76 L230 104 Z" fill="url(#il-tile)"/><path ${W} d="M220 151 V114 A26 26 0 0 1 246 140 V151 Z" fill="#d9cdb4"/><path ${W} d="M146 151 V124 A9 9 0 0 1 164 124 V151 Z" fill="#4a3424"/>${[106, 126, 186, 204].map(x => `<path d="M${x} 118 V108 A4 4 0 0 1 ${x + 8} 108 V118 Z" fill="#3b2e22"/>`).join('')}` + human(66, 156, 1.05, 'hold', '#ece8dc', `<path d="M73 128 L76 100 C76 94 84 94 82 100" stroke="#d9a83a" stroke-width="1.6" fill="none"/>`) + human(268, 156, 0.95, 'stand', '#8b4f7a') + human(288, 158, 0.6, 'stand', '#d3a640'),
   'tech:chute': () => `<circle cx="250" cy="96" r="22" fill="#e89a4a" opacity=".85" filter="url(#il-blur)"/><rect ${W} x="70" y="146" width="160" height="7" fill="#b3a994"/>${[[90, 70], [126, 48], [196, 84]].map(([x, h]) => `<g ${W}><rect x="${x}" y="${146 - h}" width="12" height="${h}" fill="#cfc6b2"/><path d="M${x} ${146 - h} l3 -4 l3 3 l3 -5 l3 4" stroke="#cfc6b2" stroke-width="2" fill="none"/></g>`).join('')}<g ${W}><rect x="150" y="140" width="34" height="9" rx="2" fill="#cfc6b2" transform="rotate(8 167 144)"/><rect x="214" y="138" width="22" height="10" fill="#c2b8a5"/></g>` + human(268, 156, 1, 'stand', '#7a4f2d'),
+  'center:place': () => `<path ${W} d="M20 151 C80 140 240 140 300 151 L300 160 L20 160 Z" fill="#b8ad94"/><ellipse ${W} cx="160" cy="146" rx="46" ry="9" fill="#8e877a"/><ellipse ${W} cx="160" cy="143" rx="38" ry="6" fill="#4f86a6"/>` + [[56, '#b5452f'], [264, '#3f6e8c']].map(([x, c]) => `<g ${W}><rect x="${x - 24}" y="104" width="3" height="40" fill="#6b4a2b"/><rect x="${x + 21}" y="104" width="3" height="40" fill="#6b4a2b"/><path d="M${x - 30} 106 L${x + 30} 106 L${x + 25} 96 L${x - 25} 96 Z" fill="${c}"/><rect x="${x - 22}" y="126" width="44" height="12" fill="#7a5532"/></g>`).join('') + human(120, 150, 0.9, 'hold', '#8b4f7a') + human(200, 152, 0.95, 'stand', '#3f6e8c') + human(228, 150, 0.85, 'stand', '#d3a640'),
+  'center:forum': () => `<rect ${W} x="20" y="140" width="280" height="14" fill="#c7bfae"/><rect ${W} x="36" y="78" width="248" height="10" fill="url(#il-tile)"/>${Array.from({ length: 11 }, (_, i) => `<rect x="${42 + i * 23.5}" y="88" width="6" height="52" fill="#e3d6bc"/>`).join('')}<path ${W} d="M126 78 L160 52 L194 78 Z" fill="url(#il-tile)"/>` + human(110, 156, 0.95, 'stand', '#ece8dc') + human(140, 158, 0.9, 'hold', '#b5652f') + human(214, 156, 0.95, 'stand', '#3f6e8c'),
   'cave:bergerie': () => caveSceneSVG() + `<g ${W}>${[0, 1, 2, 3, 4, 5, 6].map(k => `<rect x="${126 + k * 11}" y="118" width="3.5" height="34" fill="#6b4a2b"/>`).join('')}<path d="M122 126 C150 122 176 130 200 125 M122 136 C150 132 176 140 200 135 M122 146 C150 142 176 150 200 145" stroke="#9a7a4c" stroke-width="4" fill="none"/></g>` + sheepSVG(226, 150, 1) + sheepSVG(262, 154, 0.9) + human(92, 156, 1, 'stand', '#7a4f2d'),
   'cave:reserve': () => caveSceneSVG() + [[140, 1.1], [160, 0.9], [182, 1.2], [204, 0.85]].map(([x, s]) => `<path ${W} d="M${x - 8 * s} 151 C${x - 12 * s} ${151 - 12 * s} ${x - 10 * s} ${151 - 22 * s} ${x - 5 * s} ${151 - 26 * s} L${x + 5 * s} ${151 - 26 * s} C${x + 10 * s} ${151 - 22 * s} ${x + 12 * s} ${151 - 12 * s} ${x + 8 * s} 151 Z" fill="#a5643a"/>`).join('') + basketSVG(232, 152) + human(270, 156, 1, 'hold', '#9a5b48'),
   'cave:sepulture': () => caveSceneSVG() + `<path ${W} d="M168 151 L172 96 L214 100 L208 151 Z" fill="#8e877a"/><path ${W} d="M120 151 C122 140 132 136 142 140 C150 136 160 142 158 151 Z" fill="#7b7669"/><circle cx="138" cy="146" r="4" fill="#a8483a" opacity=".8"/>` + human(250, 156, 1, 'stand', '#ece8dc') + human(278, 158, 0.95, 'stand', '#7a5230'),
@@ -3795,46 +4022,43 @@ function milestone(key, x, z) {
 }
 // ================= Quêtes : un villageois demande de l'aide =================
 // Une quête à la fois. Les urgentes (faim, maladie, feu éteint, sécheresse, raid) passent devant et apprennent à se servir des pouvoirs.
-const homesBuilt = () => huts.filter(h => h.built).length;
+// Seules restent les quêtes où le geste du joueur compte : chacune demande un pouvoir précis (ou un savoir)
+// et ne réussit que si on l'accomplit. Le bouton du pouvoir demandé brille pendant la quête.
 const QUESTS = {
-  faim: { urgent: true, when: () => colony.food < Math.max(12, villagers.length * 1.5), make: () => ({ target: Math.min(foodCap(), villagers.length * 4 + 20), hours: 48 }),
-    title: 'La faim menace', ask: q => `Les réserves sont presque vides. Remontons à ${q.target} de nourriture !`, done: q => colony.food >= q.target, prog: q => `${Math.floor(colony.food)} / ${q.target} nourriture`, hint: 'Le pouvoir Gibier fait venir des cerfs et remplit les buissons de baies.', reward: { mana: 15, mood: 6 } },
-  malades: { urgent: true, when: () => villagers.filter(v => v.sick).length >= 2, make: () => ({ hours: 36 }),
-    title: 'La fièvre', ask: () => 'Plusieurs d’entre nous sont malades. Aide-nous à les guérir !', done: () => !villagers.some(v => v.sick), prog: () => `${villagers.filter(v => v.sick).length} malade(s)`, hint: 'Le pouvoir Bénir soigne tous ceux qui sont dans le cercle doré.', reward: { know: 10, mood: 6 } },
-  feu: { urgent: true, when: () => !colony.fireLit, make: () => ({ hours: 24 }),
-    title: 'Le feu s’est éteint', ask: () => 'Notre foyer est froid. Il faut le rallumer avant la nuit !', done: () => colony.fireLit, prog: () => 'Foyer éteint', hint: 'Il faut 3 bois… ou lancer le pouvoir Feu sur le foyer, sans brûler personne.', reward: { mana: 10, mood: 5 } },
-  secheresse: { urgent: true, when: () => colony.drought > 0 && fields.some(f => f.built), make: () => ({ hours: 30 }),
-    title: 'La sécheresse', ask: () => 'Les champs se dessèchent. Fais tomber la pluie !', done: () => fields.some(f => inRain(f.x, f.z)), prog: () => 'Aucune pluie sur les champs', hint: 'Lance le pouvoir Pluie au-dessus des champs.', reward: { know: 8, food: 15 } },
-  raid: { urgent: true, when: () => !!raid, make: () => ({ hours: 24 }),
-    title: 'Les pillards !', ask: () => 'Des pillards attaquent ! Protège le village !', done: () => !raid, prog: () => raid ? `${raid.n - raid.fallen - raid.escaped} assaillants` : '', hint: 'Le pouvoir Feu frappe les pillards, mais épargne tes villageois.', reward: { mana: 10, mood: 8 } },
-  mammouth: { when: () => tech.lances && deers.some(d => d.alive && d.sp === 'mammouth'), make: () => ({ base: (colony.kills || {}).mammouth || 0, hours: 72 }),
-    title: 'La grande chasse', ask: () => 'Je rêve de rapporter un mammouth au camp. Toute la tribu en parlerait !', done: q => ((colony.kills || {}).mammouth || 0) > q.base, prog: () => 'Mammouth à abattre', hint: 'Il faut 3 chasseurs ; le pouvoir Gibier peut en faire venir un.', reward: { know: 12, mana: 15 } },
-  hiver: { when: () => { const s = seasonPhase(); return s > 0.5 && s < 0.6 && meanTemp() < 9; }, make: () => ({ target: Math.min(foodCap(), villagers.length * 5 + 15), until: Math.floor(colony.time) + Math.round((0.75 - seasonPhase()) * SEASON_DAYS * 24) }),
-    title: 'Avant l’hiver', ask: q => `L’hiver approche. Il nous faut ${q.target} de nourriture en réserve avant les neiges.`, done: q => colony.food >= q.target, prog: q => `${Math.floor(colony.food)} / ${q.target} nourriture`, hint: 'Le pouvoir Gibier et la Bénédiction des champs aident beaucoup.', reward: { mana: 20, mood: 6 } },
-  bebe: { when: () => villagers.some(v => v.adult && v.sex === 'F' && v.partner && v.partner.alive), make: () => ({ base: colony.births || 0, hours: 72 }),
-    title: 'Un enfant', ask: () => 'Nous voudrions un enfant pour agrandir la famille.', done: q => (colony.births || 0) > q.base, prog: () => 'Une naissance attendue', hint: 'Le pouvoir Bénir rend la tribu féconde pendant une journée.', reward: { mana: 10, mood: 8 } },
-  savoir: { when: () => TECHS.some(t => !tech[t.id] && t.req.every(r => tech[r])), make: () => ({ base: Object.keys(tech).length, hours: 72 }),
-    title: 'Apprendre', ask: () => 'Les anciens disent qu’il reste tant à découvrir. Choisis notre prochain savoir !', done: q => Object.keys(tech).length > q.base, prog: () => `${Math.floor(colony.know)} savoir disponible`, hint: 'Ouvre l’arbre du Savoir quand une carte est prête.', reward: { mana: 15 } },
-  maisons: { when: () => tech.huttes, make: () => ({ base: homesBuilt(), hours: 72 }),
-    title: 'De nouveaux toits', ask: () => 'Nous sommes à l’étroit. Bâtissons deux nouvelles demeures.', done: q => homesBuilt() >= q.base + 2, prog: q => `${homesBuilt() - q.base} / 2 maisons`, hint: 'Les bâtisseurs ont besoin de bois : garde des bras pour couper du bois.', reward: { know: 10, mood: 6 } },
-  peinture: { when: () => tech.peinture && caves.length && (colony.paintings || 0) < 12, make: () => ({ base: colony.paintings || 0, hours: 96 }),
-    title: 'La grotte ornée', ask: () => 'Les esprits veulent voir les animaux sur la paroi. Deux nouvelles peintures !', done: q => (colony.paintings || 0) >= q.base + 2, prog: q => `${(colony.paintings || 0) - q.base} / 2 peintures`, hint: 'Les rêveurs et les conteurs peignent plus souvent.', reward: { mana: 20 } },
-  champs: { when: () => tech.agri && fields.some(f => f.built), make: () => ({ base: colony.harvests || 0, hours: 72 }),
-    title: 'Les moissons', ask: () => 'Rentrons trois récoltes avant la prochaine lune.', done: q => (colony.harvests || 0) >= q.base + 3, prog: q => `${(colony.harvests || 0) - q.base} / 3 récoltes`, hint: 'Le pouvoir Pluie fait pousser les champs plus vite.', reward: { know: 10, food: 10 } },
-  menhirs: { when: () => tech.megalithes && builtMenhirs() < MENHIR_COUNT, make: () => ({ hours: 96 }),
-    title: 'Le cercle de pierres', ask: () => 'Achevons le cercle des sept menhirs pour honorer les ancêtres.', done: () => builtMenhirs() >= MENHIR_COUNT, prog: () => `${builtMenhirs()} / ${MENHIR_COUNT} menhirs`, hint: 'Plus la tribu est nombreuse, plus les pierres se lèvent vite.', reward: { mana: 25, mood: 8 } },
-  troupeau: { when: () => !!penBuilt(), make: () => ({ base: sheep.length, hours: 96 }),
-    title: 'Le troupeau', ask: () => 'Trois agneaux de plus, et nous passerons l’hiver sans crainte.', done: q => sheep.length >= q.base + 3, prog: q => `${sheep.length - q.base} / 3 agneaux`, hint: 'Une grotte-bergerie fait grandir le troupeau plus vite.', reward: { food: 15, mood: 5 } },
-  peuple: { when: () => villagers.length >= 4, make: () => ({ target: villagers.length + 3, hours: 96 }),
-    title: 'Un peuple nombreux', ask: q => `Devenons ${q.target} ! Une tribu nombreuse est une tribu forte.`, done: q => villagers.length >= q.target, prog: q => `${villagers.length} / ${q.target} habitants`, hint: 'Bien nourris et heureux, les villageois ont plus d’enfants. Bénir aide aussi.', reward: { know: 15 } },
+  faim: { urgent: true, power: 'gibier', when: () => colony.food < Math.max(12, villagers.length * 1.5), hours: 36,
+    title: 'La faim menace', ask: () => 'Les réserves sont presque vides ! Fais venir du gibier près du village.',
+    act: 'Lance le pouvoir Gibier près du village', hit: i => Math.hypot(i.x, i.z) < 40, reward: { food: 15, mood: 6 } },
+  malades: { urgent: true, power: 'benir', when: () => villagers.some(v => v.sick), hours: 30,
+    title: 'La fièvre', ask: () => `${villagers.filter(v => v.sick).map(v => v.name).slice(0, 3).join(', ')} ${villagers.filter(v => v.sick).length > 1 ? 'sont malades' : 'est malade'}. Bénis-les pour les guérir !`,
+    act: 'Lance Bénir sur un malade (cercle doré)', hit: i => i.cured > 0, reward: { know: 10, mood: 6 } },
+  secheresse: { urgent: true, power: 'pluie', when: () => colony.drought > 0 && fields.some(f => f.built), hours: 30,
+    title: 'La sécheresse', ask: () => 'Les champs se dessèchent. Fais tomber la pluie sur eux !',
+    act: 'Lance Pluie au-dessus des champs', hit: i => fields.some(f => f.built && Math.hypot(f.x - i.x, f.z - i.z) < 16), reward: { food: 20, mood: 4 } },
+  raid: { urgent: true, power: 'feu', when: () => !!raid, hours: 24,
+    title: 'Les pillards !', ask: () => 'Des pillards attaquent ! Frappe-les avec le feu du ciel, sans toucher les nôtres.',
+    act: 'Lance Feu sur les pillards', hit: i => i.raiders > 0, reward: { mana: 15, mood: 8 } },
+  feu: { urgent: true, power: 'feu', when: () => !colony.fireLit && centerStage() === 'fire' && colony.wood < 3, hours: 24,
+    title: 'Le feu s’est éteint', ask: () => 'Plus de bois pour rallumer le foyer… Envoie-nous le feu du ciel !',
+    act: 'Lance Feu sur le foyer, sans brûler personne', hit: i => i.relit, reward: { mana: 10, mood: 5 } },
+  bebe: { power: 'benir', when: () => villagers.some(v => v.adult && v.sex === 'F' && v.partner && v.partner.alive && !v.sick), hours: 48,
+    title: 'Un enfant', ask: () => 'Nous voudrions un enfant. Bénis un couple de la tribu !',
+    act: 'Lance Bénir sur deux adultes (cercle doré)', hit: i => i.adults >= 2, reward: { mana: 10, mood: 8 } },
+  savoir: { power: 'savoir', when: () => TECHS.some(canResearch), hours: 48,
+    title: 'Apprendre', ask: () => 'Les anciens ont assez réfléchi : choisis notre prochain savoir !',
+    act: 'Ouvre le Savoir et choisis une carte', hit: () => true, reward: { mana: 15 } },
 };
-function questGiver() { const a = villagers.filter(v => v.adult); return (a.find(v => v.chief) || a.find(v => v.druid) || pick(a.length ? a : villagers) || {}).name || 'La tribu'; }
+// appelé après chaque pouvoir lancé (ou savoir appris) : la quête en cours est-elle accomplie ?
+function onPower(kind, info) {
+  const q = colony.quest; if (!q) return;
+  const Q = QUESTS[q.id]; if (Q.power === kind && Q.hit(info)) { q.ok = true; updateQuests(); }
+}function questGiver() { const a = villagers.filter(v => v.adult); return (a.find(v => v.chief) || a.find(v => v.druid) || pick(a.length ? a : villagers) || {}).name || 'La tribu'; }
 function updateQuests() {
   if (!started || colony.over) return;
+  if (colony.quest && !QUESTS[colony.quest.id]) colony.quest = null;
   const q = colony.quest;
   if (q) {
     const Q = QUESTS[q.id];
-    if (Q.done(q)) {
+    if (q.ok) {
       const R = Q.reward; colony.questsDone = (colony.questsDone || 0) + 1;
       if (R.mana) colony.mana = Math.min(100, colony.mana + R.mana); if (R.know) colony.know += R.know; if (R.food) colony.food = Math.min(foodCap(), colony.food + R.food); if (R.mood) colony.mood += R.mood;
       log(`Quête accomplie : ${Q.title.toLowerCase()} ! ${rewardText(R)}`, 'good'); sfx('chime'); burst(0, Math.max(heightAt(0, 0), 0) + 1, 0, '#f2d06b', 60, { spread: 2, up: 7, life: 1.6, size: 0.7, gravity: 3 });
@@ -3842,6 +4066,7 @@ function updateQuests() {
     }
     if (colony.time >= q.until) { log(`Quête manquée : ${Q.title.toLowerCase()}.`, 'bad'); colony.mood -= 3; colony.quest = null; colony.questWait = 10; return renderQuest(); }
     if (!Q.urgent) { const u = Object.keys(QUESTS).find(k => QUESTS[k].urgent && QUESTS[k].when()); if (u) startQuest(u); }
+    else if (!Q.when() && !q.ok) { colony.quest = null; colony.questWait = 4; log(`Plus besoin d’aide : ${Q.title.toLowerCase()}.`, ''); return renderQuest(); }
     return renderQuest();
   }
   const u = Object.keys(QUESTS).find(k => QUESTS[k].urgent && QUESTS[k].when());
@@ -3851,25 +4076,28 @@ function updateQuests() {
   if (ok.length) startQuest(pick(ok));
 }
 function startQuest(id) {
-  const Q = QUESTS[id], q = Object.assign({ id, giver: questGiver() }, Q.make());
-  q.until = q.until || Math.floor(colony.time) + (q.hours || 72); delete q.hours;
+  const Q = QUESTS[id], q = { id, giver: questGiver(), until: Math.floor(colony.time) + Q.hours };
   colony.quest = q; colony.lastQuest = id;
   log(`${q.giver} demande : ${Q.ask(q)}`, Q.urgent ? 'bad' : 'know'); sfx('event'); renderQuest();
 }
 const rewardText = R => [R.mana && `+${R.mana} mana`, R.know && `+${R.know} savoir`, R.food && `+${R.food} nourriture`, R.mood && 'bien-être en hausse'].filter(Boolean).join(', ');
 function renderQuest() {
+  if (colony.quest && !QUESTS[colony.quest.id]) colony.quest = null;   // quête d'une ancienne version
   const el = $('#quest'), q = colony.quest; if (!el) return;
+  // le bouton du pouvoir demandé brille tant que la quête est en cours
+  document.querySelectorAll('.qglow').forEach(b => b.classList.remove('qglow'));
   if (!q || !started) { el.hidden = true; return; }
   const Q = QUESTS[q.id], left = Math.max(0, q.until - colony.time);
+  const btn = Q.power === 'savoir' ? $('#techbtn') : document.querySelector(`.pw[data-power="${Q.power}"]`); if (btn) btn.classList.add('qglow');
   el.hidden = false; el.classList.toggle('urgent', !!Q.urgent);
-  el.innerHTML = `<b>${Q.title}</b><span class="qp">${Q.prog(q)}</span><small>${left >= 24 ? Math.ceil(left / 24) + ' j' : Math.ceil(left) + ' h'} · touchez pour l’aide</small>`;
+  el.innerHTML = `<b>${Q.title}</b><span class="qp">👉 ${Q.act}</span><small>${left >= 24 ? Math.ceil(left / 24) + ' j' : Math.ceil(left) + ' h'} · touchez pour en savoir plus</small>`;
 }
 function openQuest() {
   const q = colony.quest; if (!q) return; const Q = QUESTS[q.id];
-  openModal(`<p class="eyebrow">Quête${Q.urgent ? ' urgente' : ''} · demandée par ${q.giver}</p><h2 id="mtitle">${Q.title}</h2><p>« ${Q.ask(q)} »</p><p><b>Où en est-on :</b> ${Q.prog(q)}</p><p class="tip">💡 ${Q.hint}</p><p class="sub">Récompense : ${rewardText(Q.reward)}. Quêtes accomplies : ${colony.questsDone || 0}.</p><div class="mfoot"><button class="btn" data-close>Compris</button></div>`);
+  openModal(`<p class="eyebrow">Quête${Q.urgent ? ' urgente' : ''} · demandée par ${q.giver}</p><h2 id="mtitle">${Q.title}</h2><p>« ${Q.ask(q)} »</p><p class="tip">👉 <b>${Q.act}.</b></p><p class="sub">Récompense : ${rewardText(Q.reward)}. Quêtes accomplies : ${colony.questsDone || 0}.</p><div class="mfoot"><button class="btn" data-close>Compris</button></div>`);
 }
 function flushSplash() {
-  if (modalOpen) return;
+  if (modalOpen || ceremonyOn) return;
   if (!splashQueue.length) return;
   sfx('chime');
   const s = splashQueue.shift();
@@ -3965,6 +4193,30 @@ function sfx(kind) {
   else if (kind === 'death') [62, 57].forEach((m, i) => pluck(m, t + i * 0.35, 0.12, fx));
   else if (kind === 'event') { drum(t); drum(t + 0.28); }
   else if (kind === 'alarm') { horn(t); horn(t + 1.1); }
+  else if (kind === 'mystic') mysticChant(t);
+}
+// chant de la cérémonie : bourdon grave, chœur « aah » qui monte lentement, puis cloches claires
+function mysticChant(t) {
+  const ctx = music.ctx, fx = music.fx;
+  drum(t);
+  const voice = (m, start, dur, vol) => {
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, start); g.gain.linearRampToValueAtTime(vol, start + 2.2); g.gain.setValueAtTime(vol, start + dur - 2.4); g.gain.linearRampToValueAtTime(0.0001, start + dur);
+    const f1 = ctx.createBiquadFilter(); f1.type = 'bandpass'; f1.frequency.value = 760; f1.Q.value = 3;   // formants de la voyelle « a »
+    const f2 = ctx.createBiquadFilter(); f2.type = 'bandpass'; f2.frequency.value = 1150; f2.Q.value = 4;
+    for (const det of [-9, 0, 8]) {
+      const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = mtof(m); o.detune.value = det;
+      const vib = ctx.createOscillator(), vg = ctx.createGain(); vib.frequency.value = 5 + Math.random(); vg.gain.value = 6; vib.connect(vg); vg.connect(o.detune);
+      o.connect(f1); o.connect(f2); o.start(start); o.stop(start + dur + 0.1); vib.start(start); vib.stop(start + dur + 0.1);
+    }
+    f1.connect(g); f2.connect(g); g.connect(fx);
+  };
+  // bourdon
+  for (const m of [38, 45]) { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'triangle'; o.frequency.value = mtof(m); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.09, t + 1.5); g.gain.setValueAtTime(0.09, t + 7); g.gain.linearRampToValueAtTime(0.0001, t + 9.5); o.connect(g); g.connect(fx); o.start(t); o.stop(t + 9.6); }
+  // chœur : ré mineur qui s'ouvre en majeur
+  [[62, 0.5], [65, 1.2], [69, 1.9], [74, 2.6]].forEach(([m, d]) => voice(m, t + d, 6.6 - d * 0.3, 0.05));
+  voice(66, t + 4.4, 4.6, 0.045);
+  // cloches
+  [86, 81, 86, 90, 93].forEach((m, i) => pluck(m, t + 6 + i * 0.32, 0.14, fx));
 }
 // iPhone / iPad : le son Web Audio est coupé par le bouton silencieux et se fige après un verrouillage d'écran.
 // On déclare une lecture « média » (audioSession + petit son muet joué par un élément <audio>) et on relance
