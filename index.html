@@ -3711,7 +3711,7 @@ function handleTap(sx, sy) {
   const pv = pickVillager(sx, sy);
   if (pv) { select(pv); return; }
   const an = pickAnimal(sx, sy);
-  if (an) { openBuilding(an, null, true); return; }
+  if (an) { openBuilding(an, null, AINFO[an] ? 'a' : 'b'); return; }
   const p = groundPoint(sx, sy);
   if (p) {
     if (raiders.some(r => r.alive && Math.hypot(r.x - p.x, r.z - p.z) < 3)) { showHint('Un pillard ! Le pouvoir Feu peut aider les défenseurs.', 2400); return; }
@@ -3800,6 +3800,7 @@ function pickAnimal(sx, sy) {
   if (fauna.dolphins && fauna.dolphins.g.visible) for (const m of fauna.dolphins.g.children) { m.getWorldPosition(_v); C.push(['dauphin', _v.x, _v.y, _v.z, 34]); }
   if (fauna.fish && fauna.fish.m.visible) C.push(['esturgeon', fauna.fish.m.position.x, fauna.fish.m.position.y, fauna.fish.m.position.z, 34]);
   let best = null, bd = Infinity;
+  if (ship && ship.g && ship.g.visible) C.push(['navire', ship.g.position.x, ship.g.position.y + 2, ship.g.position.z, 60]);
   for (const [k, x, y, z, r] of C) { _v.set(x, y, z).project(camera); if (_v.z > 1) continue; const d = Math.hypot((_v.x + 1) / 2 * innerWidth - sx, (1 - _v.y) / 2 * innerHeight - sy); if (d < r && d < bd) { bd = d; best = k; } }
   return best;
 }
@@ -3811,6 +3812,18 @@ const CINFO = {
   vigne: ['Vigne', 'Époque romaine', 'Des ceps alignés en rangs et accrochés à des piquets. Les Grecs l’avaient apportée près de Marseille ; elle gagne toute la Gaule à l’époque romaine.', 'À la fin de l’été, on vendange les grappes, on les foule aux pieds dans une cuve, et le jus fermente en vin. On le conserve dans des amphores, puis dans des tonneaux, une invention gauloise.', 'Du vin pour les fêtes et le commerce : 10 de nourriture par récolte.'],
 };
 const INFO_HEADS = { b: ['À quoi ça sert', 'Comment on le construit'], a: ['Qui est-ce ?', 'Les hommes et lui'], c: ['Qu’est-ce que c’est ?', 'Comment on le cultive'] };
+// le reste du décor du village : places de quartier, rues, portes, tours, réserves, navire
+Object.assign(BINFO, {
+  quarter: ['Place de quartier', 'Du village à la ville', 'Chaque quartier a sa petite place avec un puits : on y puise l’eau, on y lave le linge, on y bavarde entre voisins.', 'Une place de terre battue, puis empierrée, puis dallée à l’époque romaine, autour d’un puits bordé de pierres et creusé jusqu’à l’eau qui dort sous la terre.', 'Un nouveau quartier naît à chaque âge, jusqu’à cinq dans la ville gallo-romaine.'],
+  'street:dirt': ['Sentier', 'Tracé par les pas', 'Le chemin que tout le monde prend pour aller au champ, au puits ou à la forêt.', 'Personne ne l’a construit : à force de passer au même endroit, l’herbe disparaît et la terre se tasse.', 'Les sentiers apparaissent là où les villageois passent le plus.'],
+  'street:gravel': ['Chemin empierré', 'Âge du fer', 'Relier la place, les quartiers et les portes, même quand il pleut.', 'On répand des cailloux et du gravier sur la terre tassée pour ne plus s’embourber dans la boue.', 'Les chemins relient la place centrale aux quartiers et aux portes.'],
+  'street:paved': ['Rue dallée', 'Époque romaine', 'Les rues de la ville romaine, tirées au cordeau, où passent piétons, charrettes et marchands.', 'De grandes dalles de pierre posées sur un lit de sable et de gravier, légèrement bombées pour que la pluie s’écoule dans le caniveau.', 'Les rues relient le forum aux quartiers et aux portes.'],
+  'gate:palisade': ['Porte de la palissade', 'Néolithique', 'Entrer et sortir du village, et le fermer la nuit ou quand l’ennemi approche.', 'Deux gros poteaux, une poutre par-dessus, et deux battants de planches qu’on bloque avec une barre.', 'Les villageois passent par les portes ; les pillards arrivent souvent par là.'],
+  'gate:rampart': ['Porte de l’oppidum', 'Âge du fer', 'L’entrée de la ville gauloise, gardée jour et nuit.', 'Le rempart se replie vers l’intérieur pour former un long couloir, fermé par une porte de bois entre deux tours. À Bibracte, en Bourgogne, la porte du Rebout faisait près de 20 mètres de large.', 'Les villageois passent par les portes ; les pillards arrivent souvent par là.'],
+  castrum: ['Rempart et tours du castrum', 'Fin de l’Empire romain', 'Après les invasions du IIIe siècle, les villes de Gaule se protègent derrière de nouveaux murs, souvent bâtis avec les pierres de leurs anciens monuments.', 'Des murs épais de pierre et de mortier, décorés de rangées de briques rouges, avec des tours rondes d’où l’on tire sur les assaillants. On en voit encore au Mans ou à Senlis.', 'Les assaillants sont bien mieux repoussés, et la ville est fermée aussi côté mer.'],
+  reserves: ['Réserves de la tribu', 'Préhistoire', 'Le tas de bois pour le feu et le panier de nourriture que tout le monde partage.', 'Les chasseurs, les cueilleurs et les bûcherons y déposent ce qu’ils rapportent ; chacun vient y manger quand il a faim.', 'Les chiffres en haut de l’écran indiquent ce qu’il y a dans les réserves.'],
+  navire: ['Navire marchand', 'De l’âge du bronze à l’époque romaine', 'Il apporte l’étain, le sel, le vin et les nouvelles des pays lointains, et repart avec ce que le village produit.', 'Une coque de planches de chêne et une grande voile carrée. Jules César raconte que les navires des Vénètes, en Bretagne, avaient des voiles en cuir et des coques si solides que les éperons romains ne pouvaient pas les percer.', 'Il accoste au ponton pour commercer.'],
+});
 function openBuilding(key, site, kind = 'b') {
   if (kind === true) kind = 'a';
   const B = { b: BINFO, a: AINFO, c: CINFO }[kind][key]; if (!B) return;
@@ -3833,8 +3846,12 @@ function pickBuilding(p) {
   for (const h of huts) test(h.kind, h, h.x, h.z, (HOME[h.kind] ? HOME[h.kind].clear : 3) + 0.4);
   for (const w of works) if (!['palisade', 'rampart', 'castrum', 'voie'].includes(w.kind)) test(w.kind === 'granary' && w.roman ? 'horreum' : w.kind, w, w.x, w.z, Math.max(2.4, (WORK_INFO[w.kind].clear || 2) + 0.4));
   test(centerStage(), null, 0, 0, centerStage() === 'fire' ? 1.8 : PLAZA_R() + 1);
-  if (!best && WALL) { const a = Math.atan2(p.z, p.x); if (Math.abs(Math.hypot(p.x, p.z) - profR(WALL.prof, a)) < 1.6) { const w = works.find(w => w.kind === 'rampart' && w.built) || works.find(w => w.kind === 'palisade'); if (w) best = [w.kind, w]; } }
+  if (centerStage() === 'fire') for (const P of [FOODPILE, WOODPILE]) test('reserves', null, P.x, P.z, 1.4);
+  for (const q of quarters()) if (q.i) test('quarter', null, q.x, q.z, 2.6);
+  if (WALL) for (const g of WALL.gates || []) test(works.some(w => w.kind === 'rampart' && w.built) ? 'gate:rampart' : 'gate:palisade', null, g.x, g.z, 2.8);
+  if (!best && WALL) { const a = Math.atan2(p.z, p.x); if (Math.abs(Math.hypot(p.x, p.z) - profR(WALL.prof, a)) < 1.6) { const w = works.find(w => w.kind === 'rampart' && w.built) || works.find(w => w.kind === 'palisade'); if (w) best = [w.kind === 'rampart' && works.some(x => x.kind === 'castrum' && x.built) ? 'castrum' : w.kind, w]; } }
   if (!best) { const v = works.find(w => w.kind === 'voie' && Math.hypot(w.x - p.x, w.z - p.z) < 3); if (v) best = ['voie', v]; }
+  if (!best && onStreet(p.x, p.z, 0.6)) best = ['street:' + streetKind(), null];
   return best;
 }
 function syncFollowBtn() { $('#cfollow').classList.toggle('on', cam.follow); $('#cfollow').textContent = cam.follow ? 'Suivi' : 'Suivre'; }
