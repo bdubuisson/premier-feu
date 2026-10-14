@@ -1609,6 +1609,7 @@ function runTask(v, gh) {
       if (t.phase === 'back') { deliver(v, gh); break; }
       if (!t.arrived) { if (moveTo(v, t.tx, t.tz, gh, spd(v))) { t.arrived = true; if (t.boat) launchBoat(v, t); } break; }
       if (t.boat) {
+        if (v.inWhirl) break;   // prise dans un tourbillon : elle ne rame plus
         if (t.stage === 'out') { if (stepTo(v, t.sx, t.sz, gh, 6)) t.stage = 'fishing'; break; }
         if (t.stage === 'fishing') { v.working = true; t.t = (t.t || 0) + gh; if (t.t >= 2 / workMul()) { catchFish(v, t.sx, t.sz, true); t.stage = 'in'; } break; }
         if (t.stage === 'in') { if (stepTo(v, t.tx, t.tz, gh, 6)) { landBoat(v); t.phase = 'back'; } break; }
@@ -1915,14 +1916,14 @@ function spawnShip() {
   log('Une voile apparaît au large.');
 }
 function updateShip(gh) {
-  const s = ship; if (!s) return;
+  const s = ship; if (!s || s.whirl) return;
   if (s.state === 'in') { if (stepTo(s, s.ex, s.ez, gh, 7)) { s.state = 'dock'; s.t = 2.5;
     colony.know += 4; colony.wood = Math.min(woodCap(), colony.wood + 8); colony.food = Math.min(foodCap(), colony.food + 8); colony.mood += 4;
     log('Un navire marchand accoste au ponton : étain, sel, amphores et nouvelles d’ailleurs.', 'good'); milestone('ship', s.x, s.z); } }
   else if (s.state === 'dock') { s.t -= gh; if (s.t <= 0) s.state = 'out'; }
   else if (stepTo(s, s.fx, s.fz, gh, 7)) { scene.remove(s.g); ship = null; }
 }
-function syncShip(dt) { if (!ship) return; ship.g.position.set(ship.x, 0.05 + Math.sin(animT * 1.2) * 0.08, ship.z); ship.g.rotation.y = lerpAngle(ship.g.rotation.y, ship.face, Math.min(1, dt * 2)); ship.g.rotation.z = Math.sin(animT * 0.9) * 0.04; }
+function syncShip(dt) { if (!ship || ship.whirl) return; ship.g.position.set(ship.x, 0.05 + Math.sin(animT * 1.2) * 0.08, ship.z); ship.g.rotation.y = lerpAngle(ship.g.rotation.y, ship.face, Math.min(1, dt * 2)); ship.g.rotation.z = Math.sin(animT * 0.9) * 0.04; }
 const WALL_SEG = new T.BoxGeometry(1.15, 2.3, 1.0).translate(0, 1.15, 0), WALL_BEAM = new T.BoxGeometry(1.17, 0.12, 1.04);
 const WALL_STONE = lam('#8f846f'), DARK_WOOD = lam('#4f3a26'), OAK = lam('#3f6f2e');
 const NEMETON = { ditch: new T.BoxGeometry(8.4, 0.25, 0.6), post: new T.CylinderGeometry(0.13, 0.15, 2.2, 6).translate(0, 1.1, 0), trunk: new T.CylinderGeometry(0.35, 0.55, 3.2, 7).translate(0, 1.6, 0), crown: merge([new T.IcosahedronGeometry(2.3, 1)]).scale(1, 0.8, 1).translate(0, 4.4, 0), altar: new T.BoxGeometry(1.2, 0.6, 0.7).translate(0, 0.3, 0) };
@@ -3036,7 +3037,7 @@ const POWERS = {
   arc: { name: 'Arc-en-ciel', cost: 20, cast: castRainbow, can: () => isNight() ? 'Pas d’arc-en-ciel la nuit : il faut le soleil pour éclairer les gouttes de pluie.' : null, desc: 'un arc-en-ciel se dresse dans le ciel : ceux qui le voient retrouvent le sourire. Après une pluie, il est double !' },
   fleurs: { name: 'Fleurs', cost: 10, cast: castFlowers, can: () => seasonName() === 'hiver' ? 'En hiver, les fleurs ne poussent pas : attends le printemps.' : null, desc: 'fait pousser un bouquet de fleurs sauvages de l’époque, différentes selon le climat et les savoirs. Touche-les ensuite pour savoir lesquelles.' },
   tornade: { name: 'Tornade', cost: 40, cast: castTornado, desc: 'une tornade descend du ciel et erre quelques secondes : elle arrache les arbres, emporte les huttes de branchages et les chantiers, renverse les villageois et balaie les pillards. À manier avec précaution !' },
-  tourbillon: { name: 'Tourbillon', cost: 25, cast: castWhirlpool, can: (x, z) => x !== undefined && !waterAt(x, z) ? 'Le tourbillon ne peut naître que dans l’eau : touche la mer ou un lac (pas la glace).' : null, desc: 'à lancer sur la mer ou un lac : l’eau tourne en entonnoir, les pirogues tournent en rond, le navire marchand fait demi-tour, et à la fin des poissons étourdis remontent pour les pêcheurs.' },
+  tourbillon: { name: 'Tourbillon', cost: 25, cast: castWhirlpool, can: (x, z) => x !== undefined && !waterAt(x, z) ? 'Le tourbillon ne peut naître que dans l’eau : touche la mer ou un lac (pas la glace).' : null, desc: 'à lancer sur la mer ou un lac : l’eau tourne en entonnoir et aspire tous les bateaux alentour, pirogues et navire marchand, qui tournent en spirale avant d’être avalés. À la fin, des poissons étourdis remontent pour les pêcheurs.' },
   crue: { name: 'Inondation', cost: 35, cast: castFlood, desc: 'la rivière déborde : l’eau éteint les incendies, emporte les pillards et noie les champs… puis laisse un limon fertile qui rendra les prochaines récoltes plus belles.' },
   foudre: { name: 'Foudre', cost: 30, cast: castLightning, desc: 'un éclair tombe exactement là où vous touchez : il foudroie villageois et pillards, tue les bêtes et enflamme les arbres. À manier avec précaution !' },
   benir: { name: 'Bénédiction', cost: 40, cast: castBless, desc: 'soigne les malades et redonne santé, énergie et moral dans le cercle doré. La tribu fait plus d’enfants pendant une journée.' },
@@ -3176,7 +3177,7 @@ function castTornado(x, z) {
 }
 // Tourbillon : seulement sur l'eau libre (mer ou lac, pas la glace). Comme le Maelström au large de la Norvège, l'eau tourne
 // en entonnoir : les pirogues sont entraînées en rond, le navire marchand fait demi-tour, et les poissons étourdis remontent.
-const WHIRL_R = 4.5, WHIRL_LIFE = 12;
+const WHIRL_R = 4.5, WHIRL_LIFE = 14, WHIRL_PULL = 20;
 function castWhirlpool(x, z) {
   const g = new T.Group(); g.position.set(x, -0.02, z); scene.add(g);
   const dark = new T.MeshBasicMaterial({ color: '#173c55', transparent: true, opacity: 0, depthWrite: false, side: T.DoubleSide });
@@ -3188,23 +3189,39 @@ function castWhirlpool(x, z) {
     const spiral = new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts), 60, 0.1, 4), foam); spiral.renderOrder = 3; g.add(spiral);
   }
   const ring = new T.Mesh(new T.RingGeometry(WHIRL_R - 0.3, WHIRL_R + 0.4, 40).rotateX(-Math.PI / 2), foam); ring.position.y = 0.06; ring.renderOrder = 3; g.add(ring);
-  const spun = new Set(); let t = 0, spray = 0, shipHit = false;
+  const spun = new Set(); let t = 0, spray = 0, swallowed = 0;
+  const gulp = (gx2, gz2) => { burst(gx2, 0.2, gz2, '#e6f2f6', 40, { spread: 1.5, up: 6, life: 1.2, size: 0.5, gravity: 8 }); sfx('event'); };
+  // des pirogues vides, détachées de la rive, dérivent vers le tourbillon : il y a toujours quelque chose à avaler
+  const drift = [];
+  for (let i = 0; i < 4; i++) for (let tries = 0; tries < 20; tries++) { const a = rr(0, 6.28), r = rr(10, 16), bx = x + Math.cos(a) * r, bz = z + Math.sin(a) * r; if (!waterAt(bx, bz)) continue; const m = new T.Mesh(BOAT_GEO, BOAT_MAT); m.position.set(bx, -0.02, bz); scene.add(m); drift.push({ m, x: bx, z: bz, face: 0, gone: false }); break; }
   effects.push({ update(dt) {
     const sdt = dt * Math.max(speed, 0.5); t += sdt;
     const k = Math.min(1, t / 1.2, (WHIRL_LIFE - t) / 2);
     for (const m of darks) m.opacity = m.userData.a * k; foam.opacity = 0.9 * k; g.rotation.y -= sdt * 2.6; g.scale.set(0.3 + 0.7 * k, 1, 0.3 + 0.7 * k);
     if ((spray -= dt) <= 0) { spray = 0.15; const a = rr(0, 6.28); burst(x + Math.cos(a) * WHIRL_R, 0.1, z + Math.sin(a) * WHIRL_R, '#e6f2f6', 6, { spread: 1, up: 2.5, life: 0.8, size: 0.35, gravity: 6 }); }
-    const R = WHIRL_R * 1.5 * k;
-    // les pirogues prises dans le courant tournent autour du tourbillon puis s'en échappent
-    for (const v of villagers) if (v.inBoat && Math.hypot(v.x - x, v.z - z) < R) {
-      const a = Math.atan2(v.z - z, v.x - x) + sdt * 1.6, d = Math.hypot(v.x - x, v.z - z) + sdt * 0.4;
-      v.x = x + Math.cos(a) * d; v.z = z + Math.sin(a) * d; v.face = a;
-      if (!spun.has(v)) { spun.add(v); v.energy = Math.max(0, v.energy - 25); v.happy -= 8; journal(v, 'Sa pirogue a été prise dans un tourbillon.'); log(`La pirogue de ${v.name} est happée par le tourbillon et tourne, tourne…`, 'power'); }
+    // le courant attire de loin tout ce qui flotte : les bateaux tournent en spirale de plus en plus vite et sont avalés au centre
+    const PULL = WHIRL_PULL * k;
+    const suck = (o, d) => { const a = Math.atan2(o.z - z, o.x - x) - sdt * (0.7 + 5 / (d + 1)), nd = Math.max(0, d - sdt * (0.8 + 3 / (d + 1))); o.x = x + Math.cos(a) * nd; o.z = z + Math.sin(a) * nd; o.face = a - Math.PI / 2; return nd; };
+    for (const b of drift) if (!b.gone) { const d = suck(b, Math.hypot(b.x - x, b.z - z)); b.m.position.set(b.x, -0.02 - Math.max(0, 1.5 - d) * 0.5, b.z); b.m.rotation.y = b.face; b.m.rotation.z = Math.min(0.6, 3 / (d + 3)); if (d < 0.6) { b.gone = true; scene.remove(b.m); gulp(b.x, b.z); swallowed++; } }
+    for (const v of villagers) if (v.inBoat && Math.hypot(v.x - x, v.z - z) < PULL) {
+      v.inWhirl = true; const d = suck(v, Math.hypot(v.x - x, v.z - z));
+      if (!spun.has(v)) { spun.add(v); journal(v, 'Sa pirogue a été avalée par un tourbillon.'); log(`La pirogue de ${v.name} est attirée par le tourbillon et tourne de plus en plus vite…`, 'power'); }
+      if (d < 0.6) {   // avalée, puis recrachée au bord : on rentre trempé, sans poisson
+        gulp(x, z); swallowed++; const a = rr(0, 6.28); v.x = x + Math.cos(a) * (PULL + 2); v.z = z + Math.sin(a) * (PULL + 2); v.inWhirl = false;
+        v.energy = Math.max(0, v.energy - 30); v.happy -= 10; v.carry = null; burst(v.x, 0.2, v.z, '#e6f2f6', 25, { spread: 2, up: 4, life: 1, size: 0.4, gravity: 7 });
+        log(`${v.name} est ${gx(v, 'avalé', 'avalée')} par le tourbillon… puis ${gx(v, 'recraché', 'recrachée')} plus loin, ${gx(v, 'trempé', 'trempée')} mais vivant${gx(v, '', 'e')} !`, 'power');
+      }
     }
-    if (ship && Math.hypot(ship.x - x, ship.z - z) < R + 3) { ship.face += sdt * 4; if (!shipHit) { shipHit = true; ship.state = 'out'; log('Le navire marchand est pris dans le tourbillon : il tourne sur lui-même puis repart au large sans accoster.', 'power'); } }
-    for (const w of fauna.whales) if (Math.hypot(w.x - x, w.z - z) < R + 4) { const a = Math.atan2(w.z - z, w.x - x); w.x += Math.cos(a) * sdt * 3; w.z += Math.sin(a) * sdt * 3; }
+    if (ship && Math.hypot(ship.x - x, ship.z - z) < PULL + 4) {
+      if (!ship.whirl) { ship.whirl = true; log('Le navire marchand est attiré par le tourbillon ! Ses marins rament en vain…', 'power'); }
+      const d = suck(ship, Math.hypot(ship.x - x, ship.z - z)); ship.g.position.set(ship.x, -Math.max(0, 2.5 - d) * 0.8, ship.z); ship.g.rotation.y = ship.face; ship.g.rotation.z = Math.min(0.5, 3 / (d + 4));
+      if (d < 0.8) { gulp(x, z); swallowed++; burst(x, 0.3, z, '#7a5532', 30, { spread: 3, up: 5, life: 1.6, size: 0.5, gravity: 6 }); scene.remove(ship.g); ship = null; log('Le tourbillon engloutit le navire marchand et sa cargaison d’amphores. Les marins regagnent la rive à la nage.', 'power'); }
+    }
+    for (const w of fauna.whales) if (Math.hypot(w.x - x, w.z - z) < PULL + 4) { const a = Math.atan2(w.z - z, w.x - x); w.x += Math.cos(a) * sdt * 3; w.z += Math.sin(a) * sdt * 3; }
     if (t >= WHIRL_LIFE) {
       scene.remove(g); g.traverse(o => o.geometry && o.geometry.dispose()); darks.forEach(m => m.dispose()); dark.dispose(); foam.dispose();
+      for (const b of drift) if (!b.gone) scene.remove(b.m); for (const v of villagers) v.inWhirl = false;
+      if (swallowed) log(`Le tourbillon a avalé ${swallowed} bateau${swallowed > 1 ? 'x' : ''}.`, 'power');
       if (hasJob('pecheur') || spun.size) { colony.food = Math.min(foodCap(), colony.food + 10); log('Le tourbillon s’apaise et remonte des poissons étourdis : les pêcheurs en remplissent leurs paniers (+10 nourriture).', 'good'); }
       else log('Le tourbillon s’apaise ; la surface redevient calme.', 'power');
       return false;
