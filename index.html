@@ -552,6 +552,15 @@ function makeAuk() {
   const belly = new T.Mesh(merge([new T.SphereGeometry(1, 7, 5).scale(0.15, 0.3, 0.12).translate(0, 0.34, 0.1), new T.SphereGeometry(0.04, 5, 4).scale(1, 0.7, 1.4).translate(0.09, 0.8, 0.05)]), FAUNA_MAT.belly);
   back.castShadow = true; g.add(back, belly); return g;
 }
+// espadon : corps fuselé bleu sombre, ventre argenté, long rostre plat, haute nageoire dorsale, queue en croissant
+const SWORD_MAT = { back: lam('#2c4a6e'), belly: lam('#c9d3da'), fin: lam('#22394f') };
+function makeSwordfish() {
+  const g = new T.Group();
+  g.add(new T.Mesh(merge([new T.SphereGeometry(1, 10, 6).scale(0.32, 0.36, 1.6), new T.ConeGeometry(0.06, 1.6, 5).rotateX(Math.PI / 2).translate(0, 0.02, 2.3)]), SWORD_MAT.back));
+  g.add(new T.Mesh(new T.SphereGeometry(1, 8, 5).scale(0.26, 0.24, 1.4).translate(0, -0.12, 0.05), SWORD_MAT.belly));
+  g.add(new T.Mesh(merge([new T.ConeGeometry(0.35, 0.75, 3).scale(0.15, 1, 1).translate(0, 0.62, 0.35), new T.ConeGeometry(0.55, 0.5, 3).rotateX(-Math.PI / 2).scale(0.12, 2.2, 1).translate(0, 0, -1.75)]), SWORD_MAT.fin));
+  return g;
+}
 function makeFish() {
   return new T.Mesh(merge([new T.SphereGeometry(1, 8, 5).scale(0.3, 0.3, 1.5), new T.ConeGeometry(0.12, 0.7, 5).rotateX(Math.PI / 2).translate(0, -0.05, 1.7), new T.ConeGeometry(0.5, 0.6, 3).rotateX(-Math.PI / 2).scale(0.15, 1, 1).translate(0, 0.12, -1.65)]), FAUNA_MAT.fish);
 }
@@ -580,6 +589,7 @@ function initFauna() {
   const splash = new T.Mesh(new T.RingGeometry(0.4, 0.75, 16).rotateX(-Math.PI / 2), new T.MeshBasicMaterial({ color: '#f2fafc', transparent: true, opacity: 0, depthWrite: false })); scene.add(splash);
   fauna.fish = { m: fish, t: -1, next: rr(30, 70) }; fauna.splash = { m: splash, t: 9 };
   const eg = makeBird('#4a3626', 4.2); scene.add(eg); fauna.eagle = { b: eg, a: rr(0, 6.28) };
+  if (COAST) { const sw = makeSwordfish(); sw.visible = false; scene.add(sw); fauna.sword = { m: sw, t: -1, next: rr(20, 60) }; }
 }
 const firstSight = (key, minDay) => { if (started && dayNum() >= minDay) milestone(key, 0, 0); };
 function waterAt(x, z) { const h = heightAt(x, z); if (h > -0.4) return false; return alongOf(x, z) > coastLine(x, z) - 6 ? (colony.seaIce || 0) < 0.35 : (colony.ice || 0) < 0.35; }
@@ -587,6 +597,8 @@ function updateFauna(dt, rdt) {
   const night = isNight(), t = animT, seaOpen = (colony.seaIce || 0) < 0.4;
   // baleines : souffle en surface, sonde en montrant la nageoire caudale, puis longue plongée
   for (const w of fauna.whales) {
+    if (w.whirl) continue;   // prise dans un tourbillon
+    if (w.gone) { w.m.visible = false; if (colony.time < w.back) continue; const p = coastPoint(26, 36); if (p) { w.x = p.x; w.z = p.z; } w.gone = false; }   // avalée : elle reparaît au large un jour plus tard
     w.t += dt; const cyc = w.t % 34, m = w.m, u = m.userData;
     let nx = w.x + Math.sin(w.dir) * dt * 0.9, nz = w.z + Math.cos(w.dir) * dt * 0.9;
     const d = alongOf(nx, nz) - coastLine(nx, nz);
@@ -631,6 +643,17 @@ function updateFauna(dt, rdt) {
     if (k >= 1) { F.t = -1; F.next = rr(45, 110); S.t = 0; S.m.position.set(F.x + Math.sin(F.dir) * 2.5, 0.02, F.z + Math.cos(F.dir) * 2.5); }
   }
   S.t += dt; S.m.material.opacity = Math.max(0, 0.8 - S.t * 0.8); S.m.scale.setScalar(1 + S.t * 2.2);
+  // espadon : l'été, au large, il bondit hors de l'eau et retombe dans une grande gerbe
+  const SW = fauna.sword;
+  if (SW) {
+    if (SW.t < 0) { SW.next -= dt; if (SW.next <= 0) { const p = !night && seaOpen && seasonName() === 'été' && colony.year > -11700 && coastPoint(14, 32, (x, z) => waterAt(x, z) && Math.hypot(x - cam.tx, z - cam.tz) < 55); if (p) { SW.t = 0; SW.x = p.x; SW.z = p.z; SW.dir = rr(0, 6.28); } else SW.next = rr(15, 30); } }
+    else {
+      SW.t += dt; const k = SW.t / 1.6;
+      SW.m.visible = k < 1; SW.m.position.set(SW.x + Math.sin(SW.dir) * k * 4, -0.4 + Math.sin(k * Math.PI) * 3.2, SW.z + Math.cos(SW.dir) * k * 4); SW.m.rotation.set((k - 0.5) * 2.4, SW.dir, Math.sin(k * 7) * 0.3);
+      if (k > 0.3) firstSight('sea:espadon', 2);
+      if (k >= 1) { SW.t = -1; SW.next = rr(40, 100); burst(SW.x + Math.sin(SW.dir) * 4, 0.1, SW.z + Math.cos(SW.dir) * 4, '#e6f2f6', 30, { spread: 1.8, up: 4, life: 1, size: 0.45, gravity: 7 }); }
+    }
+  }
   // goélands au-dessus du rivage (ils suivent les barques de pêche quand il y en a)
   const boat = villagers.find(v => v.inBoat);
   for (const g of fauna.gulls) {
@@ -3037,7 +3060,7 @@ const POWERS = {
   arc: { name: 'Arc-en-ciel', cost: 20, cast: castRainbow, can: () => isNight() ? 'Pas d’arc-en-ciel la nuit : il faut le soleil pour éclairer les gouttes de pluie.' : null, desc: 'un arc-en-ciel se dresse dans le ciel : ceux qui le voient retrouvent le sourire. Après une pluie, il est double !' },
   fleurs: { name: 'Fleurs', cost: 10, cast: castFlowers, can: () => seasonName() === 'hiver' ? 'En hiver, les fleurs ne poussent pas : attends le printemps.' : null, desc: 'fait pousser un bouquet de fleurs sauvages de l’époque, différentes selon le climat et les savoirs. Touche-les ensuite pour savoir lesquelles.' },
   tornade: { name: 'Tornade', cost: 40, cast: castTornado, desc: 'une tornade descend du ciel et erre quelques secondes : elle arrache les arbres, emporte les huttes de branchages et les chantiers, renverse les villageois et balaie les pillards. À manier avec précaution !' },
-  tourbillon: { name: 'Tourbillon', cost: 25, cast: castWhirlpool, can: (x, z) => x !== undefined && !waterAt(x, z) ? 'Le tourbillon ne peut naître que dans l’eau : touche la mer ou un lac (pas la glace).' : null, desc: 'à lancer sur la mer ou un lac : l’eau tourne en entonnoir et aspire tous les bateaux alentour, pirogues et navire marchand, qui tournent en spirale avant d’être avalés. À la fin, des poissons étourdis remontent pour les pêcheurs.' },
+  tourbillon: { name: 'Tourbillon', cost: 25, cast: castWhirlpool, can: (x, z) => x !== undefined && !waterAt(x, z) ? 'Le tourbillon ne peut naître que dans l’eau : touche la mer ou un lac (pas la glace).' : null, desc: 'à lancer sur la mer ou un lac : l’eau tourne en entonnoir et aspire tout ce qui flotte alentour, pirogues, navire marchand et même les baleines, qui tournent en spirale avant d’être avalés. À la fin, des poissons étourdis remontent pour les pêcheurs.' },
   crue: { name: 'Inondation', cost: 35, cast: castFlood, desc: 'la rivière déborde : l’eau éteint les incendies, emporte les pillards et noie les champs… puis laisse un limon fertile qui rendra les prochaines récoltes plus belles.' },
   foudre: { name: 'Foudre', cost: 30, cast: castLightning, desc: 'un éclair tombe exactement là où vous touchez : il foudroie villageois et pillards, tue les bêtes et enflamme les arbres. À manier avec précaution !' },
   benir: { name: 'Bénédiction', cost: 40, cast: castBless, desc: 'soigne les malades et redonne santé, énergie et moral dans le cercle doré. La tribu fait plus d’enfants pendant une journée.' },
@@ -3217,11 +3240,15 @@ function castWhirlpool(x, z) {
       const d = suck(ship, Math.hypot(ship.x - x, ship.z - z)); ship.g.position.set(ship.x, -Math.max(0, 2.5 - d) * 0.8, ship.z); ship.g.rotation.y = ship.face; ship.g.rotation.z = Math.min(0.5, 3 / (d + 4));
       if (d < 0.8) { gulp(x, z); swallowed++; burst(x, 0.3, z, '#7a5532', 30, { spread: 3, up: 5, life: 1.6, size: 0.5, gravity: 6 }); scene.remove(ship.g); ship = null; log('Le tourbillon engloutit le navire marchand et sa cargaison d’amphores. Les marins regagnent la rive à la nage.', 'power'); }
     }
-    for (const w of fauna.whales) if (Math.hypot(w.x - x, w.z - z) < PULL + 4) { const a = Math.atan2(w.z - z, w.x - x); w.x += Math.cos(a) * sdt * 3; w.z += Math.sin(a) * sdt * 3; }
+    for (const w of fauna.whales) if (!w.gone && Math.hypot(w.x - x, w.z - z) < PULL + 6) {
+      if (!w.whirl) { w.whirl = true; log('Une baleine est prise dans le courant du tourbillon ! Elle souffle, elle lutte…', 'power'); }
+      const d = suck(w, Math.hypot(w.x - x, w.z - z)); w.m.visible = true; w.m.position.set(w.x, -0.42 - Math.max(0, 3 - d) * 0.6, w.z); w.m.rotation.set(Math.max(0, 3 - d) * 0.25, Math.PI / 2 - w.face, Math.min(0.5, 3 / (d + 4))); w.m.scale.setScalar(w.s);
+      if (d < 1) { gulp(x, z); burst(x, 0.3, z, '#e6f2f6', 60, { spread: 3, up: 8, life: 1.6, size: 0.6, gravity: 7 }); swallowed++; w.gone = true; w.whirl = false; w.m.visible = false; w.back = colony.time + 24; log('Le tourbillon avale la baleine tout entière ! (On dit qu’on la reverra au large… un jour.)', 'power'); }
+    }
     if (t >= WHIRL_LIFE) {
       scene.remove(g); g.traverse(o => o.geometry && o.geometry.dispose()); darks.forEach(m => m.dispose()); dark.dispose(); foam.dispose();
-      for (const b of drift) if (!b.gone) scene.remove(b.m); for (const v of villagers) v.inWhirl = false;
-      if (swallowed) log(`Le tourbillon a avalé ${swallowed} bateau${swallowed > 1 ? 'x' : ''}.`, 'power');
+      for (const b of drift) if (!b.gone) scene.remove(b.m); for (const v of villagers) v.inWhirl = false; for (const w of fauna.whales) w.whirl = false;
+      if (swallowed) log(`Le tourbillon a avalé ${swallowed} proie${swallowed > 1 ? 's' : ''}.`, 'power');
       if (hasJob('pecheur') || spun.size) { colony.food = Math.min(foodCap(), colony.food + 10); log('Le tourbillon s’apaise et remonte des poissons étourdis : les pêcheurs en remplissent leurs paniers (+10 nourriture).', 'good'); }
       else log('Le tourbillon s’apaise ; la surface redevient calme.', 'power');
       return false;
@@ -4065,6 +4092,7 @@ const AINFO = {
   phoque: ['Phoque', 'Côte atlantique', 'Un mammifère marin qui pêche en mer et se repose en groupe sur les plages et les rochers.', 'Les hommes de la préhistoire le chassaient pour sa viande, sa graisse et sa peau. On en voit peints dans la grotte Cosquer, près de Marseille, dont l’entrée est aujourd’hui sous la mer.', 'Ils se prélassent sur la plage.'],
   pingouin: ['Grand pingouin', 'Disparu en 1844', 'Un grand oiseau marin noir et blanc, haut de 80 centimètres, qui ne savait pas voler mais nageait très bien, comme un manchot.', 'Il est peint dans la grotte Cosquer. Facile à attraper sur la terre ferme, il a été chassé jusqu’au dernier : les deux derniers ont été tués en Islande en 1844.', 'Une petite colonie vit sur la plage.'],
   dauphin: ['Grand dauphin', 'Côte atlantique', 'Un mammifère marin très intelligent qui nage et saute en bande.', 'Les marins l’ont toujours vu comme un signe de chance.', 'Une bande passe parfois au large.'],
+  espadon: ['Espadon', 'Golfe de Gascogne, l’été', 'Un grand poisson de l’Atlantique, long de 3 à 4 mètres, au dos bleu sombre. Sa mâchoire supérieure s’allonge en une longue lame plate, le rostre, dont il frappe les bancs de poissons pour les assommer. C’est l’un des poissons les plus rapides de la mer.', 'Les pêcheurs de l’Antiquité le chassaient au harpon depuis leurs barques ; les Romains appréciaient beaucoup sa chair. Il remonte l’été jusque dans le golfe de Gascogne.', 'Il bondit parfois hors de l’eau au large, en été.'],
   esturgeon: ['Esturgeon', 'Presque disparu', 'Un poisson géant, long de 3 mètres, couvert de plaques osseuses. Il remontait la Loire et la Gironde pour pondre.', 'Ses œufs sont le caviar. Trop pêché, il a presque disparu ; il n’en reste qu’en Gironde, protégés.', 'Il saute parfois hors de l’eau.'],
 };
 // l'animal le plus proche du doigt, à l'écran (comme pour les villageois)
@@ -4076,6 +4104,7 @@ function pickAnimal(sx, sy) {
   for (const s of fauna.seals) if (s.m.visible) C.push(['phoque', s.m.position.x, s.m.position.y + 0.3, s.m.position.z, 30]);
   for (const a of fauna.auks) if (a.m.visible) C.push(['pingouin', a.m.position.x, a.m.position.y + 0.4, a.m.position.z, 26]);
   if (fauna.dolphins && fauna.dolphins.g.visible) for (const m of fauna.dolphins.g.children) { m.getWorldPosition(_v); C.push(['dauphin', _v.x, _v.y, _v.z, 34]); }
+  if (fauna.sword && fauna.sword.m.visible) C.push(['espadon', fauna.sword.m.position.x, fauna.sword.m.position.y, fauna.sword.m.position.z, 40]);
   if (fauna.fish && fauna.fish.m.visible) C.push(['esturgeon', fauna.fish.m.position.x, fauna.fish.m.position.y, fauna.fish.m.position.z, 34]);
   let best = null, bd = Infinity;
   if (ship && ship.g && ship.g.visible) C.push(['navire', ship.g.position.x, ship.g.position.y + 2, ship.g.position.z, 60]);
@@ -4444,6 +4473,7 @@ const MILESTONES = {
   'sea:pingouin': ['Le grand pingouin', 'Haut de 80 cm, incapable de voler mais excellent nageur, il niche en colonies sur les côtes. Des hommes l’ont peint dans la grotte Cosquer, près de Marseille, il y a plus de 20 000 ans. Massacré pour sa chair, sa graisse et ses plumes, il s’éteint en 1844 : le dernier couple est tué en Islande.', 10],
   'sea:phoque': ['Les phoques', 'Des phoques se reposent sur la grève. Les chasseurs les guettent pour leur viande, leur graisse et leur peau. La grotte Cosquer en montre plusieurs, et même un être à corps d’homme et à tête de phoque.', 9],
   'sea:esturgeon': ['L’esturgeon', 'Jusqu’à 3 mètres et plus de 300 kilos : l’esturgeon remonte les grands fleuves comme la Loire pour pondre, et bondit parfois hors de l’eau. Surpêché pour sa chair et ses œufs, le caviar, puis coupé de ses frayères par les barrages, il ne subsiste plus en France que dans le bassin de la Gironde.', 9],
+  'sea:espadon': ['L’espadon', 'Un éclair bleu jaillit des vagues : un espadon ! Ce grand poisson de l’Atlantique, qui peut dépasser 3 mètres, remonte l’été jusque dans le golfe de Gascogne pour chasser maquereaux et calmars.', 7],
   'sea:dauphin': ['Les dauphins', 'Un groupe de dauphins bondit au large. Grands dauphins et dauphins communs fréquentent le golfe de Gascogne depuis toujours, à la poursuite des bancs de sardines et de maquereaux.', 8],
   'sky:grues': ['Le passage des migrateurs', 'Un grand V traverse le ciel : oies sauvages et grues migrent vers le nord au printemps, vers le sud à l’automne. Leur passage annonce le changement de saison.', 8],
   'druid': ['Le premier druide', 'D’après César, les druides sont à la fois prêtres, juges et savants. Leur savoir ne s’écrit pas : ils l’apprennent par cœur, parfois pendant vingt ans. Ils sont dispensés de la guerre. Pline raconte qu’ils cueillent le gui du chêne avec une serpe d’or.', 10],
@@ -4621,6 +4651,7 @@ const SCENES = {
   'sea:pingouin': () => seaSVG + `<path ${W} d="M96 151 C100 138 124 132 150 138 C160 142 162 148 160 151 Z" fill="#8d8579"/>` + [[30, 158, 1.05], [52, 160, 1.15], [72, 156, 0.95], [112, 138, 0.9], [134, 140, 1], [86, 162, 1.1]].map(([x, y, s]) => `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="0" cy="-14" rx="7" ry="14" fill="#1e1d1f"/><ellipse cx="2.4" cy="-11" rx="4.4" ry="10" fill="#f2efe8"/><circle cx="1" cy="-29" r="5.2" fill="#1e1d1f"/><ellipse cx="2.6" cy="-30.5" rx="1.9" ry="1.2" fill="#f2efe8"/><path d="M5 -31 C9 -31 13 -29 13 -27 L5 -25.5 Z" fill="#2a2522"/><path d="M6.5 -29.5 L11 -28.4" stroke="#e8e2d4" stroke-width=".6"/><path d="M-3 0 L-5 3 L-1 3 Z M3 0 L1 3 L5 3 Z" fill="#2a2522"/></g>`).join('') + `<path d="M200 150 C204 146 210 146 214 150" stroke="#1e1d1f" stroke-width="3" fill="none"/>`,
   'sea:phoque': () => seaSVG + `<path ${W} d="M110 151 C116 138 160 132 196 140 C204 144 206 148 204 151 Z" fill="#8d8579"/>` + [[48, 160, 1, 1], [140, 140, 0.9, -1], [176, 142, 0.75, 1]].map(([x, y, s, f]) => `<g transform="translate(${x} ${y}) scale(${s * f} ${s})"><path ${W} d="M-30 0 C-30 -10 -10 -14 8 -12 C18 -11 24 -16 28 -20 C34 -22 38 -18 36 -12 C34 -6 26 -2 18 0 Z M-30 0 L-39 -5 L-37 2 Z" fill="#74716b"/><circle cx="31" cy="-17" r="1.3" fill="#1a1612"/><path d="M-14 -9 l2 1 M-4 -11 l2 1 M6 -10 l2 1" stroke="#4f4c47" stroke-width="1.4"/></g>`).join('') + human(250, 156, 0.9, 'spear', '#7a5230'),
   'sea:esturgeon': () => seaSVG + `<g transform="translate(176 112) rotate(-20)"><path ${W} d="M-62 0 C-40 -12 20 -14 50 -6 L70 -1 L50 4 C20 10 -40 9 -62 2 Z" fill="#7d7a60"/><path d="M-50 3 C-20 8 20 8 48 3" stroke="#cfc9ad" stroke-width="3" fill="none"/><path ${W} d="M-60 0 L-84 -20 L-74 1 L-82 10 Z" fill="#6c6a52"/>${[-36, -22, -8, 6, 20, 34].map(x => `<path d="M${x} -10 l3 -3 l3 3 l-3 2 Z" fill="#e4dcc0"/>`).join('')}<path d="M58 3 l2 5 M62 2 l2 5" stroke="#4a4836" stroke-width="1"/><circle cx="44" cy="-4" r="1.5" fill="#1a1612"/></g><path ${W} d="M130 142 C136 128 142 132 146 142 M200 142 C206 126 214 130 218 142" stroke="#e6f2f6" stroke-width="2.4" fill="none"/>${[[138, 120], [150, 126], [210, 118], [222, 128]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2" fill="#e6f2f6"/>`).join('')}` + human(46, 156, 0.95, 'spear', '#7a5230'),
+  'sea:espadon': () => seaSVG + `<g transform="translate(170 104) rotate(-28)" ${W}><path d="M-58 0 L-30 -2 C-10 -16 30 -16 46 -4 L62 -16 L58 0 L62 16 L46 4 C30 16 -10 16 -30 2 Z" fill="#2c4a6e"/><path d="M-6 -12 L6 -34 L14 -11 Z" fill="#22394f"/><path d="M-28 2 C-6 12 26 10 44 3" stroke="#c9d3da" stroke-width="4" fill="none"/><circle cx="-20" cy="-3" r="2.2" fill="#0e1620"/></g><path d="M130 140 C140 128 150 128 160 140 M180 142 C190 130 200 130 210 142" stroke="#eef6f8" stroke-width="3" fill="none"/>`,
   'sea:dauphin': () => seaSVG + [[150, 128, -24, 1], [208, 118, -10, 0.9], [260, 134, 18, 0.8]].map(([x, y, r, s]) => `<g transform="translate(${x} ${y}) rotate(${r}) scale(${s})"><path ${W} d="M-26 4 C-16 -10 10 -12 26 -2 L34 0 L26 3 C14 7 -6 9 -26 4 Z M-2 -8 L-10 -20 L6 -9 Z M-26 4 L-38 -6 L-34 4 L-38 12 Z" fill="#6f8190"/><path d="M-18 5 C-4 8 12 6 24 2" stroke="#d4dde2" stroke-width="2.5" fill="none"/><circle cx="20" cy="-3" r="1.2" fill="#1a1612"/></g>`).join('') + human(40, 156, 0.95, 'stand', '#a8483a'),
   'sky:grues': () => [[200, 46], [190, 54], [210, 54], [180, 62], [220, 62], [170, 70], [230, 70], [160, 78], [240, 78]].map(([x, y]) => `<path d="M${x - 7} ${y + 2} q4 -5 7 0 q3 -5 7 0" stroke="#3a3530" stroke-width="1.8" fill="none" stroke-linecap="round"/>`).join('') + human(120, 156, 1.05, 'stand', '#a8483a') + human(146, 158, 0.65, 'stand', '#d3a640'),
   'raid': () => stakes(0, 150, 100) + human(70, 158, 1, 'spear', '#a8483a') + human(110, 160, 1, 'spear', '#3f6e8c') + `<path ${W} d="M170 151 C210 116 270 108 320 118 L320 151 Z" fill="#6f7d4a" opacity=".6"/>` + human(240, 128, 0.7, 'spear', '#2a2420') + human(268, 124, 0.7, 'spear', '#2a2420') + human(292, 126, 0.7, 'spear', '#2a2420'),
